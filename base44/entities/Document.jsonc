@@ -1,0 +1,51 @@
+{
+  "name": "Document",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "type": {
+      "type": "string",
+      "title": "Type",
+      "enum": [
+        "Contract",
+        "Estimate",
+        "Invoice",
+        "Certification",
+        "Warranty",
+        "Floor Plan",
+        "Photo",
+        "Other"
+      ]
+    },
+    "file_url": {
+      "type": "string",
+      "title": "File URL"
+    },
+    "client_id": {
+      "type": "string",
+      "title": "Client"
+    },
+    "property_id": {
+      "type": "string",
+      "title": "Property"
+    },
+    "project_id": {
+      "type": "string",
+      "title": "Project"
+    },
+    "expiration_date": {
+      "type": "string",
+      "title": "Expiration Date"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

@@ -1,0 +1,163 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Save, TrendingUp, FileDown } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import StatusBadge from '../components/StatusBadge';
+
+const STATUSES = ['Draft', 'To Review', 'Sent', 'Accepted', 'Rejected', 'Expired', 'Converted to Project'];
+const TYPES = ['Bathroom', 'Full Home', 'Electrical System', 'Networking', 'Security', 'Maintenance', 'Other'];
+const QUALITY = ['Essential', 'Smart', 'Intelligence'];
+
+export default function EstimateDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [form, setForm] = useState({});
+  const [clients, setClients] = useState([]);
+  const [properties, setProperties] = useState([]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      const [ests, cls, props] = await Promise.all([
+        base44.entities.Estimate.filter({ id }),
+        base44.entities.Client.list(),
+        base44.entities.Property.list(),
+      ]);
+      if (ests[0]) setForm(ests[0]);
+      setClients(cls); setProperties(props);
+    };
+    load();
+  }, [id]);
+
+  const set = (key, value) => {
+    setForm(f => {
+      const updated = { ...f, [key]: value };
+      const rev = Number(updated.revenue) || 0;
+      const mat = Number(updated.material_cost) || 0;
+      const lab = Number(updated.labor_cost) || 0;
+      const oth = Number(updated.other_costs) || 0;
+      const gm = rev - mat - lab - oth;
+      updated.gross_margin = gm;
+      updated.gross_margin_pct = rev > 0 ? parseFloat(((gm / rev) * 100).toFixed(2)) : 0;
+      return updated;
+    });
+  };
+
+  const save = async () => {
+    setSaving(true);
+    await base44.entities.Estimate.update(id, form);
+    setSaving(false);
+  };
+
+  const clientProperties = properties.filter(p => p.client_id === form.client_id);
+  const marginColor = (form.gross_margin_pct || 0) >= 30 ? 'text-green-600' : (form.gross_margin_pct || 0) >= 15 ? 'text-orange-500' : 'text-red-500';
+
+  return (
+    <div className="p-6 max-w-4xl mx-auto space-y-5">
+      <div className="flex items-center gap-3">
+        <button onClick={() => navigate('/estimates')} className="p-2 rounded-lg hover:bg-gray-100">
+          <ArrowLeft className="w-4 h-4 text-gray-600" />
+        </button>
+        <div className="flex-1">
+          <input
+            value={form.title || ''}
+            onChange={e => set('title', e.target.value)}
+            className="text-xl font-bold text-gray-900 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1 w-full"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <select value={form.status || 'Draft'} onChange={e => set('status', e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none">
+            {STATUSES.map(s => <option key={s}>{s}</option>)}
+          </select>
+          <button onClick={save} disabled={saving} className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium" style={{ backgroundColor: '#1147FF' }}>
+            <Save className="w-4 h-4" />{saving ? 'Salvataggio...' : 'Salva'}
+          </button>
+        </div>
+      </div>
+
+      {/* Margin Summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: 'Ricavi', value: form.revenue, prefix: '€', color: '#1147FF' },
+          { label: 'Costi Totali', value: (Number(form.material_cost) || 0) + (Number(form.labor_cost) || 0) + (Number(form.other_costs) || 0), prefix: '€', color: '#EF4444' },
+          { label: 'Margine Lordo', value: form.gross_margin, prefix: '€', color: '#10B981' },
+          { label: 'Margine %', value: form.gross_margin_pct, suffix: '%', color: (form.gross_margin_pct || 0) >= 30 ? '#10B981' : '#F59E0B' },
+        ].map(({ label, value, prefix, suffix, color }) => (
+          <div key={label} className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="text-xs text-gray-500 font-medium">{label}</div>
+            <div className="text-xl font-bold mt-1" style={{ color }}>
+              {prefix}{typeof value === 'number' ? value.toLocaleString() : '0'}{suffix}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Cliente</label>
+          <select value={form.client_id || ''} onChange={e => set('client_id', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white">
+            <option value="">— Seleziona —</option>
+            {clients.map(c => <option key={c.id} value={c.id}>{c.name} {c.company_name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Proprietà</label>
+          <select value={form.property_id || ''} onChange={e => set('property_id', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white">
+            <option value="">— Seleziona —</option>
+            {clientProperties.map(p => <option key={p.id} value={p.id}>{p.property_name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Tipo Lavoro</label>
+          <select value={form.estimate_type || ''} onChange={e => set('estimate_type', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white">
+            <option value="">— Seleziona —</option>
+            {TYPES.map(t => <option key={t}>{t}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Livello Qualità</label>
+          <select value={form.quality_level || ''} onChange={e => set('quality_level', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white">
+            <option value="">— Seleziona —</option>
+            {QUALITY.map(q => <option key={q}>{q}</option>)}
+          </select>
+        </div>
+        {[['revenue', 'Ricavi Stimati (€)'], ['material_cost', 'Costo Materiali (€)'], ['labor_cost', 'Costo Manodopera (€)'], ['other_costs', 'Altri Costi (€)']].map(([k, label]) => (
+          <div key={k}>
+            <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+            <input type="number" value={form[k] || ''} onChange={e => set(k, parseFloat(e.target.value) || 0)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+        ))}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Durata Stimata</label>
+          <input value={form.estimated_duration || ''} onChange={e => set('estimated_duration', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none" placeholder="es. 2 settimane" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Condizioni di Pagamento</label>
+          <input value={form.payment_terms || ''} onChange={e => set('payment_terms', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none" />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="block text-xs font-medium text-gray-600 mb-1">Lavori Inclusi</label>
+          <textarea value={form.included_works || ''} onChange={e => set('included_works', e.target.value)} rows={3} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none resize-none" />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="block text-xs font-medium text-gray-600 mb-1">Lavori Esclusi</label>
+          <textarea value={form.excluded_works || ''} onChange={e => set('excluded_works', e.target.value)} rows={2} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none resize-none" />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="block text-xs font-medium text-gray-600 mb-1">Note</label>
+          <textarea value={form.notes || ''} onChange={e => set('notes', e.target.value)} rows={2} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none resize-none" />
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <button onClick={save} className="flex items-center gap-2 px-5 py-2 text-sm text-white rounded-lg font-medium" style={{ backgroundColor: '#1147FF' }}>
+          <Save className="w-4 h-4" /> Salva Preventivo
+        </button>
+        <button className="flex items-center gap-2 px-5 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">
+          <FileDown className="w-4 h-4" /> Genera PDF (placeholder)
+        </button>
+      </div>
+    </div>
+  );
+}

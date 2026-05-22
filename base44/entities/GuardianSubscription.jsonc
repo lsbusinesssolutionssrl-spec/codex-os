@@ -1,0 +1,43 @@
+{
+  "name": "GuardianSubscription",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "title": "Client"
+    },
+    "property_id": {
+      "type": "string",
+      "title": "Property"
+    },
+    "start_date": {
+      "type": "string",
+      "title": "Start Date"
+    },
+    "monthly_price": {
+      "type": "number",
+      "title": "Monthly Price (\u20ac)"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "Active",
+        "Paused",
+        "Cancelled"
+      ],
+      "default": "Active"
+    },
+    "included_services": {
+      "type": "string",
+      "title": "Included Services"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "client_id"
+  ]
+}

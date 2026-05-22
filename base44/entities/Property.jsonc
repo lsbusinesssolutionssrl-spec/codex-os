@@ -1,0 +1,86 @@
+{
+  "name": "Property",
+  "type": "object",
+  "properties": {
+    "property_name": {
+      "type": "string",
+      "title": "Property Name"
+    },
+    "client_id": {
+      "type": "string",
+      "title": "Client"
+    },
+    "address": {
+      "type": "string",
+      "title": "Address"
+    },
+    "type": {
+      "type": "string",
+      "title": "Type",
+      "enum": [
+        "Apartment",
+        "Villa",
+        "Office",
+        "Industrial Building",
+        "Commercial Space"
+      ]
+    },
+    "square_meters": {
+      "type": "number",
+      "title": "Square Meters"
+    },
+    "year_built": {
+      "type": "number",
+      "title": "Year Built"
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Photos"
+    },
+    "floor_plans": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Floor Plans"
+    },
+    "electrical_notes": {
+      "type": "string",
+      "title": "Electrical Notes"
+    },
+    "plumbing_notes": {
+      "type": "string",
+      "title": "Plumbing Notes"
+    },
+    "heating_cooling_notes": {
+      "type": "string",
+      "title": "Heating/Cooling Notes"
+    },
+    "networking_notes": {
+      "type": "string",
+      "title": "Networking Notes"
+    },
+    "security_notes": {
+      "type": "string",
+      "title": "Security Notes"
+    },
+    "windows_doors_notes": {
+      "type": "string",
+      "title": "Windows/Doors Notes"
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Documents"
+    }
+  },
+  "required": [
+    "property_name",
+    "client_id"
+  ]
+}

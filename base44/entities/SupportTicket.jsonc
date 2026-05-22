@@ -1,0 +1,76 @@
+{
+  "name": "SupportTicket",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "client_id": {
+      "type": "string",
+      "title": "Client"
+    },
+    "property_id": {
+      "type": "string",
+      "title": "Property"
+    },
+    "guardian_id": {
+      "type": "string",
+      "title": "Guardian Subscription"
+    },
+    "issue_type": {
+      "type": "string",
+      "title": "Issue Type",
+      "enum": [
+        "Water Leak",
+        "Electrical",
+        "Network",
+        "Security",
+        "Maintenance",
+        "Other"
+      ]
+    },
+    "priority": {
+      "type": "string",
+      "title": "Priority",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Urgent"
+      ],
+      "default": "Medium"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "Open",
+        "In Progress",
+        "Waiting Client",
+        "Resolved",
+        "Closed"
+      ],
+      "default": "Open"
+    },
+    "assigned_technician": {
+      "type": "string",
+      "title": "Assigned Technician"
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Photos"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "title",
+    "client_id"
+  ]
+}

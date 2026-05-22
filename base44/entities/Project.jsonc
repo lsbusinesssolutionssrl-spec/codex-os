@@ -1,0 +1,111 @@
+{
+  "name": "Project",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "client_id": {
+      "type": "string",
+      "title": "Client"
+    },
+    "property_id": {
+      "type": "string",
+      "title": "Property"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "Lead",
+        "Survey",
+        "Estimate",
+        "Approved",
+        "In Progress",
+        "Testing",
+        "Delivered",
+        "Guardian Active"
+      ],
+      "default": "Lead"
+    },
+    "project_manager": {
+      "type": "string",
+      "title": "Project Manager"
+    },
+    "team_members": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Team Members"
+    },
+    "start_date": {
+      "type": "string",
+      "title": "Start Date"
+    },
+    "expected_end_date": {
+      "type": "string",
+      "title": "Expected End Date"
+    },
+    "actual_end_date": {
+      "type": "string",
+      "title": "Actual End Date"
+    },
+    "budget": {
+      "type": "number",
+      "title": "Budget (\u20ac)"
+    },
+    "actual_costs": {
+      "type": "number",
+      "title": "Actual Costs (\u20ac)"
+    },
+    "gross_margin": {
+      "type": "number",
+      "title": "Gross Margin (\u20ac)"
+    },
+    "photos_before": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Photos Before"
+    },
+    "photos_during": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Photos During"
+    },
+    "photos_after": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Photos After"
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Documents"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    },
+    "milestones": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "title": "Milestones"
+    }
+  },
+  "required": [
+    "title",
+    "client_id"
+  ]
+}

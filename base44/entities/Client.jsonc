@@ -1,0 +1,54 @@
+{
+  "name": "Client",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Name"
+    },
+    "company_name": {
+      "type": "string",
+      "title": "Company / Surname"
+    },
+    "phone": {
+      "type": "string",
+      "title": "Phone"
+    },
+    "email": {
+      "type": "string",
+      "title": "Email"
+    },
+    "address": {
+      "type": "string",
+      "title": "Address"
+    },
+    "type": {
+      "type": "string",
+      "title": "Type",
+      "enum": [
+        "Private",
+        "Business",
+        "Public Administration",
+        "Partner"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "title": "Source",
+      "enum": [
+        "Referral",
+        "Google",
+        "Social",
+        "Partner",
+        "Existing Client"
+      ]
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

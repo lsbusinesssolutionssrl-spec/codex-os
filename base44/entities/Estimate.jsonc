@@ -1,0 +1,102 @@
+{
+  "name": "Estimate",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "client_id": {
+      "type": "string",
+      "title": "Client"
+    },
+    "property_id": {
+      "type": "string",
+      "title": "Property"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "Draft",
+        "To Review",
+        "Sent",
+        "Accepted",
+        "Rejected",
+        "Expired",
+        "Converted to Project"
+      ],
+      "default": "Draft"
+    },
+    "estimate_type": {
+      "type": "string",
+      "title": "Type",
+      "enum": [
+        "Bathroom",
+        "Full Home",
+        "Electrical System",
+        "Networking",
+        "Security",
+        "Maintenance",
+        "Other"
+      ]
+    },
+    "quality_level": {
+      "type": "string",
+      "title": "Quality Level",
+      "enum": [
+        "Essential",
+        "Smart",
+        "Intelligence"
+      ]
+    },
+    "revenue": {
+      "type": "number",
+      "title": "Estimated Revenue (\u20ac)"
+    },
+    "material_cost": {
+      "type": "number",
+      "title": "Material Cost (\u20ac)"
+    },
+    "labor_cost": {
+      "type": "number",
+      "title": "Labor Cost (\u20ac)"
+    },
+    "other_costs": {
+      "type": "number",
+      "title": "Other Costs (\u20ac)"
+    },
+    "gross_margin": {
+      "type": "number",
+      "title": "Gross Margin (\u20ac)"
+    },
+    "gross_margin_pct": {
+      "type": "number",
+      "title": "Gross Margin %"
+    },
+    "estimated_duration": {
+      "type": "string",
+      "title": "Estimated Duration"
+    },
+    "included_works": {
+      "type": "string",
+      "title": "Included Works"
+    },
+    "excluded_works": {
+      "type": "string",
+      "title": "Excluded Works"
+    },
+    "payment_terms": {
+      "type": "string",
+      "title": "Payment Terms"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "title",
+    "client_id"
+  ]
+}
