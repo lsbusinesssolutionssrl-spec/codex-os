@@ -5,6 +5,20 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import Layout from './components/Layout';
+import Dashboard from './pages/Dashboard';
+import Clients from './pages/Clients';
+import ClientDetail from './pages/ClientDetail';
+import Properties from './pages/Properties';
+import PropertyDetail from './pages/PropertyDetail';
+import Estimates from './pages/Estimates';
+import EstimateDetail from './pages/EstimateDetail';
+import Projects from './pages/Projects';
+import Checklists from './pages/Checklists';
+import Guardian from './pages/Guardian';
+import Documents from './pages/Documents';
+import Team from './pages/Team';
+import AI from './pages/AI';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -33,7 +47,21 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
+      <Route element={<Layout />}>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/clients" element={<Clients />} />
+        <Route path="/clients/:id" element={<ClientDetail />} />
+        <Route path="/properties" element={<Properties />} />
+        <Route path="/properties/:id" element={<PropertyDetail />} />
+        <Route path="/estimates" element={<Estimates />} />
+        <Route path="/estimates/:id" element={<EstimateDetail />} />
+        <Route path="/projects" element={<Projects />} />
+        <Route path="/checklists" element={<Checklists />} />
+        <Route path="/guardian" element={<Guardian />} />
+        <Route path="/documents" element={<Documents />} />
+        <Route path="/team" element={<Team />} />
+        <Route path="/ai" element={<AI />} />
+      </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
