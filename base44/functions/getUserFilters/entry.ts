@@ -13,95 +13,137 @@ Deno.serve(async (req) => {
     const users = await base44.entities.User.filter({ email: user.email });
     const company_id = users[0]?.company_id || null;
 
-    // Return filter based on user role - ALL filtered by company_id
-    const filters = {
-      Project: { company_id },
-      Estimate: { company_id },
-      Client: { company_id },
-      Property: { company_id },
-      Document: { company_id },
-      SupportTicket: { company_id },
-      GuardianSubscription: { company_id },
-      ChecklistItem: { company_id },
-      ProjectCost: { company_id },
-      Timesheet: { company_id },
-      PurchaseOrder: { company_id },
-      Supplier: { company_id },
-      KnowledgeBase: { company_id },
-      ProjectLearning: { company_id },
-      IntelligenceInsight: { company_id },
-      EstimatePreset: { company_id },
-      FinancialAlert: { company_id },
-    };
-
-    // Admin vede tutto (ma solo della propria company)
+    // STRICT ROLE-BASED FILTERS
+    // Admin/Company Admin: full access within company
     if (user.role === 'admin' || user.role === 'company_admin') {
-      return Response.json({ filters });
+      return Response.json({
+        filters: {
+          Project: { company_id },
+          Estimate: { company_id },
+          Client: { company_id },
+          Property: { company_id },
+          Document: { company_id },
+          SupportTicket: { company_id },
+          GuardianSubscription: { company_id },
+          ChecklistItem: { company_id },
+          ProjectCost: { company_id },
+          Timesheet: { company_id },
+          PurchaseOrder: { company_id },
+          Supplier: { company_id },
+          KnowledgeBase: { company_id },
+          ProjectLearning: { company_id },
+          IntelligenceInsight: { company_id },
+          EstimatePreset: { company_id },
+          FinancialAlert: { company_id },
+        }
+      });
     }
 
-    // Project Manager vede tutto tranne financial control
+    // Project Manager: full project access, NO company settings/financial dashboards
     if (user.role === 'project_manager') {
-      return Response.json({ filters });
+      return Response.json({
+        filters: {
+          Project: { company_id },
+          Estimate: { company_id },
+          Client: { company_id },
+          Property: { company_id },
+          Document: { company_id },
+          SupportTicket: { company_id },
+          GuardianSubscription: { company_id },
+          ChecklistItem: { company_id },
+          ProjectCost: { company_id },
+          Timesheet: { company_id },
+          PurchaseOrder: { company_id },
+          // NO access to: Supplier, KnowledgeBase, FinancialAlert, IntelligenceInsight
+        },
+        restricted_entities: ['Supplier', 'KnowledgeBase', 'FinancialAlert', 'IntelligenceInsight', 'EstimatePreset']
+      });
     }
 
-    // Technician vede solo progetti/attività dove è assegnato
+    // Technician: ONLY assigned projects/tasks/tickets - NO financial data
     if (user.role === 'technician') {
-      filters.Project = {
+      const myProjects = await base44.entities.Project.filter({
+        company_id,
         $or: [
           { created_by: user.email },
           { team_members: user.email }
         ]
-      };
-      filters.Estimate = {
-        $or: [
-          { created_by: user.email },
-          { project_id: { $in: filters.Project.$or.map(p => p.team_members).flat() } }
-        ]
-      };
-      filters.ChecklistItem = {
-        $or: [
-          { assigned_person: user.email },
-          { created_by: user.email }
-        ]
-      };
-      filters.SupportTicket = { assigned_technician: user.email };
-      filters.Timesheet = { employee_id: user.email };
-      // Technician vede documenti solo per progetti assegnati
-      filters.Document = {
-        $or: [
-          { created_by: user.email },
-          { project_id: { $in: [] } } // Will be populated by project IDs
-        ]
-      };
+      });
+      const myProjectIds = myProjects.map(p => p.id);
+
+      return Response.json({
+        filters: {
+          Project: { id: myProjectIds.length > 0 ? { $in: myProjectIds } : null },
+          ChecklistItem: {
+            $or: [
+              { assigned_person: user.email },
+              { created_by: user.email },
+              { project_id: myProjectIds.length > 0 ? { $in: myProjectIds } : null }
+            ]
+          },
+          SupportTicket: { assigned_technician: user.email },
+          Document: { project_id: myProjectIds.length > 0 ? { $in: myProjectIds } : null },
+          // NO access to: Client, Property, Estimate, GuardianSubscription, ProjectCost, Timesheet, PurchaseOrder, Supplier
+        },
+        restricted_entities: ['Client', 'Property', 'Estimate', 'GuardianSubscription', 'ProjectCost', 'Timesheet', 'PurchaseOrder', 'Supplier', 'KnowledgeBase', 'FinancialAlert', 'IntelligenceInsight', 'EstimatePreset']
+      });
     }
 
-    // Sales vede tutti i clienti, proprietà, preventivi
+    // Sales: Clients, Properties, Estimates - NO project financials
     if (user.role === 'sales') {
-      filters.Client = {};
-      filters.Property = {};
-      filters.Estimate = {};
-      // Sales vede documenti per tutti i clienti
-      filters.Document = {};
-      // Progetti: solo quelli linked to estimates they created
-      filters.Project = { created_by: user.email };
+      return Response.json({
+        filters: {
+          Client: { company_id },
+          Property: { company_id },
+          Estimate: { company_id },
+          Document: { company_id },
+          Project: { company_id, created_by: user.email }, // Only projects from their estimates
+          // NO access to: ProjectCost, Timesheet, PurchaseOrder, Supplier, FinancialAlert
+        },
+        restricted_entities: ['ProjectCost', 'Timesheet', 'PurchaseOrder', 'Supplier', 'FinancialAlert', 'IntelligenceInsight']
+      });
     }
 
-    // Client vede solo i propri dati
+    // Client: ONLY their own data
     if (user.role === 'client') {
-      // Prima fetch i client ID dell'utente
       const userClients = await base44.entities.Client.filter({ email: user.email });
       const clientIds = userClients.map(c => c.id);
       
-      filters.Client = { email: user.email };
-      filters.Property = clientIds.length > 0 ? { client_id: { $in: clientIds } } : { id: null };
-      filters.Estimate = clientIds.length > 0 ? { client_id: { $in: clientIds } } : { id: null };
-      filters.Project = clientIds.length > 0 ? { client_id: { $in: clientIds } } : { id: null };
-      filters.Document = clientIds.length > 0 ? { client_id: { $in: clientIds } } : { id: null };
-      filters.SupportTicket = clientIds.length > 0 ? { client_id: { $in: clientIds } } : { id: null };
-      filters.GuardianSubscription = clientIds.length > 0 ? { client_id: { $in: clientIds } } : { id: null };
+      if (clientIds.length === 0) {
+        return Response.json({
+          filters: {},
+          restricted_entities: ['all']
+        });
+      }
+
+      return Response.json({
+        filters: {
+          Client: { id: { $in: clientIds } },
+          Property: { client_id: { $in: clientIds } },
+          Estimate: { client_id: { $in: clientIds } },
+          Project: { client_id: { $in: clientIds } },
+          Document: { client_id: { $in: clientIds } },
+          SupportTicket: { client_id: { $in: clientIds } },
+          GuardianSubscription: { client_id: { $in: clientIds } },
+          // NO access to: ProjectCost, Timesheet, PurchaseOrder, Supplier, KnowledgeBase, FinancialAlert, IntelligenceInsight
+        },
+        restricted_entities: ['ProjectCost', 'Timesheet', 'PurchaseOrder', 'Supplier', 'KnowledgeBase', 'FinancialAlert', 'IntelligenceInsight', 'EstimatePreset']
+      });
     }
 
-    return Response.json({ filters });
+    // Default: company_id filter only
+    return Response.json({
+      filters: {
+        Project: { company_id },
+        Estimate: { company_id },
+        Client: { company_id },
+        Property: { company_id },
+        Document: { company_id },
+        SupportTicket: { company_id },
+        GuardianSubscription: { company_id },
+        ChecklistItem: { company_id },
+      }
+    });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

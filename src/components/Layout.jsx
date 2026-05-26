@@ -39,6 +39,9 @@ const navItems = [
   { path: '/architecture-review', icon: Database, label: 'Architecture Review', roles: ['admin'] },
   { path: '/company-settings', icon: Building2, label: 'Company Settings', roles: ['company_admin', 'admin'] },
   { path: '/subscription-plans', icon: CreditCard, label: 'Piani Subscription', roles: ['company_admin', 'admin'] },
+  { path: '/permissions-test', icon: Shield, label: 'Permissions Test', roles: ['admin'] },
+  { path: '/data-integrity', icon: Database, label: 'Data Integrity', roles: ['admin'] },
+  { path: '/go-live-checklist', icon: CheckSquare, label: 'Go Live Checklist', roles: ['admin'] },
 ];
 
 export default function Layout() {

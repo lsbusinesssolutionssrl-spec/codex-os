@@ -14,6 +14,10 @@
       "type": "string",
       "title": "Property"
     },
+    "project_id": {
+      "type": "string",
+      "title": "Project (Originale)"
+    },
     "start_date": {
       "type": "string",
       "title": "Start Date"
@@ -28,7 +32,8 @@
       "enum": [
         "Active",
         "Paused",
-        "Cancelled"
+        "Cancelled",
+        "Archived"
       ],
       "default": "Active"
     },
@@ -42,6 +47,7 @@
     }
   },
   "required": [
-    "client_id"
+    "client_id",
+    "property_id"
   ]
 }

@@ -18,7 +18,7 @@
       "type": "string",
       "title": "Property"
     },
-    "guardian_id": {
+    "guardian_subscription_id": {
       "type": "string",
       "title": "Guardian Subscription"
     },
@@ -53,7 +53,8 @@
         "In Progress",
         "Waiting Client",
         "Resolved",
-        "Closed"
+        "Closed",
+        "Archived"
       ],
       "default": "Open"
     },
@@ -75,6 +76,7 @@
   },
   "required": [
     "title",
-    "client_id"
+    "client_id",
+    "property_id"
   ]
 }

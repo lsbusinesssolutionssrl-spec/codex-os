@@ -48,6 +48,9 @@ import ExecutiveInsights from './pages/ExecutiveInsights';
 import ArchitectureReview from './pages/ArchitectureReview';
 import CompanySettings from './pages/CompanySettings';
 import SubscriptionPlans from './pages/SubscriptionPlans';
+import PermissionsTest from './pages/PermissionsTest';
+import DataIntegrity from './pages/DataIntegrity';
+import GoLiveChecklist from './pages/GoLiveChecklist';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -117,7 +120,10 @@ const AuthenticatedApp = () => {
         <Route path="/architecture-review" element={<ArchitectureReview />} />
         <Route path="/company-settings" element={<CompanySettings />} />
         <Route path="/subscription-plans" element={<SubscriptionPlans />} />
-        </Route>
+        <Route path="/permissions-test" element={<PermissionsTest />} />
+        <Route path="/data-integrity" element={<DataIntegrity />} />
+        <Route path="/go-live-checklist" element={<GoLiveChecklist />} />
+      </Route>
       <Route element={<PortalLayout />}>
         <Route path="/portal" element={<ClientPortal />} />
       </Route>
