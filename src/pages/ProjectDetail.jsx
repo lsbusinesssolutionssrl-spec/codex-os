@@ -283,6 +283,7 @@ export default function ProjectDetail() {
           {field('title', 'Titolo')}
           {field('status', 'Stato', 'text', STATUSES)}
           {field('contract_value', 'Valore Contratto (€)', 'number')}
+          {field('approved_variations', 'Variazioni Approvate (€)', 'number')}
           {field('material_costs', 'Costo Materiali (€)', 'number')}
           {field('labor_costs', 'Costo Manodopera (€)', 'number')}
           {field('other_costs', 'Altri Costi (€)', 'number')}

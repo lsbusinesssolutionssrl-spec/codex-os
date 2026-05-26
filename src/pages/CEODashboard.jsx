@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, TrendingUp, DollarSign, Users, AlertCircle, Calendar, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { BarChart3, TrendingUp, DollarSign, Users, AlertCircle, Calendar, ArrowUpRight, ArrowDownRight, FileText } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 export default function CEODashboard() {
@@ -30,10 +30,11 @@ export default function CEODashboard() {
 
   useEffect(() => {
     const load = async () => {
-      const [projects, estimates, guardians, costs] = await Promise.all([
+      const [projects, estimates, guardians, costs, projectCosts] = await Promise.all([
         base44.entities.Project.list(),
         base44.entities.Estimate.list(),
         base44.entities.GuardianSubscription.filter({ status: 'Active' }),
+        base44.entities.ProjectCost.list(),
         base44.entities.ProjectCost.list(),
       ]);
 
@@ -73,6 +74,26 @@ export default function CEODashboard() {
       // Guardian MRR/ARR
       const guardianMRR = guardians.reduce((sum, g) => sum + (g.monthly_price || 0), 0);
       const guardianARR = guardianMRR * 12;
+
+      // Cash Flow calculations
+      const today = new Date();
+      const days30 = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const days60 = new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000);
+      const days90 = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000);
+
+      const calcIncoming = (endDate) => projects
+        .filter(p => p.expected_end_date && new Date(p.expected_end_date) <= endDate)
+        .reduce((sum, p) => sum + ((p.contract_value || 0) - (p.payment_collected || 0)), 0);
+
+      const calcOutgoing = (endDate) => projectCosts
+        .filter(c => c.date && new Date(c.date) <= endDate && !c.paid)
+        .reduce((sum, c) => sum + (c.total_cost || 0), 0);
+
+      setCashFlow({
+        days30: { incoming: calcIncoming(days30), outgoing: calcOutgoing(days30), net: calcIncoming(days30) - calcOutgoing(days30) },
+        days60: { incoming: calcIncoming(days60), outgoing: calcOutgoing(days60), net: calcIncoming(days60) - calcOutgoing(days60) },
+        days90: { incoming: calcIncoming(days90), outgoing: calcOutgoing(days90), net: calcIncoming(days90) - calcOutgoing(days90) },
+      });
 
       // Pipeline (estimates not converted)
       const pipelineValue = estimates
@@ -116,9 +137,26 @@ export default function CEODashboard() {
           <h1 className="text-2xl font-bold text-gray-900">CEO Dashboard</h1>
           <p className="text-sm text-gray-500 mt-0.5">Panoramica finanziaria - Stefano Desiato</p>
         </div>
-        <div className="text-right">
-          <p className="text-xs text-gray-500">Data</p>
-          <p className="text-sm font-semibold text-gray-900">{new Date().toLocaleDateString('it-IT')}</p>
+        <div className="flex items-center gap-3">
+          <button onClick={async () => {
+            try {
+              const response = await base44.functions.invoke('generateFinancialReports', { report_type: 'financial' });
+              const blob = new Blob([response.data], { type: 'application/pdf' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `Report_Finanziario_${new Date().toISOString().split('T')[0]}.pdf`;
+              a.click();
+            } catch (error) {
+              console.error('Error:', error);
+            }
+          }} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+            <FileText className="w-3.5 h-3.5" /> Report
+          </button>
+          <div className="text-right">
+            <p className="text-xs text-gray-500">Data</p>
+            <p className="text-sm font-semibold text-gray-900">{new Date().toLocaleDateString('it-IT')}</p>
+          </div>
         </div>
       </div>
 
@@ -181,30 +219,33 @@ export default function CEODashboard() {
 
       {/* Cash Flow Forecast */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 className="text-sm font-semibold text-gray-900 mb-4">Cash Flow Forecast</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-gray-900">Cash Flow Forecast</h2>
+          <button onClick={() => navigate('/cash-flow')} className="text-xs text-blue-600 hover:underline">Vedi dettagli →</button>
+        </div>
         <div className="grid grid-cols-3 gap-4">
           <div>
             <p className="text-xs text-gray-500 mb-2">30 Giorni</p>
             <div className="space-y-1 text-sm">
-              <p className="text-green-600">+€0</p>
-              <p className="text-red-600">-€0</p>
-              <p className="font-bold text-gray-900">Net: €0</p>
+              <p className="text-green-600 font-semibold">+€{cashFlow.days30.incoming.toLocaleString('it-IT')}</p>
+              <p className="text-red-600 font-semibold">-€{cashFlow.days30.outgoing.toLocaleString('it-IT')}</p>
+              <p className={`font-bold ${cashFlow.days30.net >= 0 ? 'text-blue-600' : 'text-red-600'}`}>Net: €{cashFlow.days30.net.toLocaleString('it-IT')}</p>
             </div>
           </div>
           <div>
             <p className="text-xs text-gray-500 mb-2">60 Giorni</p>
             <div className="space-y-1 text-sm">
-              <p className="text-green-600">+€0</p>
-              <p className="text-red-600">-€0</p>
-              <p className="font-bold text-gray-900">Net: €0</p>
+              <p className="text-green-600 font-semibold">+€{cashFlow.days60.incoming.toLocaleString('it-IT')}</p>
+              <p className="text-red-600 font-semibold">-€{cashFlow.days60.outgoing.toLocaleString('it-IT')}</p>
+              <p className={`font-bold ${cashFlow.days60.net >= 0 ? 'text-blue-600' : 'text-red-600'}`}>Net: €{cashFlow.days60.net.toLocaleString('it-IT')}</p>
             </div>
           </div>
           <div>
             <p className="text-xs text-gray-500 mb-2">90 Giorni</p>
             <div className="space-y-1 text-sm">
-              <p className="text-green-600">+€0</p>
-              <p className="text-red-600">-€0</p>
-              <p className="font-bold text-gray-900">Net: €0</p>
+              <p className="text-green-600 font-semibold">+€{cashFlow.days90.incoming.toLocaleString('it-IT')}</p>
+              <p className="text-red-600 font-semibold">-€{cashFlow.days90.outgoing.toLocaleString('it-IT')}</p>
+              <p className={`font-bold ${cashFlow.days90.net >= 0 ? 'text-blue-600' : 'text-red-600'}`}>Net: €{cashFlow.days90.net.toLocaleString('it-IT')}</p>
             </div>
           </div>
         </div>

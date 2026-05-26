@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, AlertCircle, CheckCircle2, DollarSign, Calendar, Users, BarChart3 } from 'lucide-react';
+import { TrendingUp, AlertCircle, CheckCircle2, DollarSign, Calendar, Users, BarChart3, FileText, Download, Package } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 
@@ -64,6 +64,17 @@ export default function FinancialControl() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Controllo Finanziario Progetti</h1>
           <p className="text-sm text-gray-500 mt-0.5">Profitabilità in tempo reale</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => navigate('/cash-flow')} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+            <DollarSign className="w-3.5 h-3.5" /> Cash Flow
+          </button>
+          <button onClick={() => navigate('/timesheets')} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+            <Calendar className="w-3.5 h-3.5" /> Timesheet
+          </button>
+          <button onClick={() => navigate('/purchase-orders')} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+            <Package className="w-3.5 h-3.5" /> Ordini
+          </button>
         </div>
       </div>
 

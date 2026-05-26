@@ -2,14 +2,16 @@ import { TrendingUp, TrendingDown, Euro, Wallet, PieChart } from 'lucide-react';
 
 export default function FinancialSummary({ project }) {
   const contractValue = project.contract_value || 0;
+  const approvedVariations = project.approved_variations || 0;
+  const totalRevenue = contractValue + approvedVariations;
   const materialCosts = project.material_costs || 0;
   const laborCosts = project.labor_costs || 0;
   const otherCosts = project.other_costs || 0;
   const totalCosts = materialCosts + laborCosts + otherCosts;
-  const grossMargin = contractValue - totalCosts;
-  const grossMarginPct = contractValue > 0 ? (grossMargin / contractValue) * 100 : 0;
+  const grossMargin = totalRevenue - totalCosts;
+  const grossMarginPct = totalRevenue > 0 ? (grossMargin / totalRevenue) * 100 : 0;
   const paymentCollected = project.payment_collected || 0;
-  const remainingBalance = contractValue - paymentCollected;
+  const remainingBalance = totalRevenue - paymentCollected;
 
   const marginColor = grossMarginPct >= 35 ? 'text-green-600' : grossMarginPct >= 25 ? 'text-orange-500' : 'text-red-500';
   const marginBg = grossMarginPct >= 25 ? 'bg-orange-50' : 'bg-red-50';
@@ -17,6 +19,7 @@ export default function FinancialSummary({ project }) {
 
   const cards = [
     { label: 'Valore Contratto', value: contractValue, prefix: '€', icon: Euro, color: '#1147FF' },
+    { label: 'Variazioni', value: approvedVariations, prefix: '€', icon: TrendingUp, color: '#10B981' },
     { label: 'Costi Totali', value: totalCosts, prefix: '€', icon: Wallet, color: '#EF4444' },
     { label: 'Margine Lordo', value: grossMargin, prefix: '€', suffix: ` (${grossMarginPct.toFixed(1)}%)`, icon: PieChart, color: grossMarginPct >= 35 ? '#10B981' : grossMarginPct >= 25 ? '#F59E0B' : '#EF4444' },
     { label: 'Saldo Residuo', value: remainingBalance, prefix: '€', icon: Euro, color: '#0D9488' },

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Home, FileText, FolderKanban,
-  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2, BookOpen, TrendingUp, Crown
+  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2, BookOpen, TrendingUp, Crown, Clock, Package, DollarSign
 } from 'lucide-react';
 
 import { base44 } from '@/api/base44Client';
@@ -29,6 +29,9 @@ const navItems = [
   { path: '/financial-control', icon: TrendingUp, label: 'Controllo Finanziario', roles: ['admin'] },
   { path: '/ceo-dashboard', icon: Crown, label: 'CEO Dashboard', roles: ['admin'] },
   { path: '/suppliers', icon: Users2, label: 'Fornitori' },
+  { path: '/timesheets', icon: Clock, label: 'Timesheet' },
+  { path: '/purchase-orders', icon: Package, label: 'Ordini Acquisto' },
+  { path: '/cash-flow', icon: DollarSign, label: 'Cash Flow', roles: ['admin'] },
 ];
 
 export default function Layout() {

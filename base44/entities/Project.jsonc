@@ -56,6 +56,21 @@
       "type": "number",
       "title": "Contract Value (\u20ac)"
     },
+    "approved_variations": {
+      "type": "number",
+      "title": "Variazioni Approvate (\u20ac)",
+      "default": 0
+    },
+    "total_invoiced": {
+      "type": "number",
+      "title": "Totale Fatturato (\u20ac)",
+      "default": 0
+    },
+    "total_collected": {
+      "type": "number",
+      "title": "Totale Incassato (\u20ac)",
+      "default": 0
+    },
     "material_costs": {
       "type": "number",
       "title": "Material Costs (\u20ac)"

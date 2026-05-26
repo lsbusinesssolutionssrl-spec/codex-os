@@ -67,9 +67,90 @@ Deno.serve(async (req) => {
       { title: 'Manutenzione caldaia', client_id: clients[4].id, property_id: properties[4].id, issue_type: 'Maintenance', priority: 'Medium', status: 'Resolved', notes: 'Fatto', assigned_technician: 'Luigi' },
     ]);
 
+    // 5 Suppliers
+    const suppliers = await base44.asServiceRole.entities.Supplier.bulkCreate([
+      { name: 'Edil Roma SRL', category: 'Materials', phone: '+39 06 1234567', email: 'info@edilroma.it', address: 'Via Tiburtina 500, Roma', payment_terms: '30 days', rating: 4.5, annual_spend: 45000, notes: 'Fornitore principale' },
+      { name: 'Elettro Fast', category: 'Electrical', phone: '+39 02 2345678', email: 'vendite@elettrofast.it', address: 'Viale Monza 120, Milano', payment_terms: '15 days', rating: 4.8, annual_spend: 32000, notes: 'Consegne veloci' },
+      { name: 'Idro Point', category: 'Plumbing', phone: '+39 055 3456789', email: 'info@idropoint.it', address: 'Via Pratese 80, Firenze', payment_terms: '30 days', rating: 4.2, annual_spend: 28000, notes: '' },
+      { name: 'Noleggi & Co', category: 'Equipment Rental', phone: '+39 011 4567890', email: 'noleggi@nolieco.it', address: 'Corso Francia 200, Torino', payment_terms: 'Immediate', rating: 4.0, annual_spend: 15000, notes: 'Noleggio piattaforme' },
+      { name: 'Sub Pro SRL', category: 'Subcontractor', phone: '+39 051 5678901', email: 'info@subpro.it', address: 'Via Stalingrado 50, Bologna', payment_terms: '60 days', rating: 4.6, annual_spend: 52000, notes: 'Specializzati' },
+    ]);
+
+    // 18 Project Costs
+    const projectCosts = await base44.asServiceRole.entities.ProjectCost.bulkCreate([
+      { project_id: projects[0].id, cost_type: 'Material', category: 'Cavi', supplier_id: suppliers[0].id, description: 'Cavi elettrici 100m', quantity: 2, unit_cost: 150, total_cost: 300, date: '2026-05-05', paid: false },
+      { project_id: projects[0].id, cost_type: 'Labor', category: 'Elettricista', description: 'Installazione impianto', quantity: 40, unit_cost: 25, total_cost: 1000, date: '2026-05-10', paid: false },
+      { project_id: projects[0].id, cost_type: 'Material', category: 'Materiali', supplier_id: suppliers[1].id, description: 'Quadro elettrico', quantity: 1, unit_cost: 450, total_cost: 450, date: '2026-05-08', paid: true },
+      { project_id: projects[1].id, cost_type: 'Material', category: 'Networking', supplier_id: suppliers[0].id, description: 'Cavi CAT6', quantity: 500, unit_cost: 1.5, total_cost: 750, date: '2026-06-02', paid: false },
+      { project_id: projects[1].id, cost_type: 'Labor', category: 'Tecnico', description: 'Cablaggio', quantity: 80, unit_cost: 30, total_cost: 2400, date: '2026-06-05', paid: false },
+      { project_id: projects[1].id, cost_type: 'Vehicle', category: 'Trasporto', description: 'Trasporto materiale', quantity: 100, unit_cost: 1, total_cost: 100, date: '2026-06-01', paid: true },
+      { project_id: projects[2].id, cost_type: 'Material', category: 'Edilizia', supplier_id: suppliers[0].id, description: 'Pavimenti', quantity: 150, unit_cost: 45, total_cost: 6750, date: '2026-03-15', paid: true },
+      { project_id: projects[2].id, cost_type: 'Labor', category: 'Posatore', description: 'Posa pavimenti', quantity: 60, unit_cost: 35, total_cost: 2100, date: '2026-03-20', paid: true },
+      { project_id: projects[2].id, cost_type: 'Subcontractor', category: 'Idraulico', supplier_id: suppliers[4].id, description: 'Impianto idraulico', quantity: 1, unit_cost: 8000, total_cost: 8000, date: '2026-04-01', paid: false },
+      { project_id: projects[2].id, cost_type: 'Other', category: 'Permessi', description: 'Permesso comunale', quantity: 1, unit_cost: 1200, total_cost: 1200, date: '2026-03-01', paid: true },
+      { project_id: projects[3].id, cost_type: 'Material', category: 'Pittura', supplier_id: suppliers[0].id, description: 'Vernici', quantity: 50, unit_cost: 12, total_cost: 600, date: '2026-02-10', paid: true },
+      { project_id: projects[3].id, cost_type: 'Labor', category: 'Imbianchino', description: 'Tinteggiatura', quantity: 40, unit_cost: 28, total_cost: 1120, date: '2026-02-15', paid: true },
+      { project_id: projects[3].id, cost_type: 'Vehicle', category: 'Noleggio', supplier_id: suppliers[3].id, description: 'Piattaforma aerea', quantity: 5, unit_cost: 180, total_cost: 900, date: '2026-02-05', paid: true },
+      { project_id: projects[3].id, cost_type: 'Other', category: 'Smaltimento', description: 'Smaltimento macerie', quantity: 1, unit_cost: 450, total_cost: 450, date: '2026-04-20', paid: false },
+      { project_id: projects[0].id, cost_type: 'Other', category: 'Carburante', description: 'Trasferte', quantity: 1, unit_cost: 120, total_cost: 120, date: '2026-05-15', paid: false },
+      { project_id: projects[1].id, cost_type: 'Subcontractor', category: 'Specializzato', supplier_id: suppliers[4].id, description: 'Configurazione server', quantity: 1, unit_cost: 1500, total_cost: 1500, date: '2026-06-10', paid: false },
+      { project_id: projects[2].id, cost_type: 'Material', category: 'Infissi', supplier_id: suppliers[0].id, description: 'Porte interne', quantity: 6, unit_cost: 250, total_cost: 1500, date: '2026-04-10', paid: false },
+      { project_id: projects[3].id, cost_type: 'Labor', category: 'Operaio', description: 'Manodopera varia', quantity: 20, unit_cost: 22, total_cost: 440, date: '2026-03-01', paid: true },
+    ]);
+
+    // 10 Timesheets
+    const timesheets = await base44.asServiceRole.entities.Timesheet.bulkCreate([
+      { employee_id: 'user1', project_id: projects[0].id, date: '2026-05-05', hours: 8, hourly_rate: 25, total_labor_cost: 200, notes: 'Installazione quadro' },
+      { employee_id: 'user2', project_id: projects[0].id, date: '2026-05-06', hours: 6, hourly_rate: 25, total_labor_cost: 150, notes: 'Cablaggio' },
+      { employee_id: 'user1', project_id: projects[1].id, date: '2026-06-02', hours: 8, hourly_rate: 30, total_labor_cost: 240, notes: 'Rack networking' },
+      { employee_id: 'user3', project_id: projects[2].id, date: '2026-03-15', hours: 10, hourly_rate: 35, total_labor_cost: 350, notes: 'Posa pavimenti' },
+      { employee_id: 'user2', project_id: projects[2].id, date: '2026-03-20', hours: 8, hourly_rate: 28, total_labor_cost: 224, notes: 'Rifiniture' },
+      { employee_id: 'user1', project_id: projects[3].id, date: '2026-02-10', hours: 7, hourly_rate: 25, total_labor_cost: 175, notes: 'Pittura' },
+      { employee_id: 'user3', project_id: projects[3].id, date: '2026-02-15', hours: 9, hourly_rate: 30, total_labor_cost: 270, notes: 'Pulizia' },
+      { employee_id: 'user2', project_id: projects[0].id, date: '2026-05-10', hours: 8, hourly_rate: 25, total_labor_cost: 200, notes: 'Collaudo' },
+      { employee_id: 'user1', project_id: projects[1].id, date: '2026-06-05', hours: 6, hourly_rate: 30, total_labor_cost: 180, notes: 'Test' },
+      { employee_id: 'user3', project_id: projects[2].id, date: '2026-04-01', hours: 8, hourly_rate: 35, total_labor_cost: 280, notes: 'Idraulica' },
+    ]);
+
+    // 5 Purchase Orders
+    const purchaseOrders = await base44.asServiceRole.entities.PurchaseOrder.bulkCreate([
+      { project_id: projects[0].id, supplier_id: suppliers[1].id, order_number: 'PO-2026-001', status: 'Received', order_date: '2026-05-01', expected_delivery: '2026-05-08', actual_delivery: '2026-05-07', total_amount: 450, notes: 'Materiale elettrico' },
+      { project_id: projects[1].id, supplier_id: suppliers[0].id, order_number: 'PO-2026-002', status: 'Ordered', order_date: '2026-06-01', expected_delivery: '2026-06-10', total_amount: 750, notes: 'Cavi networking' },
+      { project_id: projects[2].id, supplier_id: suppliers[0].id, order_number: 'PO-2026-003', status: 'Received', order_date: '2026-03-10', expected_delivery: '2026-03-15', actual_delivery: '2026-03-14', total_amount: 6750, notes: 'Pavimenti' },
+      { project_id: projects[2].id, supplier_id: suppliers[4].id, order_number: 'PO-2026-004', status: 'Partially Received', order_date: '2026-03-25', expected_delivery: '2026-04-05', total_amount: 8000, notes: 'Lavori idraulici' },
+      { project_id: projects[3].id, supplier_id: suppliers[3].id, order_number: 'PO-2026-005', status: 'Closed', order_date: '2026-02-01', expected_delivery: '2026-02-05', actual_delivery: '2026-02-05', total_amount: 900, notes: 'Noleggio piattaforma' },
+    ]);
+
+    // 3 Financial Alerts
+    const financialAlerts = await base44.asServiceRole.entities.FinancialAlert.bulkCreate([
+      { alert_type: 'Margin Below Target', project_id: projects[0].id, severity: 'High', message: 'Margine progetto sotto il 25%', amount: 1200, created_date: '2026-05-15' },
+      { alert_type: 'Invoice Overdue', severity: 'Critical', message: 'Fattura scaduta da 30 giorni', amount: 4500, due_date: '2026-04-26', created_date: '2026-05-20' },
+      { alert_type: 'Project Over Budget', project_id: projects[2].id, severity: 'Medium', message: 'Costi superano budget del 10%', amount: 4500, created_date: '2026-04-10' },
+    ]);
+
+    // 3 Guardian Subscriptions
+    const guardians = await base44.asServiceRole.entities.GuardianSubscription.bulkCreate([
+      { client_id: clients[0].id, property_id: properties[0].id, start_date: '2026-01-01', monthly_price: 99, status: 'Active', included_services: 'Monitoraggio 24/7, intervento urgente', notes: 'Villa Rossi' },
+      { client_id: clients[2].id, property_id: properties[2].id, start_date: '2026-02-01', monthly_price: 149, status: 'Active', included_services: 'Monitoraggio avanzato, manutenzione programmata', notes: 'Ufficio Verde' },
+      { client_id: clients[4].id, property_id: properties[4].id, start_date: '2026-03-01', monthly_price: 199, status: 'Active', included_services: 'Pacchetto completo enterprise', notes: 'Capannone Gialli' },
+    ]);
+
     return Response.json({
       message: 'Dati sample creati con successo!',
-      counts: { clients: clients.length, properties: properties.length, estimates: estimates.length, projects: projects.length, checklists: checklists.length, tickets: tickets.length },
+      counts: {
+        clients: clients.length,
+        properties: properties.length,
+        estimates: estimates.length,
+        projects: projects.length,
+        checklists: checklists.length,
+        tickets: tickets.length,
+        suppliers: suppliers.length,
+        projectCosts: projectCosts.length,
+        timesheets: timesheets.length,
+        purchaseOrders: purchaseOrders.length,
+        financialAlerts: financialAlerts.length,
+        guardians: guardians.length,
+      },
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

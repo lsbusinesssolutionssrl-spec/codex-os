@@ -38,6 +38,9 @@ import FinancialControl from './pages/FinancialControl';
 import ProjectFinancialDetail from './pages/ProjectFinancialDetail';
 import CEODashboard from './pages/CEODashboard';
 import Suppliers from './pages/Suppliers';
+import Timesheets from './pages/Timesheets';
+import PurchaseOrders from './pages/PurchaseOrders';
+import CashFlow from './pages/CashFlow';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -97,6 +100,9 @@ const AuthenticatedApp = () => {
         <Route path="/projects/:id/financial" element={<ProjectFinancialDetail />} />
         <Route path="/ceo-dashboard" element={<CEODashboard />} />
         <Route path="/suppliers" element={<Suppliers />} />
+        <Route path="/timesheets" element={<Timesheets />} />
+        <Route path="/purchase-orders" element={<PurchaseOrders />} />
+        <Route path="/cash-flow" element={<CashFlow />} />
       </Route>
       <Route element={<PortalLayout />}>
         <Route path="/portal" element={<ClientPortal />} />
