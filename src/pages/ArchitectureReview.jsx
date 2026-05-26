@@ -168,7 +168,11 @@ export default function ArchitectureReview() {
     const auditResult = {
       summary: {
         totalEntities: 18,
-        totalRecords: entities.reduce((sum, e) => sum + e.length, 0),
+        totalRecords: estimates.length + projects.length + clients.length + properties.length + 
+          projectCosts.length + timesheets.length + purchaseOrders.length + suppliers.length +
+          tickets.length + guardians.length + checklists.length + documents.length +
+          estimatePresets.length + financialAlerts.length + knowledgeBase.length + 
+          projectLearning.length + intelligenceInsights.length,
         criticalIssues: issues.filter(i => i.severity === 'High').length,
         mediumIssues: issues.filter(i => i.severity === 'Medium').length,
         lowIssues: issues.filter(i => i.severity === 'Low').length,
