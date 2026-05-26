@@ -37,6 +37,7 @@
         "Electrical System",
         "Networking",
         "Security",
+        "Roofing",
         "Maintenance",
         "Other"
       ]
@@ -50,6 +51,42 @@
         "Intelligence"
       ]
     },
+    "square_meters": {
+      "type": "number",
+      "title": "Superficie (mq)"
+    },
+    "number_of_bathrooms": {
+      "type": "number",
+      "title": "Numero Bagni"
+    },
+    "number_of_rooms": {
+      "type": "number",
+      "title": "Numero Stanze"
+    },
+    "property_type": {
+      "type": "string",
+      "title": "Tipo Propriet\u00e0",
+      "enum": [
+        "Apartment",
+        "Villa",
+        "Office",
+        "Industrial Building",
+        "Commercial Space"
+      ]
+    },
+    "location": {
+      "type": "string",
+      "title": "Localit\u00e0"
+    },
+    "urgency": {
+      "type": "string",
+      "title": "Urgenza",
+      "enum": [
+        "Standard",
+        "Urgent"
+      ],
+      "default": "Standard"
+    },
     "revenue": {
       "type": "number",
       "title": "Estimated Revenue (\u20ac)"
@@ -62,9 +99,21 @@
       "type": "number",
       "title": "Labor Cost (\u20ac)"
     },
+    "equipment_cost": {
+      "type": "number",
+      "title": "Equipment Cost (\u20ac)"
+    },
+    "subcontractor_cost": {
+      "type": "number",
+      "title": "Subcontractor Cost (\u20ac)"
+    },
     "other_costs": {
       "type": "number",
       "title": "Other Costs (\u20ac)"
+    },
+    "total_costs": {
+      "type": "number",
+      "title": "Total Costs (\u20ac)"
     },
     "gross_margin": {
       "type": "number",
@@ -78,6 +127,10 @@
       "type": "string",
       "title": "Estimated Duration"
     },
+    "project_summary": {
+      "type": "string",
+      "title": "Project Summary"
+    },
     "included_works": {
       "type": "string",
       "title": "Included Works"
@@ -86,13 +139,48 @@
       "type": "string",
       "title": "Excluded Works"
     },
+    "assumptions": {
+      "type": "string",
+      "title": "Assumptions"
+    },
     "payment_terms": {
       "type": "string",
       "title": "Payment Terms"
     },
+    "warranty_notes": {
+      "type": "string",
+      "title": "Warranty Notes"
+    },
+    "follow_up_date": {
+      "type": "string",
+      "title": "Follow-up Date"
+    },
+    "expiry_date": {
+      "type": "string",
+      "title": "Expiry Date"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "title": "Rejection Reason",
+      "enum": [
+        "Price too high",
+        "Timing",
+        "Chose another company",
+        "Project postponed",
+        "Other"
+      ]
+    },
+    "rejection_notes": {
+      "type": "string",
+      "title": "Rejection Notes"
+    },
+    "client_comments": {
+      "type": "string",
+      "title": "Client Comments"
+    },
     "notes": {
       "type": "string",
-      "title": "Notes"
+      "title": "Internal Notes"
     },
     "signature_url": {
       "type": "string",
@@ -101,6 +189,13 @@
     "signed_at": {
       "type": "string",
       "title": "Signed At"
+    },
+    "survey_photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Survey Photos"
     }
   },
   "required": [

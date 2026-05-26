@@ -1,0 +1,93 @@
+{
+  "name": "EstimatePreset",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Nome Pacchetto"
+    },
+    "estimate_type": {
+      "type": "string",
+      "title": "Tipo Preventivo",
+      "enum": [
+        "Bathroom",
+        "Full Home",
+        "Electrical System",
+        "Networking",
+        "Security",
+        "Roofing",
+        "Maintenance",
+        "Other",
+        "Guardian"
+      ]
+    },
+    "quality_level": {
+      "type": "string",
+      "title": "Livello Qualit\u00e0",
+      "enum": [
+        "Essential",
+        "Smart",
+        "Intelligence"
+      ]
+    },
+    "base_price": {
+      "type": "number",
+      "title": "Prezzo Base (\u20ac)"
+    },
+    "material_cost_pct": {
+      "type": "number",
+      "title": "% Costo Materiali",
+      "default": 40
+    },
+    "labor_cost_pct": {
+      "type": "number",
+      "title": "% Costo Manodopera",
+      "default": 45
+    },
+    "equipment_cost_pct": {
+      "type": "number",
+      "title": "% Costo Attrezzature",
+      "default": 5
+    },
+    "subcontractor_cost_pct": {
+      "type": "number",
+      "title": "% Subappaltatori",
+      "default": 5
+    },
+    "other_cost_pct": {
+      "type": "number",
+      "title": "% Altri Costi",
+      "default": 5
+    },
+    "included_works": {
+      "type": "string",
+      "title": "Lavori Inclusi (default)"
+    },
+    "excluded_works": {
+      "type": "string",
+      "title": "Lavori Esclusi (default)"
+    },
+    "payment_terms": {
+      "type": "string",
+      "title": "Condizioni di Pagamento (default)"
+    },
+    "warranty_notes": {
+      "type": "string",
+      "title": "Note Garanzia (default)"
+    },
+    "estimated_duration": {
+      "type": "string",
+      "title": "Durata Stimata (default)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Attivo",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "estimate_type",
+    "base_price"
+  ]
+}

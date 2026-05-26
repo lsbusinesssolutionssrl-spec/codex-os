@@ -13,6 +13,8 @@ import Properties from './pages/Properties';
 import PropertyDetail from './pages/PropertyDetail';
 import Estimates from './pages/Estimates';
 import EstimateDetail from './pages/EstimateDetail';
+import AIEstimator from './pages/AIEstimator';
+import EstimateAcceptance from './pages/EstimateAcceptance';
 import Projects from './pages/Projects';
 import Checklists from './pages/Checklists';
 import Guardian from './pages/Guardian';
@@ -68,6 +70,8 @@ const AuthenticatedApp = () => {
         <Route path="/properties/:id" element={<PropertyDetail />} />
         <Route path="/estimates" element={<Estimates />} />
         <Route path="/estimates/:id" element={<EstimateDetail />} />
+        <Route path="/ai-estimator" element={<AIEstimator />} />
+        <Route path="/estimate-acceptance/:id" element={<EstimateAcceptance />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/projects/:id" element={<ProjectDetail />} />
         <Route path="/checklists" element={<Checklists />} />
