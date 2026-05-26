@@ -2,6 +2,10 @@
   "name": "IntelligenceInsight",
   "type": "object",
   "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
     "insight_type": {
       "type": "string",
       "title": "Tipo Insight",

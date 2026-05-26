@@ -2,6 +2,10 @@
   "name": "Timesheet",
   "type": "object",
   "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
     "employee_id": {
       "type": "string",
       "title": "Employee"

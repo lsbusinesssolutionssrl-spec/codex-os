@@ -2,6 +2,10 @@
   "name": "SupportTicket",
   "type": "object",
   "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
     "title": {
       "type": "string",
       "title": "Title"

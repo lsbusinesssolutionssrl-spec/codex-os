@@ -2,6 +2,10 @@
   "name": "FinancialAlert",
   "type": "object",
   "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
     "alert_type": {
       "type": "string",
       "title": "Alert Type",

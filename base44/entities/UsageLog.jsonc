@@ -1,0 +1,62 @@
+{
+  "name": "UsageLog",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "resource_type": {
+      "type": "string",
+      "title": "Resource Type",
+      "enum": [
+        "user",
+        "project",
+        "estimate",
+        "ticket",
+        "storage",
+        "ai_request",
+        "client",
+        "property",
+        "guardian_subscription"
+      ]
+    },
+    "resource_id": {
+      "type": "string",
+      "title": "Resource ID"
+    },
+    "action": {
+      "type": "string",
+      "title": "Action",
+      "enum": [
+        "create",
+        "update",
+        "delete",
+        "consume"
+      ]
+    },
+    "quantity": {
+      "type": "number",
+      "title": "Quantity",
+      "default": 1
+    },
+    "timestamp": {
+      "type": "string",
+      "title": "Timestamp"
+    },
+    "user_email": {
+      "type": "string",
+      "title": "User Email"
+    },
+    "metadata": {
+      "type": "object",
+      "title": "Metadata"
+    }
+  },
+  "required": [
+    "company_id",
+    "resource_type",
+    "action",
+    "timestamp"
+  ]
+}

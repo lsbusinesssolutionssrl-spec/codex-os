@@ -2,6 +2,10 @@
   "name": "EstimatePreset",
   "type": "object",
   "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
     "name": {
       "type": "string",
       "title": "Nome Pacchetto"

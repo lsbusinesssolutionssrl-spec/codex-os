@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Home, FileText, FolderKanban,
-  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2, BookOpen, TrendingUp, Crown, Clock, Package, DollarSign, Brain, Database
+  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2, BookOpen, TrendingUp, Crown, Clock, Package, DollarSign, Brain, Database, Building2, CreditCard
 } from 'lucide-react';
 
 import { base44 } from '@/api/base44Client';
@@ -37,6 +37,8 @@ const navItems = [
   { path: '/ai-advisor', icon: Bot, label: 'AI Advisor', roles: ['admin'] },
   { path: '/executive-insights', icon: Crown, label: 'Executive Insights', roles: ['admin'] },
   { path: '/architecture-review', icon: Database, label: 'Architecture Review', roles: ['admin'] },
+  { path: '/company-settings', icon: Building2, label: 'Company Settings', roles: ['company_admin', 'admin'] },
+  { path: '/subscription-plans', icon: CreditCard, label: 'Piani Subscription', roles: ['company_admin', 'admin'] },
 ];
 
 export default function Layout() {
@@ -128,6 +130,13 @@ export default function Layout() {
               <><WifiOff className="w-3.5 h-3.5 text-orange-400" /><span className="text-orange-400">Offline{queueCount > 0 ? ` · ${queueCount} in coda` : ''}</span></>
             )}
           </div>
+          <Link
+            to="/company-settings"
+            className="flex items-center gap-2 text-white/50 hover:text-white text-sm transition-colors"
+          >
+            <Building2 className="w-4 h-4" />
+            Settings
+          </Link>
           <button
             onClick={() => base44.auth.logout()}
             className="flex items-center gap-2 text-white/50 hover:text-white text-sm transition-colors"

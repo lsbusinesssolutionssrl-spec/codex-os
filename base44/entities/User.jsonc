@@ -2,17 +2,65 @@
   "name": "User",
   "type": "object",
   "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
     "role": {
       "type": "string",
+      "title": "Role",
       "enum": [
         "admin",
         "project_manager",
         "technician",
         "sales",
-        "client"
+        "client",
+        "company_admin"
       ],
-      "default": "user",
-      "title": "Role"
+      "default": "user"
+    },
+    "department": {
+      "type": "string",
+      "title": "Department"
+    },
+    "phone": {
+      "type": "string",
+      "title": "Phone"
+    },
+    "avatar_url": {
+      "type": "string",
+      "title": "Avatar URL"
+    },
+    "job_title": {
+      "type": "string",
+      "title": "Job Title"
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    },
+    "last_login": {
+      "type": "string",
+      "title": "Last Login"
+    },
+    "preferences": {
+      "type": "object",
+      "title": "User Preferences",
+      "properties": {
+        "language": {
+          "type": "string",
+          "default": "it"
+        },
+        "theme": {
+          "type": "string",
+          "default": "light"
+        },
+        "notifications_enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      }
     }
   }
 }

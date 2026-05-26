@@ -1,0 +1,109 @@
+{
+  "name": "SubscriptionPlan",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Plan Name"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "price_monthly": {
+      "type": "number",
+      "title": "Monthly Price (\u20ac)"
+    },
+    "price_yearly": {
+      "type": "number",
+      "title": "Yearly Price (\u20ac)"
+    },
+    "quotas": {
+      "type": "object",
+      "title": "Quotas & Limits",
+      "properties": {
+        "max_users": {
+          "type": "number",
+          "default": 5
+        },
+        "max_projects": {
+          "type": "number",
+          "default": 10
+        },
+        "max_estimates_per_month": {
+          "type": "number",
+          "default": 20
+        },
+        "max_storage_gb": {
+          "type": "number",
+          "default": 5
+        },
+        "max_tickets_per_month": {
+          "type": "number",
+          "default": 50
+        },
+        "max_clients": {
+          "type": "number",
+          "default": 50
+        },
+        "max_properties": {
+          "type": "number",
+          "default": 100
+        },
+        "ai_requests_per_month": {
+          "type": "number",
+          "default": 100
+        },
+        "guardian_subscriptions": {
+          "type": "number",
+          "default": 10
+        },
+        "custom_reports": {
+          "type": "boolean",
+          "default": false
+        },
+        "api_access": {
+          "type": "boolean",
+          "default": false
+        },
+        "priority_support": {
+          "type": "boolean",
+          "default": false
+        },
+        "white_label": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Features List"
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    },
+    "is_popular": {
+      "type": "boolean",
+      "title": "Popular Badge",
+      "default": false
+    },
+    "stripe_price_id_monthly": {
+      "type": "string",
+      "title": "Stripe Price ID (Monthly)"
+    },
+    "stripe_price_id_yearly": {
+      "type": "string",
+      "title": "Stripe Price ID (Yearly)"
+    }
+  },
+  "required": [
+    "name",
+    "price_monthly"
+  ]
+}

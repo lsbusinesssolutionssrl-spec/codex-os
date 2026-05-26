@@ -1,0 +1,107 @@
+{
+  "name": "CompanySubscription",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "plan_id": {
+      "type": "string",
+      "title": "Subscription Plan"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "trial",
+        "active",
+        "cancelled",
+        "past_due",
+        "paused"
+      ],
+      "default": "trial"
+    },
+    "billing_cycle": {
+      "type": "string",
+      "title": "Billing Cycle",
+      "enum": [
+        "monthly",
+        "yearly"
+      ],
+      "default": "monthly"
+    },
+    "trial_start": {
+      "type": "string",
+      "title": "Trial Start Date"
+    },
+    "trial_end": {
+      "type": "string",
+      "title": "Trial End Date"
+    },
+    "current_period_start": {
+      "type": "string",
+      "title": "Current Period Start"
+    },
+    "current_period_end": {
+      "type": "string",
+      "title": "Current Period End"
+    },
+    "cancel_at_period_end": {
+      "type": "boolean",
+      "title": "Cancel at Period End",
+      "default": false
+    },
+    "cancelled_at": {
+      "type": "string",
+      "title": "Cancelled At"
+    },
+    "cancel_reason": {
+      "type": "string",
+      "title": "Cancel Reason"
+    },
+    "stripe_subscription_id": {
+      "type": "string",
+      "title": "Stripe Subscription ID"
+    },
+    "stripe_customer_id": {
+      "type": "string",
+      "title": "Stripe Customer ID"
+    },
+    "stripe_payment_method_id": {
+      "type": "string",
+      "title": "Stripe Payment Method ID"
+    },
+    "last_payment_date": {
+      "type": "string",
+      "title": "Last Payment Date"
+    },
+    "last_payment_amount": {
+      "type": "number",
+      "title": "Last Payment Amount (\u20ac)"
+    },
+    "next_billing_date": {
+      "type": "string",
+      "title": "Next Billing Date"
+    },
+    "mrr": {
+      "type": "number",
+      "title": "Monthly Recurring Revenue (\u20ac)"
+    },
+    "seats_used": {
+      "type": "number",
+      "title": "Seats Used",
+      "default": 1
+    },
+    "storage_used_gb": {
+      "type": "number",
+      "title": "Storage Used (GB)",
+      "default": 0
+    }
+  },
+  "required": [
+    "company_id",
+    "plan_id",
+    "status"
+  ]
+}

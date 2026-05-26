@@ -1,0 +1,97 @@
+{
+  "name": "Company",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Company Name"
+    },
+    "slug": {
+      "type": "string",
+      "title": "Slug (URL-safe identifier)"
+    },
+    "tax_id": {
+      "type": "string",
+      "title": "Tax ID / VAT Number"
+    },
+    "address": {
+      "type": "string",
+      "title": "Address"
+    },
+    "phone": {
+      "type": "string",
+      "title": "Phone"
+    },
+    "email": {
+      "type": "string",
+      "title": "Email"
+    },
+    "logo_url": {
+      "type": "string",
+      "title": "Company Logo URL"
+    },
+    "brand_color_primary": {
+      "type": "string",
+      "title": "Primary Brand Color",
+      "default": "#1147FF"
+    },
+    "brand_color_secondary": {
+      "type": "string",
+      "title": "Secondary Brand Color",
+      "default": "#0B2341"
+    },
+    "website": {
+      "type": "string",
+      "title": "Website"
+    },
+    "industry": {
+      "type": "string",
+      "title": "Industry"
+    },
+    "settings": {
+      "type": "object",
+      "title": "Company Settings",
+      "properties": {
+        "currency": {
+          "type": "string",
+          "default": "EUR"
+        },
+        "language": {
+          "type": "string",
+          "default": "it"
+        },
+        "timezone": {
+          "type": "string",
+          "default": "Europe/Rome"
+        },
+        "date_format": {
+          "type": "string",
+          "default": "DD/MM/YYYY"
+        },
+        "fiscal_year_start": {
+          "type": "string",
+          "default": "01/01"
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "active",
+        "suspended",
+        "cancelled"
+      ],
+      "default": "active"
+    },
+    "created_date": {
+      "type": "string",
+      "title": "Created Date"
+    }
+  },
+  "required": [
+    "name",
+    "slug",
+    "email"
+  ]
+}
