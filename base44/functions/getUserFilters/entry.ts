@@ -42,7 +42,12 @@ Deno.serve(async (req) => {
           { team_members: user.email }
         ]
       };
-      filters.Estimate = { created_by: user.email };
+      filters.Estimate = {
+        $or: [
+          { created_by: user.email },
+          { project_id: { $in: filters.Project.$or.map(p => p.team_members).flat() } }
+        ]
+      };
       filters.ChecklistItem = {
         $or: [
           { assigned_person: user.email },
@@ -51,7 +56,13 @@ Deno.serve(async (req) => {
       };
       filters.SupportTicket = { assigned_technician: user.email };
       filters.Timesheet = { employee_id: user.email };
-      filters.Document = {}; // Technician può vedere tutti i documenti
+      // Technician vede documenti solo per progetti assegnati
+      filters.Document = {
+        $or: [
+          { created_by: user.email },
+          { project_id: { $in: [] } } // Will be populated by project IDs
+        ]
+      };
     }
 
     // Sales vede tutti i clienti, proprietà, preventivi
@@ -59,7 +70,10 @@ Deno.serve(async (req) => {
       filters.Client = {};
       filters.Property = {};
       filters.Estimate = {};
-      // Progetti solo per i suoi clienti (filtrato in frontend)
+      // Sales vede documenti per tutti i clienti
+      filters.Document = {};
+      // Progetti: solo quelli linked to estimates they created
+      filters.Project = { created_by: user.email };
     }
 
     // Client vede solo i propri dati

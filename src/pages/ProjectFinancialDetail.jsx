@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
+import { hasRole } from '../lib/roleUtils';
 
 export default function ProjectFinancialDetail() {
   const { id } = useParams();
@@ -22,6 +23,13 @@ export default function ProjectFinancialDetail() {
 
   useEffect(() => {
     const load = async () => {
+      // SECURITY: Only admin and PM can access financial details
+      const canAccess = await hasRole(['admin', 'project_manager']);
+      if (!canAccess) {
+        navigate('/projects');
+        return;
+      }
+
       const [projs, projectCosts, timesheetData] = await Promise.all([
         base44.entities.Project.filter({ id }),
         base44.entities.ProjectCost.filter({ project_id: id }),
