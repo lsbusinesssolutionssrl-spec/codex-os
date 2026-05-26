@@ -79,7 +79,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard icon={FolderKanban} label="Progetti Attivi" value={stats.activeProjects} color="#1147FF" to="/projects" />
         <KpiCard icon={FileText} label="Preventivi Aperti" value={stats.openEstimates} color="#F58220" to="/estimates" />
-        <KpiCard icon={AlertCircle} label="Ticket Aperti" value={stats.openTickets} color="#ef4444" to="/guardian" />
+        <KpiCard icon={AlertCircle} label="Ticket Aperti" value={stats.openTickets} color="#ef4444" to="/tickets" />
         <KpiCard icon={TrendingUp} label="Ricavi Guardian/mese" value={stats.monthlyRevenue ? `€${stats.monthlyRevenue.toLocaleString()}` : '€0'} color="#10b981" />
         <KpiCard icon={TrendingUp} label="Margine Lordo %" value={stats.marginPct ? `${stats.marginPct}%` : '0%'} color="#8b5cf6" />
         <KpiCard icon={Home} label="Home Passport" value={stats.activePassports} color="#0B2341" to="/properties" />

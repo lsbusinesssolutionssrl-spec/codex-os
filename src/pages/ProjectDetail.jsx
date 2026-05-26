@@ -16,6 +16,8 @@ export default function ProjectDetail() {
   const [checklists, setChecklists] = useState([]);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
+  const [newTask, setNewTask] = useState('');
+  const [addingTask, setAddingTask] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -39,6 +41,14 @@ export default function ProjectDetail() {
     };
     load();
   }, [id]);
+
+  const addChecklist = async () => {
+    if (!newTask.trim()) return;
+    const created = await base44.entities.ChecklistItem.create({ title: newTask.trim(), project_id: id, status: 'To Do' });
+    setChecklists(prev => [...prev, created]);
+    setNewTask('');
+    setAddingTask(false);
+  };
 
   const save = async () => {
     const updated = await base44.entities.Project.update(id, form);
@@ -127,7 +137,12 @@ export default function ProjectDetail() {
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-semibold text-gray-900">Avanzamento Checklist</h2>
-          <span className="text-sm text-gray-500">{doneCount}/{checklists.length} completate</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">{doneCount}/{checklists.length} completate</span>
+            <button onClick={() => setAddingTask(true)} className="flex items-center gap-1 px-2 py-1 text-xs text-white rounded-lg" style={{ backgroundColor: '#1147FF' }}>
+              <Plus className="w-3 h-3" /> Aggiungi
+            </button>
+          </div>
         </div>
         <div className="w-full bg-gray-100 rounded-full h-2 mb-4">
           <div className="h-2 rounded-full transition-all" style={{ width: `${progress}%`, backgroundColor: '#1147FF' }} />
@@ -140,7 +155,21 @@ export default function ProjectDetail() {
               <StatusBadge status={c.status} />
             </div>
           ))}
-          {checklists.length === 0 && <p className="text-sm text-gray-400 text-center py-4">Nessuna attività associata</p>}
+          {checklists.length === 0 && !addingTask && <p className="text-sm text-gray-400 text-center py-4">Nessuna attività associata</p>}
+          {addingTask && (
+            <div className="flex items-center gap-2 py-2 px-3">
+              <input
+                autoFocus
+                value={newTask}
+                onChange={e => setNewTask(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') addChecklist(); if (e.key === 'Escape') setAddingTask(false); }}
+                placeholder="Titolo attività..."
+                className="flex-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button onClick={addChecklist} className="px-3 py-1.5 text-xs text-white rounded-lg" style={{ backgroundColor: '#1147FF' }}>Aggiungi</button>
+              <button onClick={() => setAddingTask(false)} className="p-1.5 rounded-lg hover:bg-gray-100"><X className="w-3.5 h-3.5 text-gray-400" /></button>
+            </div>
+          )}
         </div>
       </div>
 
