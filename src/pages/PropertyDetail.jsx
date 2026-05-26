@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Home, Zap, Droplets, Thermometer, Wifi, Shield, DoorOpen, Edit2, Save, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, Home, Zap, Droplets, Thermometer, Wifi, Shield, DoorOpen, Edit2, Save, X, Trash2, ExternalLink } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 const NOTES_SECTIONS = [
@@ -154,16 +154,72 @@ export default function PropertyDetail() {
         {interventions.length === 0 ? (
           <div className="py-8 text-center text-sm text-gray-400">Nessun intervento registrato</div>
         ) : (
-          <div className="px-5 py-4 space-y-3">
-            {interventions.map(p => (
-              <div key={p.id} className="flex items-center gap-3 text-sm">
-                <div className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
-                <span className="font-medium text-gray-800">{p.title}</span>
-                <span className="text-gray-400">·</span>
-                <span className="text-gray-500">{p.status}</span>
-                {p.start_date && <span className="text-gray-400 ml-auto">{new Date(p.start_date).toLocaleDateString('it-IT')}</span>}
+          <div className="px-5 py-6">
+            <div className="relative">
+              {/* vertical line */}
+              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-100" />
+              <div className="space-y-6">
+                {[...interventions]
+                  .sort((a, b) => new Date(b.start_date || b.created_date) - new Date(a.start_date || a.created_date))
+                  .map((p, idx) => {
+                    const statusColors = {
+                      'Lead': '#9CA3AF', 'Survey': '#8B5CF6', 'Estimate': '#3B82F6',
+                      'Approved': '#0D9488', 'In Progress': '#1147FF', 'Testing': '#F59E0B',
+                      'Delivered': '#10B981', 'Guardian Active': '#059669'
+                    };
+                    const color = statusColors[p.status] || '#9CA3AF';
+                    const dateStr = p.start_date
+                      ? new Date(p.start_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
+                      : p.created_date
+                      ? new Date(p.created_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
+                      : null;
+                    const endStr = p.actual_end_date
+                      ? new Date(p.actual_end_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
+                      : p.expected_end_date
+                      ? new Date(p.expected_end_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
+                      : null;
+                    return (
+                      <div key={p.id} className="relative flex items-start gap-4 pl-10">
+                        {/* dot */}
+                        <div
+                          className="absolute left-[11px] top-1 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: color }}
+                        >
+                          <div className="w-2 h-2 rounded-full bg-white" />
+                        </div>
+                        <div
+                          className="flex-1 bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-gray-200 cursor-pointer transition-all"
+                          onClick={() => navigate(`/projects/${p.id}`)}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-semibold text-gray-900">{p.title}</p>
+                              {dateStr && (
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                  {dateStr}{endStr ? ` → ${endStr}` : ''}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span
+                                className="text-xs font-medium px-2 py-0.5 rounded-full text-white"
+                                style={{ backgroundColor: color }}
+                              >{p.status}</span>
+                              <ExternalLink className="w-3.5 h-3.5 text-gray-300" />
+                            </div>
+                          </div>
+                          {p.budget && (
+                            <p className="text-xs text-gray-500 mt-2">Budget: <span className="font-medium text-gray-700">€{p.budget.toLocaleString('it-IT')}</span></p>
+                          )}
+                          {p.notes && (
+                            <p className="text-xs text-gray-400 mt-1 line-clamp-1">{p.notes}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
-            ))}
+            </div>
           </div>
         )}
       </div>
