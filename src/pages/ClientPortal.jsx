@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Home, FileText, Ticket, Archive, AlertCircle, ChevronRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
@@ -19,7 +18,6 @@ function Section({ icon: Icon, title, children, color = '#1147FF' }) {
 }
 
 export default function ClientPortal() {
-  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [client, setClient] = useState(null);
   const [properties, setProperties] = useState([]);
@@ -33,22 +31,15 @@ export default function ClientPortal() {
       const me = await base44.auth.me();
       setUser(me);
 
-      // Find client by email
-      const cls = await base44.entities.Client.list();
-      const linked = cls.find(c => c.email?.toLowerCase() === me.email?.toLowerCase());
-      if (!linked) { setLoading(false); return; }
-      setClient(linked);
+      const res = await base44.functions.invoke('getClientPortalData', {});
+      const data = res.data;
 
-      const [props, ests, tkts, docs] = await Promise.all([
-        base44.entities.Property.filter({ client_id: linked.id }),
-        base44.entities.Estimate.filter({ client_id: linked.id }),
-        base44.entities.SupportTicket.filter({ client_id: linked.id }),
-        base44.entities.Document.filter({ client_id: linked.id }),
-      ]);
-      setProperties(props);
-      setEstimates(ests.sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
-      setTickets(tkts.sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
-      setDocuments(docs.sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
+      if (!data.client) { setLoading(false); return; }
+      setClient(data.client);
+      setProperties(data.properties || []);
+      setEstimates((data.estimates || []).sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
+      setTickets((data.tickets || []).sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
+      setDocuments((data.documents || []).sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
       setLoading(false);
     };
     load();
