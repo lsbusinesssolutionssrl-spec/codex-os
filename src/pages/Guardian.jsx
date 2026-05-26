@@ -7,8 +7,11 @@ import StatusBadge from '../components/StatusBadge';
 export default function Guardian() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [clients, setClients] = useState({});
+  const [clientList, setClientList] = useState([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [showNewModal, setShowNewModal] = useState(false);
+  const [newClientId, setNewClientId] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,6 +21,7 @@ export default function Guardian() {
         base44.entities.Client.list(),
       ]);
       setSubscriptions(subs);
+      setClientList(cls);
       const map = {};
       cls.forEach(c => { map[c.id] = c.name + (c.company_name ? ` ${c.company_name}` : ''); });
       setClients(map);
@@ -32,7 +36,8 @@ export default function Guardian() {
   });
 
   const createNew = async () => {
-    const created = await base44.entities.GuardianSubscription.create({ status: 'Active' });
+    if (!newClientId) return;
+    const created = await base44.entities.GuardianSubscription.create({ client_id: newClientId, status: 'Active' });
     navigate(`/guardian/${created.id}`);
   };
 
@@ -43,7 +48,7 @@ export default function Guardian() {
           <h1 className="text-2xl font-bold text-gray-900">Codex Guardian</h1>
           <p className="text-sm text-gray-500">{subscriptions.length} abbonamenti attivi</p>
         </div>
-        <button onClick={createNew} className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium" style={{ backgroundColor: '#1147FF' }}>
+        <button onClick={() => { setNewClientId(''); setShowNewModal(true); }} className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium" style={{ backgroundColor: '#1147FF' }}>
           <Plus className="w-4 h-4" /> Nuovo Abbonamento
         </button>
       </div>
@@ -60,6 +65,25 @@ export default function Guardian() {
           <option value="Cancelled">Cancelled</option>
         </select>
       </div>
+
+      {showNewModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl space-y-4">
+            <h2 className="font-bold text-gray-900">Nuovo Abbonamento Guardian</h2>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Seleziona Cliente *</label>
+              <select value={newClientId} onChange={e => setNewClientId(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none">
+                <option value="">— Scegli un cliente —</option>
+                {clientList.map(c => <option key={c.id} value={c.id}>{c.name}{c.company_name ? ` ${c.company_name}` : ''}</option>)}
+              </select>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button onClick={createNew} disabled={!newClientId} className="flex-1 py-2 text-sm text-white rounded-lg font-medium disabled:opacity-40" style={{ backgroundColor: '#1147FF' }}>Crea</button>
+              <button onClick={() => setShowNewModal(false)} className="flex-1 py-2 text-sm border border-gray-200 rounded-lg text-gray-600">Annulla</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.length === 0 ? (
