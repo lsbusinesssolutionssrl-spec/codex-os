@@ -93,6 +93,14 @@
     "notes": {
       "type": "string",
       "title": "Notes"
+    },
+    "signature_url": {
+      "type": "string",
+      "title": "Client Signature"
+    },
+    "signed_at": {
+      "type": "string",
+      "title": "Signed At"
     }
   },
   "required": [

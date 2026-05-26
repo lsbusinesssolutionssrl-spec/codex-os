@@ -25,6 +25,9 @@ export default function ProjectDetail() {
   const [photoTab, setPhotoTab] = useState('before');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef(null);
+  const [sopModal, setSopModal] = useState(false);
+  const [sopTemplates, setSopTemplates] = useState([]);
+  const [applyingTemplate, setApplyingTemplate] = useState(false);
 
   const photoKeys = { before: 'photos_before', during: 'photos_during', after: 'photos_after' };
 
@@ -71,6 +74,31 @@ export default function ProjectDetail() {
     };
     load();
   }, [id]);
+
+  const openSOPModal = async () => {
+    if (sopTemplates.length === 0) {
+      const templates = await base44.entities.SOPTemplate.list();
+      setSopTemplates(templates);
+    }
+    setSopModal(true);
+  };
+
+  const applySOPTemplate = async (template) => {
+    setApplyingTemplate(true);
+    const items = template.items || [];
+    const newItems = await Promise.all(
+      items.map(item => base44.entities.ChecklistItem.create({
+        title: item.title || item.name || 'Attività',
+        description: item.description || '',
+        project_id: id,
+        category: template.category,
+        status: 'To Do',
+      }))
+    );
+    setChecklists(prev => [...prev, ...newItems]);
+    setSopModal(false);
+    setApplyingTemplate(false);
+  };
 
   const deleteRecord = async () => {
     await base44.entities.Project.delete(id);
@@ -238,6 +266,9 @@ export default function ProjectDetail() {
           <h2 className="font-semibold text-gray-900">Avanzamento Checklist</h2>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-500">{doneCount}/{checklists.length} completate</span>
+            <button onClick={openSOPModal} className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">
+              <Plus className="w-3 h-3" /> Da Template
+            </button>
             <button onClick={() => setAddingTask(true)} className="flex items-center gap-1 px-2 py-1 text-xs text-white rounded-lg" style={{ backgroundColor: '#1147FF' }}>
               <Plus className="w-3 h-3" /> Aggiungi
             </button>
@@ -383,6 +414,41 @@ export default function ProjectDetail() {
           onChange={e => { if (e.target.files[0]) uploadPhoto(e.target.files[0]); e.target.value = ''; }}
         />
       </div>
+
+      {/* SOP Template Modal */}
+      {sopModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-bold text-gray-900">Applica SOP Template</h2>
+              <button onClick={() => setSopModal(false)}><X className="w-5 h-5 text-gray-400" /></button>
+            </div>
+            {sopTemplates.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-8">Nessun template disponibile</p>
+            ) : (
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {sopTemplates.map(t => (
+                  <div key={t.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl hover:border-blue-200 hover:bg-blue-50/30 transition-colors">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">{t.title}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{t.category} · {(t.items || []).length} voci</p>
+                    </div>
+                    <button
+                      onClick={() => applySOPTemplate(t)}
+                      disabled={applyingTemplate}
+                      className="px-3 py-1.5 text-xs text-white rounded-lg font-medium disabled:opacity-40"
+                      style={{ backgroundColor: '#1147FF' }}
+                    >
+                      {applyingTemplate ? '...' : 'Applica'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button onClick={() => setSopModal(false)} className="mt-4 w-full py-2 text-sm border border-gray-200 rounded-lg text-gray-600">Chiudi</button>
+          </div>
+        </div>
+      )}
 
       {project.notes && (
         <div className="bg-white rounded-xl border border-gray-200 p-5">

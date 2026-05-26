@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, TrendingUp, FileDown, FolderPlus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, TrendingUp, FileDown, FolderPlus, Trash2, PenLine, CheckCircle2 } from 'lucide-react';
+import SignaturePad from '../components/SignaturePad';
 import { jsPDF } from 'jspdf';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
@@ -17,6 +18,8 @@ export default function EstimateDetail() {
   const [properties, setProperties] = useState([]);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showSignature, setShowSignature] = useState(false);
+  const [uploadingSignature, setUploadingSignature] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -195,6 +198,24 @@ export default function EstimateDetail() {
     doc.save(`preventivo-${(form.title || 'codex').replace(/\s+/g, '-').toLowerCase()}.pdf`);
   };
 
+  const handleSignatureSave = async (dataUrl) => {
+    setUploadingSignature(true);
+    // Convert dataUrl to File and upload
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], 'firma.png', { type: 'image/png' });
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const updated = await base44.entities.Estimate.update(id, {
+      ...form,
+      signature_url: file_url,
+      signed_at: new Date().toISOString(),
+      status: 'Accepted',
+    });
+    setForm(updated);
+    setShowSignature(false);
+    setUploadingSignature(false);
+  };
+
   const clientProperties = properties.filter(p => p.client_id === form.client_id);
   const marginColor = (form.gross_margin_pct || 0) >= 30 ? 'text-green-600' : (form.gross_margin_pct || 0) >= 15 ? 'text-orange-500' : 'text-red-500';
 
@@ -323,7 +344,35 @@ export default function EstimateDetail() {
             <FolderPlus className="w-4 h-4" /> Converti in Progetto
           </button>
         )}
+        {form.status === 'Sent' && !form.signature_url && (
+          <button onClick={() => setShowSignature(true)} className="flex items-center gap-2 px-5 py-2 text-sm border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50">
+            <PenLine className="w-4 h-4" /> Raccogliere Firma
+          </button>
+        )}
       </div>
+
+      {/* Firma digitale */}
+      {form.signature_url ? (
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <CheckCircle2 className="w-5 h-5 text-green-500" />
+            <h2 className="font-semibold text-gray-900">Preventivo Firmato</h2>
+            {form.signed_at && <span className="text-xs text-gray-400 ml-auto">{new Date(form.signed_at).toLocaleDateString('it-IT')}</span>}
+          </div>
+          <img src={form.signature_url} alt="Firma cliente" className="max-h-24 border border-gray-100 rounded-lg p-2 bg-gray-50" />
+        </div>
+      ) : showSignature ? (
+        <div className="space-y-2">
+          <p className="text-xs text-gray-500">Fai firmare il cliente sul dispositivo. La firma verrà salvata e il preventivo verrà impostato su <strong>Accepted</strong>.</p>
+          {uploadingSignature ? (
+            <div className="flex items-center justify-center h-32 bg-gray-50 rounded-xl border border-gray-200">
+              <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+            </div>
+          ) : (
+            <SignaturePad onSave={handleSignatureSave} onCancel={() => setShowSignature(false)} />
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

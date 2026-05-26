@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Home, FileText, Ticket, Archive, AlertCircle, ChevronRight } from 'lucide-react';
+import { Home, FileText, Ticket, Archive, AlertCircle, ChevronRight, Plus, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 
@@ -25,6 +25,9 @@ export default function ClientPortal() {
   const [tickets, setTickets] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showTicketModal, setShowTicketModal] = useState(false);
+  const [ticketForm, setTicketForm] = useState({ title: '', issue_type: 'Other', priority: 'Medium', notes: '', property_id: '' });
+  const [creatingTicket, setCreatingTicket] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -44,6 +47,17 @@ export default function ClientPortal() {
     };
     load();
   }, []);
+
+  const submitTicket = async () => {
+    if (!ticketForm.title.trim()) return;
+    setCreatingTicket(true);
+    const res = await base44.functions.invoke('createPortalTicket', ticketForm);
+    const newTicket = res.data.ticket;
+    setTickets(prev => [newTicket, ...prev]);
+    setShowTicketModal(false);
+    setTicketForm({ title: '', issue_type: 'Other', priority: 'Medium', notes: '', property_id: '' });
+    setCreatingTicket(false);
+  };
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -132,6 +146,15 @@ export default function ClientPortal() {
 
       {/* Tickets */}
       <Section icon={Ticket} title="I Miei Ticket" color="#EF4444">
+        <div className="px-5 py-3 border-b border-gray-50">
+          <button
+            onClick={() => setShowTicketModal(true)}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs text-white rounded-lg font-medium"
+            style={{ backgroundColor: '#EF4444' }}
+          >
+            <Plus className="w-3 h-3" /> Apri Nuovo Ticket
+          </button>
+        </div>
         {tickets.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-8">Nessun ticket</p>
         ) : (
@@ -151,6 +174,55 @@ export default function ClientPortal() {
           </div>
         )}
       </Section>
+
+      {/* New Ticket Modal */}
+      {showTicketModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-gray-900">Apri Nuovo Ticket</h2>
+              <button onClick={() => setShowTicketModal(false)}><X className="w-5 h-5 text-gray-400" /></button>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Oggetto *</label>
+              <input value={ticketForm.title} onChange={e => setTicketForm(f => ({ ...f, title: e.target.value }))} placeholder="Descrivi brevemente il problema..." className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Tipo Problema</label>
+                <select value={ticketForm.issue_type} onChange={e => setTicketForm(f => ({ ...f, issue_type: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none">
+                  {['Water Leak','Electrical','Network','Security','Maintenance','Other'].map(t => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Priorità</label>
+                <select value={ticketForm.priority} onChange={e => setTicketForm(f => ({ ...f, priority: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none">
+                  {['Low','Medium','High','Urgent'].map(p => <option key={p}>{p}</option>)}
+                </select>
+              </div>
+            </div>
+            {properties.length > 0 && (
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Proprietà (opzionale)</label>
+                <select value={ticketForm.property_id} onChange={e => setTicketForm(f => ({ ...f, property_id: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none">
+                  <option value="">— Seleziona proprietà —</option>
+                  {properties.map(p => <option key={p.id} value={p.id}>{p.property_name}</option>)}
+                </select>
+              </div>
+            )}
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Note aggiuntive</label>
+              <textarea value={ticketForm.notes} onChange={e => setTicketForm(f => ({ ...f, notes: e.target.value }))} rows={3} placeholder="Descrivi il problema in dettaglio..." className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none resize-none" />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button onClick={submitTicket} disabled={creatingTicket || !ticketForm.title.trim()} className="flex-1 py-2 text-sm text-white rounded-lg font-medium disabled:opacity-40" style={{ backgroundColor: '#EF4444' }}>
+                {creatingTicket ? 'Invio...' : 'Invia Ticket'}
+              </button>
+              <button onClick={() => setShowTicketModal(false)} className="flex-1 py-2 text-sm border border-gray-200 rounded-lg text-gray-600">Annulla</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Documents */}
       <Section icon={Archive} title="I Miei Documenti" color="#10B981">
