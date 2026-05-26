@@ -28,7 +28,6 @@ export default function ArchitectureReview() {
       base44.entities.Document.list(),
       base44.entities.SOPTemplate.list(),
       base44.entities.EstimatePreset.list(),
-      base44.entities.EstimateTemplate.list(),
       base44.entities.FinancialAlert.list(),
       base44.entities.KnowledgeBase.list(),
       base44.entities.ProjectLearning.list(),
@@ -38,7 +37,7 @@ export default function ArchitectureReview() {
     const [
       estimates, projects, clients, properties, projectCosts, timesheets, 
       purchaseOrders, suppliers, tickets, guardians, checklists, documents,
-      sopTemplates, estimatePresets, estimateTemplates, financialAlerts,
+      sopTemplates, estimatePresets, financialAlerts,
       knowledgeBase, projectLearning, intelligenceInsights
     ] = entities;
 
@@ -77,7 +76,7 @@ export default function ArchitectureReview() {
     // estimate_id aggiunto a Project entity
     // Bottone "Converti in Progetto" disponibile per estimate Accepted
 
-    // 4. UNUSED TABLES - RESOLVED
+    // 4. UNUSED TABLES
     if (sopTemplates.length === 0) {
       unusedTables.push({
         table: 'SOPTemplate',
@@ -85,13 +84,6 @@ export default function ArchitectureReview() {
         status: 'pending'
       });
     }
-
-    // EstimateTemplate RIMOSSO (duplicato di EstimatePreset)
-    unusedTables.push({
-      table: 'EstimateTemplate',
-      reason: 'Rimosso - duplicato di EstimatePreset',
-      status: 'resolved'
-    });
 
     // 5. PERMISSION ISSUES
     permissionIssues.push({
@@ -136,9 +128,9 @@ export default function ArchitectureReview() {
 
     optimizationOpportunities.push({
       impact: 'Medium',
-      opportunity: 'Unificare EstimatePreset ed EstimateTemplate',
-      description: 'Due entità simili per templating preventivi',
-      benefit: 'Semplificazione UX, meno confusione',
+      opportunity: 'Migliorare EstimatePreset',
+      description: "EstimateTemplate rimosso, EstimatePreset è l'unico template per preventivi",
+      benefit: 'UX semplificata, documentazione chiara',
     });
 
     optimizationOpportunities.push({
@@ -179,7 +171,7 @@ export default function ArchitectureReview() {
 
     const auditResult = {
       summary: {
-        totalEntities: 19,
+        totalEntities: 18,
         totalRecords: entities.reduce((sum, e) => sum + e.length, 0),
         criticalIssues: issues.filter(i => i.severity === 'High').length,
         mediumIssues: issues.filter(i => i.severity === 'Medium').length,
@@ -196,12 +188,13 @@ export default function ArchitectureReview() {
       relationships,
       entityHealth: {
         Estimate: { records: estimates.length, fields: 38, issues: 0, status: 'resolved' },
-        Project: { records: projects.length, fields: 33, issues: 0, status: 'resolved' }, // +estimate_id
+        Project: { records: projects.length, fields: 33, issues: 0, status: 'resolved' },
         Client: { records: clients.length, fields: 8, issues: 0, status: 'good' },
         Property: { records: properties.length, fields: 14, issues: 0, status: 'good' },
         ProjectCost: { records: projectCosts.length, fields: 12, issues: 0, status: 'good' },
         GuardianSubscription: { records: guardians.length, fields: 7, issues: 1, status: 'warning' },
-        EstimateTemplate: { records: 0, fields: 0, issues: 0, status: 'removed' },
+        SOPTemplate: { records: sopTemplates.length, fields: 5, issues: sopTemplates.length === 0 ? 1 : 0, status: sopTemplates.length === 0 ? 'warning' : 'good' },
+        EstimatePreset: { records: estimatePresets.length, fields: 14, issues: 0, status: 'good' },
       },
     };
 

@@ -135,11 +135,12 @@ GuardianSubscription (1) ──→ (N) SupportTicket
 - [x] Rimuovere EstimateTemplate (usare EstimatePreset)
 - [ ] Implementare RLS per ruoli (prossimo)
 
-### Phase 2: Data Cleanup (1 settimana)
+### Phase 2: Data Cleanup & Optimization
 - [x] Rimuovere EstimateTemplate
-- [ ] Rimuovere SOPTemplate se non usato
-- [ ] Aggiungere stato "Archived"
-- [ ] Migrare dati esistenti
+- [ ] Valutare rimozione SOPTemplate (se 0 record)
+- [ ] Aggiungere stato "Archived" a Project/Estimate
+- [ ] Migrare dati esistenti (se necessario)
+- [ ] Documentare EstimatePreset usage
 
 ### Phase 3: Performance (1 settimana)
 - [ ] Calcoli on-the-fly per margini
