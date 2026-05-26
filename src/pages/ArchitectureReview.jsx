@@ -13,44 +13,36 @@ export default function ArchitectureReview() {
   }, []);
 
   const runAudit = async () => {
-    // Fetch entities in batches to avoid rate limiting
-    const batch1 = await Promise.all([
-      base44.entities.Estimate.list(undefined, 50),
-      base44.entities.Project.list(undefined, 50),
-      base44.entities.Client.list(undefined, 50),
-      base44.entities.Property.list(undefined, 50),
-    ]);
-    
-    const batch2 = await Promise.all([
-      base44.entities.ProjectCost.list(undefined, 50),
-      base44.entities.Timesheet.list(undefined, 50),
-      base44.entities.PurchaseOrder.list(undefined, 50),
-      base44.entities.Supplier.list(undefined, 50),
-    ]);
-    
-    const batch3 = await Promise.all([
-      base44.entities.SupportTicket.list(undefined, 50),
-      base44.entities.GuardianSubscription.list(undefined, 50),
-      base44.entities.ChecklistItem.list(undefined, 50),
-      base44.entities.Document.list(undefined, 50),
-    ]);
-    
-    const batch4 = await Promise.all([
-      base44.entities.EstimatePreset.list(undefined, 50),
-      base44.entities.FinancialAlert.list(undefined, 50),
-      base44.entities.KnowledgeBase.list(undefined, 50),
-      base44.entities.ProjectLearning.list(undefined, 50),
-      base44.entities.IntelligenceInsight.list(undefined, 50),
-    ]);
-
-    const entities = [...batch1, ...batch2, ...batch3, ...batch4];
-
-    const [
-      estimates, projects, clients, properties, projectCosts, timesheets, 
-      purchaseOrders, suppliers, tickets, guardians, checklists, documents,
-      estimatePresets, financialAlerts,
-      knowledgeBase, projectLearning, intelligenceInsights
-    ] = entities;
+    try {
+      // Fetch entities in smaller batches to avoid rate limiting
+      const [estimates, projects, clients, properties] = await Promise.all([
+        base44.entities.Estimate.list(undefined, 50),
+        base44.entities.Project.list(undefined, 50),
+        base44.entities.Client.list(undefined, 50),
+        base44.entities.Property.list(undefined, 50),
+      ]);
+      
+      const [projectCosts, timesheets, purchaseOrders, suppliers] = await Promise.all([
+        base44.entities.ProjectCost.list(undefined, 50),
+        base44.entities.Timesheet.list(undefined, 50),
+        base44.entities.PurchaseOrder.list(undefined, 50),
+        base44.entities.Supplier.list(undefined, 50),
+      ]);
+      
+      const [tickets, guardians, checklists, documents] = await Promise.all([
+        base44.entities.SupportTicket.list(undefined, 50),
+        base44.entities.GuardianSubscription.list(undefined, 50),
+        base44.entities.ChecklistItem.list(undefined, 50),
+        base44.entities.Document.list(undefined, 50),
+      ]);
+      
+      const [estimatePresets, financialAlerts, knowledgeBase, projectLearning, intelligenceInsights] = await Promise.all([
+        base44.entities.EstimatePreset.list(undefined, 50),
+        base44.entities.FinancialAlert.list(undefined, 50),
+        base44.entities.KnowledgeBase.list(undefined, 50),
+        base44.entities.ProjectLearning.list(undefined, 50),
+        base44.entities.IntelligenceInsight.list(undefined, 50),
+      ]);
 
     // ANALYSIS
     const issues = [];
@@ -198,12 +190,36 @@ export default function ArchitectureReview() {
         ProjectCost: { records: projectCosts.length, fields: 12, issues: 0, status: 'good' },
         GuardianSubscription: { records: guardians.length, fields: 7, issues: 1, status: 'warning' },
         EstimatePreset: { records: estimatePresets.length, fields: 14, issues: 0, status: 'good' },
-        Estimate: { records: estimates.length, fields: 38, issues: 0, status: 'good' },
+        SupportTicket: { records: tickets.length, fields: 10, issues: 0, status: 'good' },
+        ChecklistItem: { records: checklists.length, fields: 13, issues: 0, status: 'good' },
+        Document: { records: documents.length, fields: 9, issues: 0, status: 'good' },
       },
     };
-
-    setAudit(auditResult);
-    setLoading(false);
+    } catch (error) {
+      console.error('Audit failed:', error);
+      setAudit({
+        summary: { totalEntities: 0, totalRecords: 0, criticalIssues: 0, mediumIssues: 0, lowIssues: 0 },
+        duplicatedFields: [],
+        optimizationOpportunities: [],
+        relationships: [],
+        entityHealth: {},
+        permissionIssues: [],
+        navigationIssues: [],
+      });
+    } catch (error) {
+      console.error('Audit failed:', error);
+      setAudit({
+        summary: { totalEntities: 0, totalRecords: 0, criticalIssues: 0, mediumIssues: 0, lowIssues: 0 },
+        duplicatedFields: [],
+        optimizationOpportunities: [],
+        relationships: [],
+        entityHealth: {},
+        permissionIssues: [],
+        navigationIssues: [],
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
