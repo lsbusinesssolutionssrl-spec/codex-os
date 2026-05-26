@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart3, TrendingUp, DollarSign, Users, AlertCircle, Calendar, ArrowUpRight, ArrowDownRight, FileText } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { hasRole } from '../lib/roleUtils';
 
 export default function CEODashboard() {
   const navigate = useNavigate();
@@ -27,8 +28,22 @@ export default function CEODashboard() {
     days90: { incoming: 0, outgoing: 0, net: 0 },
   });
   const [loading, setLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
+    // SECURITY: Only admins can access CEO dashboard
+    hasRole(['admin']).then(auth => {
+      if (!auth) {
+        navigate('/');
+        return;
+      }
+      setIsAuthorized(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthorized) return;
+    
     const load = async () => {
       const [projects, estimates, guardians, costs, projectCosts] = await Promise.all([
         base44.entities.Project.list(),
@@ -127,6 +142,7 @@ export default function CEODashboard() {
     load();
   }, []);
 
+  if (!isAuthorized) return null;
   if (loading) return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
 
   return (

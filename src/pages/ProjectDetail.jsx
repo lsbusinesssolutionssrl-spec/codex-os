@@ -52,15 +52,32 @@ export default function ProjectDetail() {
         base44.entities.ChecklistItem.filter({ project_id: id }),
         base44.entities.User.list(),
       ]);
-      if (projs[0]) {
-        setProject(projs[0]);
-        setForm(projs[0]);
-        const c = cls.find(c => c.id === projs[0].client_id);
-        setClient(c);
-        if (projs[0].property_id) {
-          const props = await base44.entities.Property.filter({ id: projs[0].property_id });
-          setProperty(props[0]);
+      
+      // SECURITY: Verify user has access to this project
+      if (projs.length === 0) {
+        navigate('/projects');
+        return;
+      }
+      
+      const project = projs[0];
+      
+      // Additional check: for technicians, verify they're assigned
+      const user = await base44.auth.me();
+      if (user && user.role === 'technician') {
+        const isAssigned = project.team_members?.includes(user.email) || project.created_by === user.email;
+        if (!isAssigned) {
+          navigate('/projects');
+          return;
         }
+      }
+      
+      setProject(project);
+      setForm(project);
+      const c = cls.find(c => c.id === project.client_id);
+      setClient(c);
+      if (project.property_id) {
+        const props = await base44.entities.Property.filter({ id: project.property_id });
+        setProperty(props[0]);
       }
       setClients(cls);
       setUsers(usrs);

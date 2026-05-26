@@ -17,8 +17,12 @@ export default function Estimates() {
 
   useEffect(() => {
     const load = async () => {
+      // Get user-specific filters for RLS
+      const filtersRes = await base44.functions.invoke('getUserFilters', {});
+      const estimateFilters = filtersRes.data.filters.Estimate || {};
+      
       const [ests, cls] = await Promise.all([
-        base44.entities.Estimate.list('-created_date'),
+        base44.entities.Estimate.filter(estimateFilters, '-created_date'),
         base44.entities.Client.list(),
       ]);
       setEstimates(ests);

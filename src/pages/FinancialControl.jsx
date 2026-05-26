@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { TrendingUp, AlertCircle, CheckCircle2, DollarSign, Calendar, Users, BarChart3, FileText, Download, Package } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
+import { hasRole } from '../lib/roleUtils';
 
 export default function FinancialControl() {
   const navigate = useNavigate();
@@ -18,8 +19,22 @@ export default function FinancialControl() {
     projectsInLoss: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
+    // SECURITY: Only admins can access financial control
+    hasRole(['admin']).then(auth => {
+      if (!auth) {
+        navigate('/');
+        return;
+      }
+      setIsAuthorized(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthorized) return;
+    
     const load = async () => {
       const [projs, projectCosts, financialAlerts] = await Promise.all([
         base44.entities.Project.list(),
@@ -55,6 +70,7 @@ export default function FinancialControl() {
     load();
   }, []);
 
+  if (!isAuthorized) return null;
   if (loading) return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
 
   return (

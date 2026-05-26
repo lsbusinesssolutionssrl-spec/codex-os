@@ -18,8 +18,12 @@ export default function Projects() {
 
   useEffect(() => {
     const load = async () => {
+      // Get user-specific filters for RLS
+      const filtersRes = await base44.functions.invoke('getUserFilters', {});
+      const projectFilters = filtersRes.data.filters.Project || {};
+      
       const [projs, cls] = await Promise.all([
-        base44.entities.Project.list('-created_date'),
+        base44.entities.Project.filter(projectFilters, '-created_date'),
         base44.entities.Client.list(),
       ]);
       setProjects(projs);
