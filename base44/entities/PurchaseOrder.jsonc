@@ -1,0 +1,62 @@
+{
+  "name": "PurchaseOrder",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "title": "Project"
+    },
+    "supplier_id": {
+      "type": "string",
+      "title": "Supplier"
+    },
+    "order_number": {
+      "type": "string",
+      "title": "Order Number"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "Draft",
+        "Ordered",
+        "Received",
+        "Partially Received",
+        "Closed"
+      ],
+      "default": "Draft"
+    },
+    "order_date": {
+      "type": "string",
+      "title": "Order Date"
+    },
+    "expected_delivery": {
+      "type": "string",
+      "title": "Expected Delivery"
+    },
+    "actual_delivery": {
+      "type": "string",
+      "title": "Actual Delivery"
+    },
+    "total_amount": {
+      "type": "number",
+      "title": "Total Amount (\u20ac)"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "title": "Order Items"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "project_id",
+    "supplier_id",
+    "total_amount"
+  ]
+}

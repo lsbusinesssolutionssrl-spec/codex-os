@@ -1,0 +1,65 @@
+{
+  "name": "Supplier",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Name"
+    },
+    "category": {
+      "type": "string",
+      "title": "Category",
+      "enum": [
+        "Materials",
+        "Electrical",
+        "Plumbing",
+        "Construction",
+        "Equipment Rental",
+        "Subcontractor",
+        "Other"
+      ]
+    },
+    "phone": {
+      "type": "string",
+      "title": "Phone"
+    },
+    "email": {
+      "type": "string",
+      "title": "Email"
+    },
+    "address": {
+      "type": "string",
+      "title": "Address"
+    },
+    "payment_terms": {
+      "type": "string",
+      "title": "Payment Terms",
+      "enum": [
+        "Immediate",
+        "7 days",
+        "15 days",
+        "30 days",
+        "60 days",
+        "90 days"
+      ]
+    },
+    "rating": {
+      "type": "number",
+      "title": "Rating",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "annual_spend": {
+      "type": "number",
+      "title": "Annual Spend (\u20ac)"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "name",
+    "category"
+  ]
+}

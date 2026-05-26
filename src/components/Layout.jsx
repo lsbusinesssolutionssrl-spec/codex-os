@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Home, FileText, FolderKanban,
-  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2, BookOpen
+  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2, BookOpen, TrendingUp, Crown
 } from 'lucide-react';
 
 import { base44 } from '@/api/base44Client';
@@ -26,6 +26,9 @@ const navItems = [
   { path: '/calendar', icon: CalendarDays, label: 'Calendario' },
   { path: '/report', icon: BarChart2, label: 'Report' },
   { path: '/sop', icon: BookOpen, label: 'SOP Templates' },
+  { path: '/financial-control', icon: TrendingUp, label: 'Controllo Finanziario', roles: ['admin'] },
+  { path: '/ceo-dashboard', icon: Crown, label: 'CEO Dashboard', roles: ['admin'] },
+  { path: '/suppliers', icon: Users2, label: 'Fornitori' },
 ];
 
 export default function Layout() {
@@ -61,7 +64,13 @@ export default function Layout() {
     client: [],
   };
   const allowedPaths = userRole ? NAV_BY_ROLE[userRole] : null;
-  const visibleNav = allowedPaths === null ? navItems : navItems.filter(i => allowedPaths.includes(i.path));
+  const visibleNav = navItems.filter(i => {
+    // If item has role restriction, only show for those roles
+    if (i.roles && !i.roles.includes(userRole)) return false;
+    // If user role has path restrictions, filter by allowed paths
+    if (allowedPaths !== null && !allowedPaths.includes(i.path)) return false;
+    return true;
+  });
 
   const isActive = (path) => path === '/'
     ? location.pathname === '/'

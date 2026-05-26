@@ -34,6 +34,10 @@ import SOPTemplates from './pages/SOPTemplates';
 import SOPTemplateDetail from './pages/SOPTemplateDetail';
 import ChecklistDetail from './pages/ChecklistDetail';
 import GenerateSampleData from './pages/GenerateSampleData';
+import FinancialControl from './pages/FinancialControl';
+import ProjectFinancialDetail from './pages/ProjectFinancialDetail';
+import CEODashboard from './pages/CEODashboard';
+import Suppliers from './pages/Suppliers';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -89,6 +93,10 @@ const AuthenticatedApp = () => {
         <Route path="/sop" element={<SOPTemplates />} />
         <Route path="/sop/:id" element={<SOPTemplateDetail />} />
         <Route path="/generate-data" element={<GenerateSampleData />} />
+        <Route path="/financial-control" element={<FinancialControl />} />
+        <Route path="/projects/:id/financial" element={<ProjectFinancialDetail />} />
+        <Route path="/ceo-dashboard" element={<CEODashboard />} />
+        <Route path="/suppliers" element={<Suppliers />} />
       </Route>
       <Route element={<PortalLayout />}>
         <Route path="/portal" element={<ClientPortal />} />

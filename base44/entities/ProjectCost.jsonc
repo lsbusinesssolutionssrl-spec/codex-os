@@ -1,0 +1,67 @@
+{
+  "name": "ProjectCost",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "title": "Project"
+    },
+    "cost_type": {
+      "type": "string",
+      "title": "Cost Type",
+      "enum": [
+        "Material",
+        "Labor",
+        "Vehicle",
+        "Subcontractor",
+        "Other"
+      ]
+    },
+    "category": {
+      "type": "string",
+      "title": "Category"
+    },
+    "supplier_id": {
+      "type": "string",
+      "title": "Supplier"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "quantity": {
+      "type": "number",
+      "title": "Quantity"
+    },
+    "unit_cost": {
+      "type": "number",
+      "title": "Unit Cost (\u20ac)"
+    },
+    "total_cost": {
+      "type": "number",
+      "title": "Total Cost (\u20ac)"
+    },
+    "date": {
+      "type": "string",
+      "title": "Date"
+    },
+    "paid": {
+      "type": "boolean",
+      "title": "Paid",
+      "default": false
+    },
+    "payment_date": {
+      "type": "string",
+      "title": "Payment Date"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "project_id",
+    "cost_type",
+    "total_cost"
+  ]
+}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Camera, BookOpen, Home, FileCheck, FileText, Download } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Camera, BookOpen, Home, FileCheck, FileText, Download, TrendingUp } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 import FinancialSummary from '../components/FinancialSummary';
@@ -245,6 +245,9 @@ export default function ProjectDetail() {
         <div className="flex gap-2">
           {!editing ? (
             <>
+              <button onClick={() => navigate(`/projects/${id}/financial`)} className="flex items-center gap-2 px-3 py-1.5 text-sm text-white rounded-lg" style={{ backgroundColor: '#0B2341' }}>
+                <TrendingUp className="w-3.5 h-3.5" /> Finanziario
+              </button>
               <button onClick={() => setReportModal(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
                 <FileText className="w-3.5 h-3.5" /> Report
               </button>

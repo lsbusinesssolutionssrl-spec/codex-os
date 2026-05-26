@@ -1,0 +1,61 @@
+{
+  "name": "FinancialAlert",
+  "type": "object",
+  "properties": {
+    "alert_type": {
+      "type": "string",
+      "title": "Alert Type",
+      "enum": [
+        "Margin Below Target",
+        "Project Over Budget",
+        "Delayed Project",
+        "Invoice Overdue",
+        "Supplier Payment Overdue"
+      ]
+    },
+    "project_id": {
+      "type": "string",
+      "title": "Project"
+    },
+    "severity": {
+      "type": "string",
+      "title": "Severity",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "default": "Medium"
+    },
+    "message": {
+      "type": "string",
+      "title": "Message"
+    },
+    "amount": {
+      "type": "number",
+      "title": "Amount (\u20ac)"
+    },
+    "due_date": {
+      "type": "string",
+      "title": "Due Date"
+    },
+    "resolved": {
+      "type": "boolean",
+      "title": "Resolved",
+      "default": false
+    },
+    "resolved_date": {
+      "type": "string",
+      "title": "Resolved Date"
+    },
+    "created_date": {
+      "type": "string",
+      "title": "Created Date"
+    }
+  },
+  "required": [
+    "alert_type",
+    "message"
+  ]
+}

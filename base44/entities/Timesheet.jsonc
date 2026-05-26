@@ -1,0 +1,49 @@
+{
+  "name": "Timesheet",
+  "type": "object",
+  "properties": {
+    "employee_id": {
+      "type": "string",
+      "title": "Employee"
+    },
+    "project_id": {
+      "type": "string",
+      "title": "Project"
+    },
+    "date": {
+      "type": "string",
+      "title": "Date"
+    },
+    "hours": {
+      "type": "number",
+      "title": "Hours Worked"
+    },
+    "hourly_rate": {
+      "type": "number",
+      "title": "Hourly Rate (\u20ac)"
+    },
+    "total_labor_cost": {
+      "type": "number",
+      "title": "Total Labor Cost (\u20ac)"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    },
+    "approved": {
+      "type": "boolean",
+      "title": "Approved",
+      "default": false
+    },
+    "approved_by": {
+      "type": "string",
+      "title": "Approved By"
+    }
+  },
+  "required": [
+    "employee_id",
+    "project_id",
+    "date",
+    "hours"
+  ]
+}
