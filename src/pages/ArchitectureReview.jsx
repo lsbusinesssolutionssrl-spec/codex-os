@@ -13,24 +13,25 @@ export default function ArchitectureReview() {
   }, []);
 
   const runAudit = async () => {
+    // Fetch entities with limit to avoid rate limiting
     const entities = await Promise.all([
-      base44.entities.Estimate.list(),
-      base44.entities.Project.list(),
-      base44.entities.Client.list(),
-      base44.entities.Property.list(),
-      base44.entities.ProjectCost.list(),
-      base44.entities.Timesheet.list(),
-      base44.entities.PurchaseOrder.list(),
-      base44.entities.Supplier.list(),
-      base44.entities.SupportTicket.list(),
-      base44.entities.GuardianSubscription.list(),
-      base44.entities.ChecklistItem.list(),
-      base44.entities.Document.list(),
-      base44.entities.EstimatePreset.list(),
-      base44.entities.FinancialAlert.list(),
-      base44.entities.KnowledgeBase.list(),
-      base44.entities.ProjectLearning.list(),
-      base44.entities.IntelligenceInsight.list(),
+      base44.entities.Estimate.list(undefined, 100),
+      base44.entities.Project.list(undefined, 100),
+      base44.entities.Client.list(undefined, 100),
+      base44.entities.Property.list(undefined, 100),
+      base44.entities.ProjectCost.list(undefined, 100),
+      base44.entities.Timesheet.list(undefined, 100),
+      base44.entities.PurchaseOrder.list(undefined, 100),
+      base44.entities.Supplier.list(undefined, 100),
+      base44.entities.SupportTicket.list(undefined, 100),
+      base44.entities.GuardianSubscription.list(undefined, 100),
+      base44.entities.ChecklistItem.list(undefined, 100),
+      base44.entities.Document.list(undefined, 100),
+      base44.entities.EstimatePreset.list(undefined, 100),
+      base44.entities.FinancialAlert.list(undefined, 100),
+      base44.entities.KnowledgeBase.list(undefined, 100),
+      base44.entities.ProjectLearning.list(undefined, 100),
+      base44.entities.IntelligenceInsight.list(undefined, 100),
     ]);
 
     const [
