@@ -45,6 +45,7 @@ import CodexIntelligence from './pages/CodexIntelligence';
 import KnowledgeBase from './pages/KnowledgeBase';
 import AIAdvisor from './pages/AIAdvisor';
 import ExecutiveInsights from './pages/ExecutiveInsights';
+import ArchitectureReview from './pages/ArchitectureReview';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -111,6 +112,7 @@ const AuthenticatedApp = () => {
         <Route path="/knowledge-base" element={<KnowledgeBase />} />
         <Route path="/ai-advisor" element={<AIAdvisor />} />
         <Route path="/executive-insights" element={<ExecutiveInsights />} />
+<Route path="/architecture-review" element={<ArchitectureReview />} />
       </Route>
       <Route element={<PortalLayout />}>
         <Route path="/portal" element={<ClientPortal />} />
