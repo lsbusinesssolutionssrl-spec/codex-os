@@ -16,9 +16,15 @@ import EstimateDetail from './pages/EstimateDetail';
 import Projects from './pages/Projects';
 import Checklists from './pages/Checklists';
 import Guardian from './pages/Guardian';
+import GuardianDetail from './pages/GuardianDetail';
 import Documents from './pages/Documents';
+import DocumentDetail from './pages/DocumentDetail';
 import Team from './pages/Team';
 import AI from './pages/AI';
+import Tickets from './pages/Tickets';
+import TicketDetail from './pages/TicketDetail';
+import ProjectDetail from './pages/ProjectDetail';
+import ChecklistDetail from './pages/ChecklistDetail';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -56,9 +62,15 @@ const AuthenticatedApp = () => {
         <Route path="/estimates" element={<Estimates />} />
         <Route path="/estimates/:id" element={<EstimateDetail />} />
         <Route path="/projects" element={<Projects />} />
+        <Route path="/projects/:id" element={<ProjectDetail />} />
         <Route path="/checklists" element={<Checklists />} />
+        <Route path="/checklists/:id" element={<ChecklistDetail />} />
         <Route path="/guardian" element={<Guardian />} />
+        <Route path="/guardian/:id" element={<GuardianDetail />} />
         <Route path="/documents" element={<Documents />} />
+        <Route path="/documents/:id" element={<DocumentDetail />} />
+        <Route path="/tickets" element={<Tickets />} />
+        <Route path="/tickets/:id" element={<TicketDetail />} />
         <Route path="/team" element={<Team />} />
         <Route path="/ai" element={<AI />} />
       </Route>

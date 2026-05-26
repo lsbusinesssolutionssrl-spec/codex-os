@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Home, FileText, FolderKanban,
-  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff
+  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import NotificationBell from './NotificationBell';
@@ -16,6 +16,7 @@ const navItems = [
   { path: '/projects', icon: FolderKanban, label: 'Progetti' },
   { path: '/checklists', icon: CheckSquare, label: 'Checklist' },
   { path: '/guardian', icon: Shield, label: 'Guardian' },
+  { path: '/tickets', icon: Ticket, label: 'Ticket' },
   { path: '/documents', icon: Archive, label: 'Documenti' },
   { path: '/team', icon: Users2, label: 'Team' },
   { path: '/ai', icon: Bot, label: 'Codex AI' },

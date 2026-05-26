@@ -1,0 +1,140 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Save, Upload, ExternalLink, X } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+
+const TYPES = ['Contract', 'Estimate', 'Invoice', 'Certification', 'Warranty', 'Floor Plan', 'Photo', 'Other'];
+
+export default function DocumentDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [doc, setDoc] = useState(null);
+  const [clients, setClients] = useState([]);
+  const [properties, setProperties] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [form, setForm] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      const [docs, cls, props, projs] = await Promise.all([
+        base44.entities.Document.filter({ id }),
+        base44.entities.Client.list(),
+        base44.entities.Property.list(),
+        base44.entities.Project.list(),
+      ]);
+      if (docs[0]) { setDoc(docs[0]); setForm(docs[0]); }
+      setClients(cls);
+      setProperties(props);
+      setProjects(projs);
+    };
+    load();
+  }, [id]);
+
+  const save = async () => {
+    setSaving(true);
+    const updated = await base44.entities.Document.update(id, form);
+    setDoc(updated);
+    setForm(updated);
+    setSaving(false);
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setForm(f => ({ ...f, file_url }));
+    setUploading(false);
+  };
+
+  if (!doc) return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
+
+  const isImage = form.file_url && /\.(jpg|jpeg|png|gif|webp)$/i.test(form.file_url);
+
+  return (
+    <div className="p-6 max-w-3xl mx-auto space-y-5">
+      <div className="flex items-center gap-3">
+        <button onClick={() => navigate('/documents')} className="p-2 rounded-lg hover:bg-gray-100">
+          <ArrowLeft className="w-4 h-4 text-gray-600" />
+        </button>
+        <div className="flex-1">
+          <h1 className="text-xl font-bold text-gray-900">{doc.title}</h1>
+          <p className="text-xs text-gray-400 mt-0.5">{doc.type}</p>
+        </div>
+        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium" style={{ backgroundColor: '#1147FF' }}>
+          <Save className="w-3.5 h-3.5" /> {saving ? 'Salvataggio...' : 'Salva'}
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1">Titolo</label>
+          <input value={form.title || ''} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Tipo</label>
+            <select value={form.type || ''} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none">
+              {TYPES.map(t => <option key={t}>{t}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Scadenza</label>
+            <input type="date" value={form.expiration_date || ''} onChange={e => setForm(f => ({ ...f, expiration_date: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Cliente</label>
+            <select value={form.client_id || ''} onChange={e => setForm(f => ({ ...f, client_id: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none">
+              <option value="">—</option>
+              {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Progetto</label>
+            <select value={form.project_id || ''} onChange={e => setForm(f => ({ ...f, project_id: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none">
+              <option value="">—</option>
+              {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+            </select>
+          </div>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1">Note</label>
+          <textarea value={form.notes || ''} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none resize-none" />
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold text-gray-900">File</h2>
+          <label className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+            <Upload className="w-3.5 h-3.5" />
+            {uploading ? 'Caricamento...' : 'Carica File'}
+            <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
+          </label>
+        </div>
+        {form.file_url ? (
+          <div className="space-y-3">
+            {isImage ? (
+              <img src={form.file_url} alt="" className="max-h-64 rounded-lg object-contain bg-gray-50 w-full" />
+            ) : (
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="text-2xl">📄</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-700 truncate">Documento caricato</p>
+                  <p className="text-xs text-gray-400 truncate">{form.file_url}</p>
+                </div>
+              </div>
+            )}
+            <a href={form.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-blue-600 hover:underline">
+              <ExternalLink className="w-3.5 h-3.5" /> Apri file
+            </a>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-400 text-center py-6">Nessun file caricato</p>
+        )}
+      </div>
+    </div>
+  );
+}
