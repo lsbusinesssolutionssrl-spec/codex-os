@@ -26,7 +26,6 @@ export default function ArchitectureReview() {
       base44.entities.GuardianSubscription.list(),
       base44.entities.ChecklistItem.list(),
       base44.entities.Document.list(),
-      base44.entities.SOPTemplate.list(),
       base44.entities.EstimatePreset.list(),
       base44.entities.FinancialAlert.list(),
       base44.entities.KnowledgeBase.list(),
@@ -37,7 +36,7 @@ export default function ArchitectureReview() {
     const [
       estimates, projects, clients, properties, projectCosts, timesheets, 
       purchaseOrders, suppliers, tickets, guardians, checklists, documents,
-      sopTemplates, estimatePresets, financialAlerts,
+      estimatePresets, financialAlerts,
       knowledgeBase, projectLearning, intelligenceInsights
     ] = entities;
 
@@ -76,14 +75,7 @@ export default function ArchitectureReview() {
     // estimate_id aggiunto a Project entity
     // Bottone "Converti in Progetto" disponibile per estimate Accepted
 
-    // 4. UNUSED TABLES
-    if (sopTemplates.length === 0) {
-      unusedTables.push({
-        table: 'SOPTemplate',
-        reason: '0 record. Valutare se rimuovere o incentivare uso',
-        status: 'pending'
-      });
-    }
+    // 4. UNUSED TABLES - SOPTemplate già rimosso
 
     // 5. PERMISSION ISSUES
     permissionIssues.push({
@@ -193,8 +185,8 @@ export default function ArchitectureReview() {
         Property: { records: properties.length, fields: 14, issues: 0, status: 'good' },
         ProjectCost: { records: projectCosts.length, fields: 12, issues: 0, status: 'good' },
         GuardianSubscription: { records: guardians.length, fields: 7, issues: 1, status: 'warning' },
-        SOPTemplate: { records: sopTemplates.length, fields: 5, issues: sopTemplates.length === 0 ? 1 : 0, status: sopTemplates.length === 0 ? 'warning' : 'good' },
         EstimatePreset: { records: estimatePresets.length, fields: 14, issues: 0, status: 'good' },
+        Estimate: { records: estimates.length, fields: 38, issues: 0, status: 'good' },
       },
     };
 
