@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, X, Camera, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Save, X, Camera, AlertTriangle, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 
@@ -15,6 +15,7 @@ export default function ChecklistDetail() {
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -36,6 +37,11 @@ export default function ChecklistDetail() {
     setSaving(false);
   };
 
+  const deleteRecord = async () => {
+    await base44.entities.ChecklistItem.delete(id);
+    navigate('/checklists');
+  };
+
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -47,6 +53,18 @@ export default function ChecklistDetail() {
   };
 
   if (!item) return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
+
+  if (confirmDelete) return (
+    <div className="p-6 max-w-sm mx-auto mt-20 bg-white rounded-2xl border border-gray-200 shadow-lg text-center space-y-4">
+      <Trash2 className="w-10 h-10 text-red-400 mx-auto" />
+      <h2 className="font-bold text-gray-900">Elimina attività?</h2>
+      <p className="text-sm text-gray-500">Questa azione è irreversibile.</p>
+      <div className="flex gap-2">
+        <button onClick={deleteRecord} className="flex-1 py-2 text-sm text-white bg-red-500 rounded-lg font-medium hover:bg-red-600">Elimina</button>
+        <button onClick={() => setConfirmDelete(false)} className="flex-1 py-2 text-sm border border-gray-200 rounded-lg text-gray-600">Annulla</button>
+      </div>
+    </div>
+  );
 
   const projectName = projects.find(p => p.id === form.project_id)?.title;
 
@@ -65,6 +83,9 @@ export default function ChecklistDetail() {
         </div>
         <button onClick={save} disabled={saving} className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium" style={{ backgroundColor: '#1147FF' }}>
           <Save className="w-3.5 h-3.5" /> {saving ? 'Salvataggio...' : 'Salva'}
+        </button>
+        <button onClick={() => setConfirmDelete(true)} className="p-2 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600">
+          <Trash2 className="w-4 h-4" />
         </button>
       </div>
 

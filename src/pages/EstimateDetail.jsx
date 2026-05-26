@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, TrendingUp, FileDown, FolderPlus } from 'lucide-react';
+import { ArrowLeft, Save, TrendingUp, FileDown, FolderPlus, Trash2 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
@@ -16,6 +16,7 @@ export default function EstimateDetail() {
   const [clients, setClients] = useState([]);
   const [properties, setProperties] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -48,6 +49,11 @@ export default function EstimateDetail() {
     setSaving(true);
     await base44.entities.Estimate.update(id, form);
     setSaving(false);
+  };
+
+  const deleteRecord = async () => {
+    await base44.entities.Estimate.delete(id);
+    navigate('/estimates');
   };
 
   const convertToProject = async () => {
@@ -124,6 +130,18 @@ export default function EstimateDetail() {
   const clientProperties = properties.filter(p => p.client_id === form.client_id);
   const marginColor = (form.gross_margin_pct || 0) >= 30 ? 'text-green-600' : (form.gross_margin_pct || 0) >= 15 ? 'text-orange-500' : 'text-red-500';
 
+  if (confirmDelete) return (
+    <div className="p-6 max-w-sm mx-auto mt-20 bg-white rounded-2xl border border-gray-200 shadow-lg text-center space-y-4">
+      <Trash2 className="w-10 h-10 text-red-400 mx-auto" />
+      <h2 className="font-bold text-gray-900">Elimina preventivo?</h2>
+      <p className="text-sm text-gray-500">Questa azione è irreversibile.</p>
+      <div className="flex gap-2">
+        <button onClick={deleteRecord} className="flex-1 py-2 text-sm text-white bg-red-500 rounded-lg font-medium hover:bg-red-600">Elimina</button>
+        <button onClick={() => setConfirmDelete(false)} className="flex-1 py-2 text-sm border border-gray-200 rounded-lg text-gray-600">Annulla</button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-5">
       <div className="flex items-center gap-3">
@@ -143,6 +161,9 @@ export default function EstimateDetail() {
           </select>
           <button onClick={save} disabled={saving} className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium" style={{ backgroundColor: '#1147FF' }}>
             <Save className="w-4 h-4" />{saving ? 'Salvataggio...' : 'Salva'}
+          </button>
+          <button onClick={() => setConfirmDelete(true)} className="p-2 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600">
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>

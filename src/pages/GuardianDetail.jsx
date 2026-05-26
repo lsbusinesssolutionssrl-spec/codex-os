@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit2, Save, X, Plus } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Plus, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 
@@ -15,6 +15,7 @@ export default function GuardianDetail() {
   const [tickets, setTickets] = useState([]);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -42,7 +43,24 @@ export default function GuardianDetail() {
     setEditing(false);
   };
 
+  const deleteRecord = async () => {
+    await base44.entities.GuardianSubscription.delete(id);
+    navigate('/guardian');
+  };
+
   if (!sub) return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
+
+  if (confirmDelete) return (
+    <div className="p-6 max-w-sm mx-auto mt-20 bg-white rounded-2xl border border-gray-200 shadow-lg text-center space-y-4">
+      <Trash2 className="w-10 h-10 text-red-400 mx-auto" />
+      <h2 className="font-bold text-gray-900">Elimina abbonamento?</h2>
+      <p className="text-sm text-gray-500">Questa azione è irreversibile.</p>
+      <div className="flex gap-2">
+        <button onClick={deleteRecord} className="flex-1 py-2 text-sm text-white bg-red-500 rounded-lg font-medium hover:bg-red-600">Elimina</button>
+        <button onClick={() => setConfirmDelete(false)} className="flex-1 py-2 text-sm border border-gray-200 rounded-lg text-gray-600">Annulla</button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-5">
@@ -58,9 +76,14 @@ export default function GuardianDetail() {
           </div>
         </div>
         {!editing ? (
-          <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
-            <Edit2 className="w-3.5 h-3.5" /> Modifica
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+              <Edit2 className="w-3.5 h-3.5" /> Modifica
+            </button>
+            <button onClick={() => setConfirmDelete(true)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
         ) : (
           <div className="flex gap-2">
             <button onClick={save} className="flex items-center gap-2 px-3 py-1.5 text-sm text-white rounded-lg" style={{ backgroundColor: '#1147FF' }}>
