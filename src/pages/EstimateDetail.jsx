@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, TrendingUp, FileDown, FolderPlus, Trash2, PenLine, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Save, FileDown, FolderPlus, Trash2, PenLine, CheckCircle2 } from 'lucide-react';
 import SignaturePad from '../components/SignaturePad';
-import { jsPDF } from 'jspdf';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 
@@ -78,130 +77,20 @@ export default function EstimateDetail() {
     navigate(`/projects/${project.id}`);
   };
 
-  const exportPDF = () => {
-    const doc = new jsPDF();
-    const client = clients.find(c => c.id === form.client_id);
-    const property = properties.find(p => p.id === form.property_id);
-
-    // Header band
-    doc.setFillColor(11, 35, 65); // navy #0B2341
-    doc.rect(0, 0, 210, 38, 'F');
-    // Orange accent line
-    doc.setFillColor(245, 130, 32); // orange #F58220
-    doc.rect(0, 38, 210, 3, 'F');
-    // Logo text in header
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.setTextColor(255, 255, 255);
-    doc.text('CODEX SOLUTION', 20, 18);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(200, 210, 230);
-    doc.text('www.codexsolution.it', 20, 26);
-    // Doc type top right
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(245, 130, 32);
-    doc.text('PREVENTIVO', 150, 18);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(200, 210, 230);
-    doc.text(new Date().toLocaleDateString('it-IT'), 150, 26);
-
-    // Title
-    let y = 52;
-    doc.setFontSize(15);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(11, 35, 65);
-    doc.text(form.title || 'Preventivo', 20, y); y += 8;
-
-    // Client + property info box
-    doc.setFillColor(248, 249, 252);
-    doc.rect(20, y, 170, client ? 22 : 12, 'F');
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(80, 90, 110);
-    if (client) {
-      doc.text(`Cliente: ${client.name}${client.company_name ? ' ' + client.company_name : ''}`, 25, y + 7);
-      if (client.email) doc.text(`Email: ${client.email}`, 25, y + 13);
-      if (client.phone) doc.text(`Tel: ${client.phone}`, 110, y + 7);
-      if (property) doc.text(`Proprietà: ${property.property_name}`, 110, y + 13);
-      y += 26;
-    } else { y += 14; }
-
-    // Blue section: riepilogo economico
-    y += 4;
-    doc.setFillColor(17, 71, 255);
-    doc.rect(20, y, 170, 8, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(255, 255, 255);
-    doc.text('RIEPILOGO ECONOMICO', 25, y + 5.5);
-    y += 12;
-    doc.setTextColor(30, 30, 30);
-    const rows = [
-      ['Ricavi Stimati', `€ ${(form.revenue || 0).toLocaleString('it-IT')}`],
-      ['Costo Materiali', `€ ${(form.material_cost || 0).toLocaleString('it-IT')}`],
-      ['Costo Manodopera', `€ ${(form.labor_cost || 0).toLocaleString('it-IT')}`],
-      ['Altri Costi', `€ ${(form.other_costs || 0).toLocaleString('it-IT')}`],
-    ];
-    rows.forEach(([label, val], idx) => {
-      if (idx % 2 === 0) { doc.setFillColor(248, 249, 252); doc.rect(20, y - 4, 170, 8, 'F'); }
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(60, 70, 90);
-      doc.text(label, 25, y);
-      doc.text(val, 160, y, { align: 'right' });
-      y += 8;
-    });
-    // Margin row highlighted
-    doc.setFillColor(11, 35, 65);
-    doc.rect(20, y - 4, 170, 9, 'F');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(255, 255, 255);
-    doc.text('Margine Lordo', 25, y + 1);
-    doc.setTextColor(245, 130, 32);
-    doc.text(`€ ${(form.gross_margin || 0).toLocaleString('it-IT')} (${form.gross_margin_pct || 0}%)`, 160, y + 1, { align: 'right' });
-    y += 13;
-
-    // Details
-    if (form.estimate_type || form.quality_level || form.estimated_duration) {
-      doc.setFillColor(17, 71, 255);
-      doc.rect(20, y, 170, 8, 'F');
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(255, 255, 255);
-      doc.text('DETTAGLI INTERVENTO', 25, y + 5.5);
-      y += 12;
-      doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 70, 90);
-      if (form.estimate_type) { doc.text(`Tipo: ${form.estimate_type}`, 25, y); y += 7; }
-      if (form.quality_level) { doc.text(`Livello qualità: ${form.quality_level}`, 25, y); y += 7; }
-      if (form.estimated_duration) { doc.text(`Durata stimata: ${form.estimated_duration}`, 25, y); y += 7; }
-      if (form.payment_terms) { doc.text(`Condizioni di pagamento: ${form.payment_terms}`, 25, y); y += 7; }
-      y += 3;
+  const exportPDF = async () => {
+    try {
+      const response = await base44.functions.invoke('generateEstimatePDF', { estimate_id: id });
+      const { pdf, filename } = response.data;
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.href = pdf;
+      link.download = filename || 'preventivo.pdf';
+      link.click();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Errore nella generazione del PDF');
     }
-
-    if (form.included_works) {
-      doc.setFillColor(17, 71, 255);
-      doc.rect(20, y, 170, 8, 'F');
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(255, 255, 255);
-      doc.text('LAVORI INCLUSI', 25, y + 5.5); y += 12;
-      doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 70, 90);
-      const lines = doc.splitTextToSize(form.included_works, 160);
-      doc.text(lines, 25, y); y += lines.length * 6 + 5;
-    }
-    if (form.excluded_works) {
-      doc.setFillColor(17, 71, 255);
-      doc.rect(20, y, 170, 8, 'F');
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(255, 255, 255);
-      doc.text('LAVORI ESCLUSI', 25, y + 5.5); y += 12;
-      doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 70, 90);
-      const lines = doc.splitTextToSize(form.excluded_works, 160);
-      doc.text(lines, 25, y); y += lines.length * 6 + 5;
-    }
-
-    // Footer
-    doc.setFillColor(11, 35, 65);
-    doc.rect(0, 282, 210, 15, 'F');
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(180, 190, 210);
-    doc.text('Codex Solution · Documento generato automaticamente', 105, 290, { align: 'center' });
-
-    doc.save(`preventivo-${(form.title || 'codex').replace(/\s+/g, '-').toLowerCase()}.pdf`);
   };
 
   const handleSignatureSave = async (dataUrl) => {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, TrendingUp } from 'lucide-react';
+import { Plus, Search, TrendingUp, Sparkles } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 
@@ -46,9 +46,14 @@ export default function Estimates() {
           <h1 className="text-2xl font-bold text-gray-900">Preventivi</h1>
           <p className="text-sm text-gray-500">{estimates.length} preventivi totali</p>
         </div>
-        <button onClick={createNew} className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium" style={{ backgroundColor: '#1147FF' }}>
-          <Plus className="w-4 h-4" /> Nuovo Preventivo
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => navigate('/ai-estimator')} className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium" style={{ backgroundColor: '#F58220' }}>
+            <Sparkles className="w-4 h-4" /> AI Estimator
+          </button>
+          <button onClick={createNew} className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium" style={{ backgroundColor: '#1147FF' }}>
+            <Plus className="w-4 h-4" /> Nuovo Preventivo
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-3 flex-wrap">
