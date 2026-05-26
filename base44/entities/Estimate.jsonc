@@ -24,7 +24,8 @@
         "Accepted",
         "Rejected",
         "Expired",
-        "Converted to Project"
+        "Converted to Project",
+        "Archived"
       ],
       "default": "Draft"
     },

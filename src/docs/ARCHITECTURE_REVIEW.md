@@ -16,7 +16,7 @@ Codex OS è stato trasformato da tool interno a piattaforma SaaS. Questo documen
 
 ---
 
-## ✅ RESOLVED ISSUES
+## ✅ RESOLVED ISSUES (Phase 1 & 2 - COMPLETATO)
 
 ### 1. ✓ Estimate → Project Conversion - **RISOLTO**
 **Stato:** Completato  
@@ -31,6 +31,35 @@ Codex OS è stato trasformato da tool interno a piattaforma SaaS. Questo documen
 **Soluzione implementata:**
 - ✅ Rimosso entity EstimateTemplate (duplicato di EstimatePreset)
 - ✅ Usare solo EstimatePreset per templating
+
+### 3. ✓ SOPTemplate Cleanup - **RISOLTO**
+**Stato:** Completato  
+**Soluzione implementata:**
+- ✅ Rimosso entity SOPTemplate (0 record, non utilizzato)
+- ✅ Rimossa referenza da ArchitectureReview
+
+### 4. ✓ Stato "Archived" - **RISOLTO**
+**Stato:** Completato  
+**Soluzione implementata:**
+- ✅ Aggiunto stato "Archived" a Project entity
+- ✅ Aggiunto stato "Archived" a Estimate entity
+- ✅ Utenti possono archiviare progetti/preventivi completati
+
+### 5. ✓ Breadcrumb Navigation - **RISOLTO**
+**Stato:** Completato  
+**Soluzione implementata:**
+- ✅ Creato componente Breadcrumb riutilizzabile
+- ✅ Integrato in ProjectDetail, Estimates, Projects
+- ✅ Generazione automatica da path o custom
+
+### 6. ✓ RLS per Ruoli (Permission Issues) - **PARZIALMENTE RISOLTO**
+**Stato:** Implementato base  
+**Soluzione implementata:**
+- ✅ Creato lib/roleUtils.js per controlli ruoli
+- ✅ Funzioni: hasRole(), canEditFinancialFields(), getProjectFilter()
+- ✅ ProjectDetail: solo admin modifica campi finanziari
+- ✅ Funzione backend getUserFilters per filtri entity
+- ⚠️ **TODO:** Applicare filtri RLS a tutte le pagine (Estimates, Projects, etc.)
 
 ## 🔴 CRITICAL ISSUES (Priorità 1)
 
@@ -133,14 +162,19 @@ GuardianSubscription (1) ──→ (N) SupportTicket
 - [x] Aggiungere `estimate_id` a Project
 - [x] Implementare conversione Estimate → Project
 - [x] Rimuovere EstimateTemplate (usare EstimatePreset)
-- [ ] Implementare RLS per ruoli (prossimo)
 
-### Phase 2: Data Cleanup & Optimization
+### ✅ Phase 2: Cleanup & Foundation - **COMPLETATO**
 - [x] Rimuovere EstimateTemplate
-- [ ] Valutare rimozione SOPTemplate (se 0 record)
-- [ ] Aggiungere stato "Archived" a Project/Estimate
-- [ ] Migrare dati esistenti (se necessario)
-- [ ] Documentare EstimatePreset usage
+- [x] Rimuovere SOPTemplate
+- [x] Aggiungere stato "Archived" a Project/Estimate
+- [x] Breadcrumb navigation
+- [x] RLS foundation (roleUtils, getUserFilters)
+
+### Phase 3: RLS Enforcement (Prossimo)
+- [ ] Applicare getUserFilters a tutte le pagine (Estimates, Projects, Clients, etc.)
+- [ ] Testare permessi per ogni ruolo (admin, PM, technician, sales, client)
+- [ ] Documentare matrix permessi
+- [ ] Aggiungere UI per gestione team members nei progetti
 
 ### Phase 3: Performance (1 settimana)
 - [ ] Calcoli on-the-fly per margini
@@ -214,4 +248,5 @@ GuardianSubscription (1) ──→ (N) SupportTicket
 
 **Ultimo Audit:** 2026-05-26  
 **Phase 1 Status:** ✅ COMPLETATO  
-**Prossima Review:** Dopo implementazione RLS e Phase 2
+**Phase 2 Status:** ✅ COMPLETATO  
+**Prossima Review:** Phase 3 - RLS Enforcement

@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, TrendingUp, Sparkles } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
+import Breadcrumb from '../components/Breadcrumb';
 
-const STATUSES = ['', 'Draft', 'To Review', 'Sent', 'Accepted', 'Rejected', 'Expired', 'Converted to Project'];
+const STATUSES = ['', 'Draft', 'To Review', 'Sent', 'Accepted', 'Rejected', 'Expired', 'Converted to Project', 'Archived'];
 const TYPES = ['', 'Bathroom', 'Full Home', 'Electrical System', 'Networking', 'Security', 'Maintenance', 'Other'];
 
 export default function Estimates() {
@@ -41,6 +42,7 @@ export default function Estimates() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-5">
+      <Breadcrumb items={[{ label: 'Preventivi' }]} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Preventivi</h1>

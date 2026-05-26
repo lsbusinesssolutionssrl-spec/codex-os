@@ -5,8 +5,10 @@ import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 import FinancialSummary from '../components/FinancialSummary';
 import PhotoGallery from '../components/PhotoGallery';
+import Breadcrumb from '../components/Breadcrumb';
+import { hasRole, canEditFinancialFields } from '../lib/roleUtils';
 
-const STATUSES = ['Lead', 'Survey', 'Estimate', 'Approved', 'In Progress', 'Testing', 'Delivered', 'Guardian Active'];
+const STATUSES = ['Lead', 'Survey', 'Estimate', 'Approved', 'In Progress', 'Testing', 'Delivered', 'Guardian Active', 'Archived'];
 const SOP_CATEGORIES = ['Bathroom', 'Full Home', 'Electrical', 'Networking', 'Security', 'Roofing', 'Handover'];
 
 export default function ProjectDetail() {
@@ -33,6 +35,14 @@ export default function ProjectDetail() {
   const [reportModal, setReportModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState('progress');
   const [generatingReport, setGeneratingReport] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+  const [canEditFinancial, setCanEditFinancial] = useState(false);
+
+  useEffect(() => {
+    Promise.all([hasRole(['admin', 'project_manager']), canEditFinancialFields()]).then(([hasRoleRes, canEdit]) => {
+      setCanEditFinancial(canEdit);
+    });
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -227,6 +237,12 @@ export default function ProjectDetail() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-5">
+      {/* Breadcrumb */}
+      <Breadcrumb items={[
+        { label: 'Progetti', path: '/projects' },
+        { label: project.title }
+      ]} />
+
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 flex-1">
@@ -282,12 +298,23 @@ export default function ProjectDetail() {
         <div className="bg-white rounded-xl border border-gray-200 p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {field('title', 'Titolo')}
           {field('status', 'Stato', 'text', STATUSES)}
-          {field('contract_value', 'Valore Contratto (€)', 'number')}
-          {field('approved_variations', 'Variazioni Approvate (€)', 'number')}
-          {field('material_costs', 'Costo Materiali (€)', 'number')}
-          {field('labor_costs', 'Costo Manodopera (€)', 'number')}
-          {field('other_costs', 'Altri Costi (€)', 'number')}
-          {field('payment_collected', 'Pagamenti Ricevuti (€)', 'number')}
+          {!canEditFinancial && (
+            <>
+              <div className="sm:col-span-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-xs text-yellow-800 font-medium">⚠️ Solo admin può modificare i campi finanziari</p>
+              </div>
+            </>
+          )}
+          {canEditFinancial && (
+            <>
+              {field('contract_value', 'Valore Contratto (€)', 'number')}
+              {field('approved_variations', 'Variazioni Approvate (€)', 'number')}
+              {field('material_costs', 'Costo Materiali (€)', 'number')}
+              {field('labor_costs', 'Costo Manodopera (€)', 'number')}
+              {field('other_costs', 'Altri Costi (€)', 'number')}
+              {field('payment_collected', 'Pagamenti Ricevuti (€)', 'number')}
+            </>
+          )}
           {field('project_manager', 'Project Manager')}
           {field('start_date', 'Data Inizio', 'date')}
           {field('expected_end_date', 'Data Fine Prevista', 'date')}

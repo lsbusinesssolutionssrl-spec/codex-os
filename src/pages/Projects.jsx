@@ -4,8 +4,9 @@ import { Plus, Search, LayoutList, BarChart2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 import GanttChart from '../components/GanttChart';
+import Breadcrumb from '../components/Breadcrumb';
 
-const STATUSES = ['', 'Lead', 'Survey', 'Estimate', 'Approved', 'In Progress', 'Testing', 'Delivered', 'Guardian Active'];
+const STATUSES = ['', 'Lead', 'Survey', 'Estimate', 'Approved', 'In Progress', 'Testing', 'Delivered', 'Guardian Active', 'Archived'];
 
 export default function Projects() {
   const [projects, setProjects] = useState([]);
@@ -47,6 +48,7 @@ export default function Projects() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-5">
+      <Breadcrumb items={[{ label: 'Progetti' }]} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Progetti</h1>
