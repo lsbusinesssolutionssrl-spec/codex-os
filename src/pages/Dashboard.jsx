@@ -1,210 +1,163 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { FolderKanban, FileText, Shield, TrendingUp, Home, Users, AlertCircle, Activity, FileCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { BarChart3, TrendingUp, AlertCircle, CheckCircle2, XCircle, Plus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend } from 'recharts';
-
-const TICKET_COLORS = { 'Open': '#EF4444', 'In Progress': '#3B82F6', 'Waiting Client': '#F59E0B', 'Resolved': '#10B981', 'Closed': '#9CA3AF' };
-const ESTIMATE_COLORS = { 'Draft': '#9CA3AF', 'To Review': '#F59E0B', 'Sent': '#3B82F6' };
-
-function KpiCard({ icon: Icon, label, value, color, to }) {
-  const card = (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-gray-500 font-medium">{label}</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{value ?? '—'}</p>
-        </div>
-        <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: color + '20' }}>
-          <Icon className="w-5 h-5" style={{ color }} />
-        </div>
-      </div>
-    </div>
-  );
-  return to ? <Link to={to}>{card}</Link> : card;
-}
+import StatusBadge from '../components/StatusBadge';
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({});
-  const [activity, setActivity] = useState([]);
+  const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    totalEstimates: 0,
+    draft: 0,
+    sent: 0,
+    accepted: 0,
+    rejected: 0,
+    totalPipelineValue: 0,
+    acceptedValue: 0,
+    avgEstimateValue: 0,
+    conversionRate: 0,
+    avgMargin: 0,
+  });
+  const [recentEstimates, setRecentEstimates] = useState([]);
+  const [rejectionReasons, setRejectionReasons] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const [projects, estimates, tickets, guardian, properties, clients] = await Promise.all([
-        base44.entities.Project.list(),
-        base44.entities.Estimate.list(),
-        base44.entities.SupportTicket.list(),
-        base44.entities.GuardianSubscription.list(),
-        base44.entities.Property.list(),
-        base44.entities.Client.list(),
-      ]);
-
-      const activeProjects = projects.filter(p => ['In Progress', 'Approved', 'Testing'].includes(p.status));
-      const openEstimates = estimates.filter(e => ['Draft', 'To Review', 'Sent'].includes(e.status));
-      const acceptedNotConverted = estimates.filter(e => e.status === 'Accepted');
-      const openTickets = tickets.filter(t => ['Open', 'In Progress', 'Waiting Client'].includes(t.status));
-      const activeGuardian = guardian.filter(g => g.status === 'Active');
-      const monthlyRevenue = activeGuardian.reduce((sum, g) => sum + (g.monthly_price || 0), 0);
-      const acceptedEstimates = estimates.filter(e => e.status === 'Accepted');
-      const totalRevenue = acceptedEstimates.reduce((s, e) => s + (e.revenue || 0), 0);
-      const totalMargin = acceptedEstimates.reduce((s, e) => s + (e.gross_margin || 0), 0);
-      const marginPct = totalRevenue > 0 ? ((totalMargin / totalRevenue) * 100).toFixed(1) : 0;
+      const estimates = await base44.entities.Estimate.list();
       
-      // New Phase 2 widgets
-      const nearDeadline = projects.filter(p => {
-        if (!p.expected_end_date || !['In Progress', 'Testing'].includes(p.status)) return false;
-        const daysLeft = (new Date(p.expected_end_date) - new Date()) / (1000 * 60 * 60 * 24);
-        return daysLeft >= 0 && daysLeft <= 14;
+      const draft = estimates.filter(e => e.status === 'Draft').length;
+      const sent = estimates.filter(e => e.status === 'Sent').length;
+      const accepted = estimates.filter(e => e.status === 'Accepted').length;
+      const rejected = estimates.filter(e => e.status === 'Rejected').length;
+      
+      const totalPipelineValue = estimates.reduce((sum, e) => sum + (e.revenue || 0), 0);
+      const acceptedValue = estimates.filter(e => e.status === 'Accepted').reduce((sum, e) => sum + (e.revenue || 0), 0);
+      
+      const margins = estimates.filter(e => e.gross_margin_pct).map(e => e.gross_margin_pct);
+      const avgMargin = margins.length > 0 ? margins.reduce((a, b) => a + b, 0) / margins.length : 0;
+      
+      const total = estimates.length;
+      const conversionRate = total > 0 ? ((accepted / total) * 100).toFixed(1) : 0;
+      
+      // Rejection reasons
+      const reasons = {};
+      estimates.filter(e => e.status === 'Rejected' && e.rejection_reason).forEach(e => {
+        reasons[e.rejection_reason] = (reasons[e.rejection_reason] || 0) + 1;
       });
-      const lowMargin = projects.filter(p => {
-        const margin = p.contract_value && p.contract_value > 0 ? ((p.contract_value - (p.material_costs || 0) - (p.labor_costs || 0) - (p.other_costs || 0)) / p.contract_value) * 100 : 0;
-        return margin < 25;
-      });
-      const deliveredWithoutPassport = projects.filter(p => p.status === 'Delivered');
-
-      // Ticket distribution
-      const ticketDist = Object.entries(
-        tickets.reduce((acc, t) => { acc[t.status] = (acc[t.status] || 0) + 1; return acc; }, {})
-      ).map(([name, value]) => ({ name, value }));
-
-      // Pending estimates value by status
-      const pendingEstimates = ['Draft', 'To Review', 'Sent'].map(status => ({
-        name: status,
-        value: estimates.filter(e => e.status === status).reduce((s, e) => s + (e.revenue || 0), 0),
-        count: estimates.filter(e => e.status === status).length,
-      }));
-
+      setRejectionReasons(Object.entries(reasons).map(([reason, count]) => ({ reason, count })));
+      
       setStats({
-        activeProjects: activeProjects.length,
-        openEstimates: openEstimates.length,
-        acceptedNotConverted: acceptedNotConverted.length,
-        openTickets: openTickets.length,
-        monthlyRevenue,
-        marginPct,
-        activePassports: properties.length,
-        activeGuardian: activeGuardian.length,
-        clients: clients.length,
-        nearDeadline: nearDeadline.length,
-        lowMargin: lowMargin.length,
-        deliveredWithoutPassport: deliveredWithoutPassport.length,
-        ticketDist,
-        pendingEstimates,
+        totalEstimates: total,
+        draft,
+        sent,
+        accepted,
+        rejected,
+        totalPipelineValue,
+        acceptedValue,
+        avgEstimateValue: total > 0 ? totalPipelineValue / total : 0,
+        conversionRate: parseFloat(conversionRate),
+        avgMargin: avgMargin.toFixed(1),
       });
-
-      // recent activity
-      const recent = [
-        ...projects.slice(0, 3).map(p => ({ type: 'project', label: `Progetto: ${p.title}`, status: p.status, date: p.updated_date })),
-        ...tickets.slice(0, 3).map(t => ({ type: 'ticket', label: `Ticket: ${t.title}`, status: t.status, date: t.updated_date })),
-        ...estimates.slice(0, 3).map(e => ({ type: 'estimate', label: `Preventivo: ${e.title}`, status: e.status, date: e.updated_date })),
-      ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
-      setActivity(recent);
+      
+      setRecentEstimates(estimates.sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 5));
       setLoading(false);
     };
     load();
   }, []);
 
+  if (loading) return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Panoramica operativa Codex Solution</p>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard Commerciale</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Panoramica preventivi e performance</p>
+        </div>
+        <button onClick={() => navigate('/ai-estimator')} className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium" style={{ backgroundColor: '#F58220' }}>
+          <Plus className="w-4 h-4" /> Nuovo Preventivo
+        </button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard icon={FolderKanban} label="Progetti Attivi" value={stats.activeProjects} color="#1147FF" to="/projects" />
-        <KpiCard icon={FileText} label="Preventivi Aperti" value={stats.openEstimates} color="#F58220" to="/estimates" />
-        <KpiCard icon={FileCheck} label="Da Convertire" value={stats.acceptedNotConverted} color="#10B981" to="/estimates" />
-        <KpiCard icon={AlertCircle} label="Ticket Aperti" value={stats.openTickets} color="#ef4444" to="/tickets" />
-        <KpiCard icon={TrendingUp} label="Ricavi Guardian/mese" value={stats.monthlyRevenue ? `€${stats.monthlyRevenue.toLocaleString()}` : '€0'} color="#10b981" />
-        <KpiCard icon={TrendingUp} label="Margine Lordo %" value={stats.marginPct ? `${stats.marginPct}%` : '0%'} color="#8b5cf6" />
-        <KpiCard icon={Home} label="Home Passport" value={stats.activePassports} color="#0B2341" to="/properties" />
-        <KpiCard icon={Shield} label="Clienti Guardian" value={stats.activeGuardian} color="#059669" to="/guardian" />
-        <KpiCard icon={Users} label="Clienti Totali" value={stats.clients} color="#6366f1" to="/clients" />
-        <KpiCard icon={Activity} label="Scadenza 14gg" value={stats.nearDeadline} color="#F59E0B" to="/projects" />
-        <KpiCard icon={TrendingUp} label="Margine <25%" value={stats.lowMargin} color="#EF4444" to="/projects" />
-        <KpiCard icon={Home} label="Da Passport" value={stats.deliveredWithoutPassport} color="#6B7280" to="/projects" />
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <KpiCard label="Totale Preventivi" value={stats.totalEstimates} icon={BarChart3} color="#1147FF" />
+        <KpiCard label="Inviati" value={stats.sent} icon={CheckCircle2} color="#10B981" />
+        <KpiCard label="Accettati" value={stats.accepted} icon={CheckCircle2} color="#10B981" />
+        <KpiCard label="Rifiutati" value={stats.rejected} icon={XCircle} color="#EF4444" />
+        <KpiCard label="Tasso Conversione" value={`${stats.conversionRate}%`} icon={TrendingUp} color="#F58220" />
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Pie: Ticket per stato */}
+      {/* Financial KPIs */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h2 className="font-semibold text-gray-900 text-sm mb-4">Distribuzione Ticket per Stato</h2>
-          {!stats.ticketDist || stats.ticketDist.length === 0 ? (
-            <p className="text-center text-sm text-gray-400 py-10">Nessun ticket</p>
-          ) : (
-            <div className="flex items-center gap-4">
-              <ResponsiveContainer width={160} height={160}>
-                <PieChart>
-                  <Pie data={stats.ticketDist} cx="50%" cy="50%" innerRadius={40} outerRadius={70} dataKey="value" paddingAngle={2}>
-                    {stats.ticketDist.map((entry, i) => (
-                      <Cell key={i} fill={TICKET_COLORS[entry.name] || '#E5E7EB'} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(v, n) => [v, n]} contentStyle={{ borderRadius: '8px', fontSize: 12 }} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex-1 space-y-2">
-                {stats.ticketDist.map((d, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: TICKET_COLORS[d.name] || '#E5E7EB' }} />
-                      <span className="text-xs text-gray-600">{d.name}</span>
-                    </div>
-                    <span className="text-xs font-semibold text-gray-800">{d.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <p className="text-xs text-gray-500 font-medium mb-1">Valore Pipeline</p>
+          <p className="text-2xl font-bold" style={{ color: '#1147FF' }}>€{stats.totalPipelineValue.toLocaleString('it-IT')}</p>
         </div>
-
-        {/* Bar: Preventivi in attesa per valore */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h2 className="font-semibold text-gray-900 text-sm mb-4">Valore Preventivi in Attesa</h2>
-          {!stats.pendingEstimates ? (
-            <div className="py-10 flex justify-center"><div className="w-6 h-6 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>
-          ) : (
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={stats.pendingEstimates} barSize={40}>
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} tickFormatter={v => v >= 1000 ? `€${(v/1000).toFixed(0)}k` : `€${v}`} />
-                <Tooltip formatter={(v, n, p) => [`€${v.toLocaleString('it-IT')} (${p.payload.count} prev.)`, 'Valore']} contentStyle={{ borderRadius: '8px', fontSize: 12 }} />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {(stats.pendingEstimates || []).map((entry, i) => (
-                    <Cell key={i} fill={ESTIMATE_COLORS[entry.name] || '#E5E7EB'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )}
+          <p className="text-xs text-gray-500 font-medium mb-1">Valore Accettato</p>
+          <p className="text-2xl font-bold" style={{ color: '#10B981' }}>€{stats.acceptedValue.toLocaleString('it-IT')}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <p className="text-xs text-gray-500 font-medium mb-1">Margine Medio</p>
+          <p className={`text-2xl font-bold ${parseFloat(stats.avgMargin) >= 35 ? 'text-green-600' : parseFloat(stats.avgMargin) >= 25 ? 'text-orange-600' : 'text-red-600'}`}>
+            {stats.avgMargin}%
+          </p>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200">
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-          <Activity className="w-4 h-4 text-gray-400" />
-          <h2 className="font-semibold text-gray-900 text-sm">Attività Recenti</h2>
-        </div>
-        {loading ? (
-          <div className="py-10 flex justify-center"><div className="w-6 h-6 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>
-        ) : activity.length === 0 ? (
-          <p className="text-center text-sm text-gray-400 py-10">Nessuna attività recente</p>
-        ) : (
-          <div className="divide-y divide-gray-50">
-            {activity.map((a, i) => (
-              <div key={i} className="px-5 py-3 flex items-center justify-between">
-                <span className="text-sm text-gray-800">{a.label}</span>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-400">{a.date ? new Date(a.date).toLocaleDateString('it-IT') : ''}</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{a.status}</span>
-                </div>
+      {/* Rejection Reasons */}
+      {rejectionReasons.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-orange-500" />
+            Motivi Rifiuto
+          </h2>
+          <div className="space-y-2">
+            {rejectionReasons.map(({ reason, count }) => (
+              <div key={reason} className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">{reason}</span>
+                <span className="text-sm font-semibold text-gray-900">{count}</span>
               </div>
             ))}
           </div>
-        )}
+        </div>
+      )}
+
+      {/* Recent Estimates */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h2 className="text-sm font-semibold text-gray-900">Preventivi Recenti</h2>
+        </div>
+        <div className="divide-y divide-gray-50">
+          {recentEstimates.map(e => (
+            <div key={e.id} onClick={() => navigate(`/estimates/${e.id}`)} className="px-5 py-3 flex items-center justify-between hover:bg-gray-50 cursor-pointer">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">{e.title}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{e.estimate_type} · {e.quality_level}</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-semibold text-gray-900">€{(e.revenue || 0).toLocaleString('it-IT')}</span>
+                <StatusBadge status={e.status} />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
+    </div>
+  );
+}
+
+function KpiCard({ label, value, icon: Icon, color }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <Icon className="w-4 h-4" style={{ color }} />
+        <span className="text-xs text-gray-500 font-medium">{label}</span>
+      </div>
+      <p className="text-2xl font-bold" style={{ color }}>{typeof value === 'number' ? value.toLocaleString('it-IT') : value}</p>
     </div>
   );
 }
