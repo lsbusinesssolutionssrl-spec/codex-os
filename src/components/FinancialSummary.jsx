@@ -1,7 +1,6 @@
 import { TrendingUp, TrendingDown, Euro, Wallet, PieChart } from 'lucide-react';
 
 export default function FinancialSummary({ project }) {
-  const Icon = ({ className, style }) => <svg className={className} style={style} />;
   const contractValue = project.contract_value || 0;
   const materialCosts = project.material_costs || 0;
   const laborCosts = project.labor_costs || 0;
@@ -14,7 +13,7 @@ export default function FinancialSummary({ project }) {
 
   const marginColor = grossMarginPct >= 35 ? 'text-green-600' : grossMarginPct >= 25 ? 'text-orange-500' : 'text-red-500';
   const marginBg = grossMarginPct >= 35 ? 'bg-green-50' : grossMarginPct >= 25 ? 'bg-orange-50' : 'bg-red-50';
-  const marginIcon = grossMarginPct >= 35 ? TrendingUp : TrendingDown;
+  const MarginIcon = grossMarginPct >= 35 ? TrendingUp : TrendingDown;
 
   const cards = [
     { label: 'Valore Contratto', value: contractValue, prefix: '€', icon: Euro, color: '#1147FF' },
@@ -65,7 +64,7 @@ export default function FinancialSummary({ project }) {
         {grossMarginPct < 35 && (
           <div className={`mt-4 p-3 rounded-lg ${marginBg} border ${grossMarginPct >= 25 ? 'border-orange-200' : 'border-red-200'}`}>
             <div className="flex items-center gap-2">
-              {marginIcon({ className: `w-4 h-4 ${marginColor}` })}
+              <MarginIcon className={`w-4 h-4 ${marginColor}`} />
               <span className={`text-xs font-medium ${marginColor}`}>
                 {grossMarginPct < 25
                   ? `Attenzione: margine critico (${grossMarginPct.toFixed(1)}%). Rivedi i costi.`
