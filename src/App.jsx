@@ -26,6 +26,7 @@ import Report from './pages/Report';
 import Tickets from './pages/Tickets';
 import TicketDetail from './pages/TicketDetail';
 import ProjectDetail from './pages/ProjectDetail';
+import ClientPortal from './pages/ClientPortal';
 import ChecklistDetail from './pages/ChecklistDetail';
 // Add page imports here
 
@@ -77,6 +78,7 @@ const AuthenticatedApp = () => {
         <Route path="/ai" element={<AI />} />
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/report" element={<Report />} />
+        <Route path="/portal" element={<ClientPortal />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

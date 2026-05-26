@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { Link, useLocation, Outlet } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Home, FileText, FolderKanban,
   CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2
 } from 'lucide-react';
+
 import { base44 } from '@/api/base44Client';
 import NotificationBell from './NotificationBell';
 import GlobalSearch from './GlobalSearch';
@@ -27,8 +28,21 @@ const navItems = [
 
 export default function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isOnline, queueCount } = useOfflineSync();
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(u => {
+      setUserRole(u?.role);
+      if (u?.role === 'client' && !location.pathname.startsWith('/portal')) {
+        navigate('/portal', { replace: true });
+      }
+    }).catch(() => {});
+  }, []);
+
+  const visibleNav = userRole === 'client' ? [] : navItems;
 
   const isActive = (path) => path === '/'
     ? location.pathname === '/'
@@ -55,7 +69,7 @@ export default function Layout() {
         </div>
 
         <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
-          {navItems.map(item => (
+          {visibleNav.map(item => (
             <Link
               key={item.path}
               to={item.path}
