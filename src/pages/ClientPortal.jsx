@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Home, FileText, Ticket, Archive, AlertCircle, ChevronRight, Plus, X, Download, FolderKanban, Lock } from 'lucide-react';
+import { Home, FileText, Ticket, Archive, AlertCircle, ChevronRight, Plus, X, Download, FolderKanban, Lock, LayoutDashboard } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 import SecureDocumentLink from '../components/SecureDocumentLink';
+import { hasRole } from '../lib/roleUtils';
 
 function Section({ icon: Icon, title, children, color = '#1147FF' }) {
   return (
@@ -30,11 +31,16 @@ export default function ClientPortal() {
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [ticketForm, setTicketForm] = useState({ title: '', issue_type: 'Other', priority: 'Medium', notes: '', property_id: '' });
   const [creatingTicket, setCreatingTicket] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       const me = await base44.auth.me();
       setUser(me);
+      
+      // Check if admin user (for testing purposes)
+      const adminCheck = await hasRole(['admin', 'company_admin']);
+      setIsAdmin(adminCheck);
 
       const res = await base44.functions.invoke('getClientPortalData', {});
       const data = res.data;
@@ -81,14 +87,25 @@ export default function ClientPortal() {
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-5">
       {/* Welcome */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4">
-        <div className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0" style={{ backgroundColor: '#1147FF' }}>
-          {client.name?.[0]?.toUpperCase()}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0" style={{ backgroundColor: '#1147FF' }}>
+            {client.name?.[0]?.toUpperCase()}
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Benvenuto, {client.name}</h1>
+            <p className="text-sm text-gray-500 mt-0.5">{client.company_name || client.email} · Area Cliente Codex Solution</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Benvenuto, {client.name}</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{client.company_name || client.email} · Area Cliente Codex Solution</p>
-        </div>
+        {isAdmin && (
+          <button
+            onClick={() => window.location.href = '/'}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            Back to Admin Dashboard
+          </button>
+        )}
       </div>
 
       {/* KPI row */}
