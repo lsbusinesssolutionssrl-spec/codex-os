@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Camera, BookOpen, Home, FileCheck } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Camera, BookOpen, Home, FileCheck, FileText, Download } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 import FinancialSummary from '../components/FinancialSummary';
@@ -30,6 +30,9 @@ export default function ProjectDetail() {
   const [sopTemplates, setSopTemplates] = useState([]);
   const [applyingTemplate, setApplyingTemplate] = useState(false);
   const [activePhotoTab, setActivePhotoTab] = useState('before');
+  const [reportModal, setReportModal] = useState(false);
+  const [selectedReport, setSelectedReport] = useState('progress');
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -166,6 +169,31 @@ export default function ProjectDetail() {
     navigate(`/properties/${property.id}`);
   };
 
+  const generateReport = async () => {
+    setGeneratingReport(true);
+    try {
+      const response = await base44.functions.invoke('generateProjectReport', {
+        project_id: id,
+        report_type: selectedReport
+      });
+      
+      // Create blob and download
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Report_${project.title.replace(/[^a-z0-9]/gi, '_')}_${selectedReport}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      setReportModal(false);
+    } catch (error) {
+      console.error('Error generating report:', error);
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
   const field = (k, label, type = 'text', options = null) => (
     <div key={k}>
       <label className="block text-xs font-medium text-gray-500 mb-1">{label}</label>
@@ -217,6 +245,9 @@ export default function ProjectDetail() {
         <div className="flex gap-2">
           {!editing ? (
             <>
+              <button onClick={() => setReportModal(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+                <FileText className="w-3.5 h-3.5" /> Report
+              </button>
               <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
                 <Edit2 className="w-3.5 h-3.5" /> Modifica
               </button>
@@ -390,6 +421,65 @@ export default function ProjectDetail() {
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h2 className="font-semibold text-gray-900 mb-2">Note</h2>
           <p className="text-sm text-gray-600 whitespace-pre-wrap">{project.notes}</p>
+        </div>
+      )}
+
+      {/* Report Modal */}
+      {reportModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-gray-900 flex items-center gap-2">
+                <Download className="w-5 h-5" /> Genera Report
+              </h2>
+              <button onClick={() => setReportModal(false)}><X className="w-5 h-5 text-gray-400" /></button>
+            </div>
+            
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-2">Tipo Report</label>
+              <div className="space-y-2">
+                {[
+                  { value: 'progress', label: 'Stato Avanzamento Lavori', desc: 'Progresso, milestone e attività' },
+                  { value: 'financial', label: 'Riepilogo Costi', desc: 'Valore, costi e margini' },
+                  { value: 'completion', label: 'Relazione di Conclusione', desc: 'Dettagli finali e documentazione' },
+                  { value: 'checklist', label: 'Checklist Completa', desc: 'Tutte le attività dettagliate' }
+                ].map(option => (
+                  <div
+                    key={option.value}
+                    onClick={() => setSelectedReport(option.value)}
+                    className={`p-3 border rounded-xl cursor-pointer transition-all ${
+                      selectedReport === option.value
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <p className={`text-sm font-semibold ${selectedReport === option.value ? 'text-blue-700' : 'text-gray-800'}`}>
+                      {option.label}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">{option.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={generateReport}
+                disabled={generatingReport}
+                className="flex-1 flex items-center justify-center gap-2 py-2 text-sm text-white rounded-lg font-medium disabled:opacity-40"
+                style={{ backgroundColor: '#1147FF' }}
+              >
+                <Download className="w-4 h-4" />
+                {generatingReport ? 'Generazione...' : 'Scarica PDF'}
+              </button>
+              <button
+                onClick={() => setReportModal(false)}
+                className="flex-1 py-2 text-sm border border-gray-200 rounded-lg text-gray-600"
+              >
+                Annulla
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
