@@ -7,6 +7,7 @@ import {
 
 import { base44 } from '@/api/base44Client';
 import NotificationBell from './NotificationBell';
+import CodexLogo from './CodexLogo';
 import GlobalSearch from './GlobalSearch';
 import { useOfflineSync } from '../hooks/useOfflineSync';
 
@@ -68,10 +69,7 @@ export default function Layout() {
         style={{ backgroundColor: '#0B2341' }}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-          <div>
-            <div className="text-white font-bold text-lg tracking-tight">Codex OS</div>
-            <div className="text-white/40 text-xs font-medium">Codex Solution</div>
-          </div>
+          <CodexLogo />
           <button className="lg:hidden text-white/60 hover:text-white" onClick={() => setSidebarOpen(false)}>
             <X className="w-5 h-5" />
           </button>
