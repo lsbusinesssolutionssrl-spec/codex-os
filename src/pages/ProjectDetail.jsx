@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit2, Save, X, Plus, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -19,6 +20,8 @@ export default function ProjectDetail() {
   const [newTask, setNewTask] = useState('');
   const [addingTask, setAddingTask] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [newMilestone, setNewMilestone] = useState({ title: '', due_date: '' });
+  const [addingMilestone, setAddingMilestone] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -54,6 +57,30 @@ export default function ProjectDetail() {
     setChecklists(prev => [...prev, created]);
     setNewTask('');
     setAddingTask(false);
+  };
+
+  const addMilestone = async () => {
+    if (!newMilestone.title.trim()) return;
+    const milestones = [...(form.milestones || []), { ...newMilestone, id: Date.now().toString(), done: false }];
+    const updated = await base44.entities.Project.update(id, { milestones });
+    setProject(updated);
+    setForm(updated);
+    setNewMilestone({ title: '', due_date: '' });
+    setAddingMilestone(false);
+  };
+
+  const toggleMilestone = async (mId) => {
+    const milestones = (form.milestones || []).map(m => m.id === mId ? { ...m, done: !m.done } : m);
+    const updated = await base44.entities.Project.update(id, { milestones });
+    setProject(updated);
+    setForm(updated);
+  };
+
+  const deleteMilestone = async (mId) => {
+    const milestones = (form.milestones || []).filter(m => m.id !== mId);
+    const updated = await base44.entities.Project.update(id, { milestones });
+    setProject(updated);
+    setForm(updated);
   };
 
   const save = async () => {
@@ -194,6 +221,66 @@ export default function ProjectDetail() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Milestones */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold text-gray-900">Milestone</h2>
+          <button onClick={() => setAddingMilestone(true)} className="flex items-center gap-1 px-2 py-1 text-xs text-white rounded-lg" style={{ backgroundColor: '#1147FF' }}>
+            <Plus className="w-3 h-3" /> Aggiungi
+          </button>
+        </div>
+        {(!form.milestones || form.milestones.length === 0) && !addingMilestone ? (
+          <p className="text-sm text-gray-400 text-center py-4">Nessuna milestone</p>
+        ) : (
+          <div className="space-y-0">
+            {(form.milestones || []).map((m, idx) => (
+              <div key={m.id} className="flex items-start gap-3 py-3">
+                {/* vertical line */}
+                <div className="flex flex-col items-center">
+                  <button onClick={() => toggleMilestone(m.id)} className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                    m.done ? 'bg-green-500 border-green-500' : 'border-gray-300 hover:border-blue-400'
+                  }`}>
+                    {m.done && <div className="w-2 h-2 rounded-full bg-white" />}
+                  </button>
+                  {idx < (form.milestones.length - 1) && <div className="w-0.5 h-8 bg-gray-100 mt-1" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium ${m.done ? 'line-through text-gray-400' : 'text-gray-800'}`}>{m.title}</p>
+                  {m.due_date && (
+                    <p className={`text-xs mt-0.5 ${
+                      !m.done && new Date(m.due_date) < new Date() ? 'text-red-500 font-medium' : 'text-gray-400'
+                    }`}>{new Date(m.due_date).toLocaleDateString('it-IT')}</p>
+                  )}
+                </div>
+                <button onClick={() => deleteMilestone(m.id)} className="p-1 rounded hover:bg-red-50 text-gray-300 hover:text-red-400 flex-shrink-0">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        {addingMilestone && (
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+            <input
+              autoFocus
+              value={newMilestone.title}
+              onChange={e => setNewMilestone(m => ({ ...m, title: e.target.value }))}
+              onKeyDown={e => { if (e.key === 'Enter') addMilestone(); if (e.key === 'Escape') setAddingMilestone(false); }}
+              placeholder="Titolo milestone..."
+              className="flex-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none"
+            />
+            <input
+              type="date"
+              value={newMilestone.due_date}
+              onChange={e => setNewMilestone(m => ({ ...m, due_date: e.target.value }))}
+              className="px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none"
+            />
+            <button onClick={addMilestone} className="px-3 py-1.5 text-xs text-white rounded-lg" style={{ backgroundColor: '#1147FF' }}>Aggiungi</button>
+            <button onClick={() => setAddingMilestone(false)} className="p-1.5 rounded-lg hover:bg-gray-100"><X className="w-3.5 h-3.5 text-gray-400" /></button>
+          </div>
+        )}
       </div>
 
       {project.notes && (
