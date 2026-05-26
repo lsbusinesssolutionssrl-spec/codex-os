@@ -59,22 +59,13 @@ export default function EstimateDetail() {
   };
 
   const convertToProject = async () => {
-    await base44.entities.Estimate.update(id, { ...form, status: 'Converted to Project' });
-    const project = await base44.entities.Project.create({
-      title: form.title,
-      client_id: form.client_id,
-      property_id: form.property_id,
-      status: 'Approved',
-      contract_value: form.revenue,
-      material_costs: form.material_cost,
-      labor_costs: form.labor_cost,
-      other_costs: form.other_costs,
-      estimated_duration: form.estimated_duration,
-      notes: `Creato da preventivo: ${form.title}\n\nLavori inclusi: ${form.included_works || ''}\n\nLavori esclusi: ${form.excluded_works || ''}`,
-      estimate_type: form.estimate_type,
-      quality_level: form.quality_level,
-    });
-    navigate(`/projects/${project.id}`);
+    try {
+      const response = await base44.functions.invoke('convertEstimateToProject', { estimate_id: id });
+      navigate(`/projects/${response.data.project_id}`);
+    } catch (error) {
+      console.error('Error converting to project:', error);
+      alert('Errore nella conversione: ' + (error.message || 'Riprova'));
+    }
   };
 
   const exportPDF = async () => {

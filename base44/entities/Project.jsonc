@@ -14,6 +14,10 @@
       "type": "string",
       "title": "Property"
     },
+    "estimate_id": {
+      "type": "string",
+      "title": "Estimate (Originale)"
+    },
     "status": {
       "type": "string",
       "title": "Status",
@@ -25,7 +29,8 @@
         "In Progress",
         "Testing",
         "Delivered",
-        "Guardian Active"
+        "Guardian Active",
+        "Archived"
       ],
       "default": "Lead"
     },
@@ -83,10 +88,6 @@
       "type": "number",
       "title": "Other Costs (\u20ac)"
     },
-    "payment_collected": {
-      "type": "number",
-      "title": "Payment Collected (\u20ac)"
-    },
     "estimated_duration": {
       "type": "string",
       "title": "Estimated Duration"
@@ -98,22 +99,6 @@
     "quality_level": {
       "type": "string",
       "title": "Quality Level"
-    },
-    "budget": {
-      "type": "number",
-      "title": "Budget (\u20ac)"
-    },
-    "actual_costs": {
-      "type": "number",
-      "title": "Actual Costs (\u20ac)"
-    },
-    "gross_margin": {
-      "type": "number",
-      "title": "Gross Margin (\u20ac)"
-    },
-    "gross_margin_pct": {
-      "type": "number",
-      "title": "Gross Margin %"
     },
     "photos_before": {
       "type": "array",

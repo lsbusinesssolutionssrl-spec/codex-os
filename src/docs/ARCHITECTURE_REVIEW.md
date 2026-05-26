@@ -16,17 +16,25 @@ Codex OS è stato trasformato da tool interno a piattaforma SaaS. Questo documen
 
 ---
 
+## ✅ RESOLVED ISSUES
+
+### 1. ✓ Estimate → Project Conversion - **RISOLTO**
+**Stato:** Completato  
+**Soluzione implementata:**
+- ✅ Aggiunto campo `estimate_id` a Project entity
+- ✅ Creata funzione backend `convertEstimateToProject`
+- ✅ Bottone "Converti in Progetto" in EstimateDetail
+- ✅ Ereditarietà automatica costi e margini
+
+### 2. ✓ EstimateTemplate Duplicato - **RISOLTO**
+**Stato:** Completato  
+**Soluzione implementata:**
+- ✅ Rimosso entity EstimateTemplate (duplicato di EstimatePreset)
+- ✅ Usare solo EstimatePreset per templating
+
 ## 🔴 CRITICAL ISSUES (Priorità 1)
 
-### 1. Broken Workflow: Estimate → Project Conversion
-**Problema:** Preventivi accettati non si convertono automaticamente in progetti  
-**Impatto:** Duplicazione dati, errore manuale, inconsistenza  
-**Soluzione:** 
-- Aggiungere campo `estimate_id` a Project entity
-- Creare automazione o funzione "Converti in Progetto"
-- Ereditare automaticamente costi e margini da Estimate
-
-### 2. Permission Issues: Campi Finanziari
+### 3. Permission Issues: Campi Finanziari
 **Problema:** Technician possono modificare margini e costi  
 **Impatto:** Rischio sicurezza, dati finanziari compromessi  
 **Soluzione:**
@@ -38,30 +46,21 @@ Codex OS è stato trasformato da tool interno a piattaforma SaaS. Questo documen
 
 ## 🟠 MEDIUM ISSUES (Priorità 2)
 
-### 3. Duplicated Fields
+### 4. Duplicated Fields (Parzialmente Risolto)
 **Entità:** Estimate vs Project  
-**Campi duplicati:**
-- `revenue` vs `contract_value`
-- `material_cost` vs `material_costs`
-- `labor_cost` vs `labor_costs`
-- `gross_margin`, `gross_margin_pct`
+**Stato:** `estimate_id` aggiunto, ma persistono duplicazioni  
+**Campi ancora duplicati:**
+- `revenue` vs `contract_value` (giustificato: stima vs reale)
+- `material_cost` vs `material_costs` (giustificato: stima vs reale)
+- `gross_margin`, `gross_margin_pct` (da calcolare on-the-fly)
 
-**Raccomandazione:** Unificare naming, calcolare on-the-fly
+**Raccomandazione:** Valutare se duplicazione è necessaria (stima vs consuntivo)
 
-### 4. Duplicated Logic
-**Entità:** EstimatePreset vs EstimateTemplate  
-**Problema:** Due entità per lo stesso scopo (templating preventivi)  
-**Soluzione:** Unificare in singola entità "EstimateTemplate"
+### 5. Unused Tables (Parzialmente Risolto)
+- ✅ **EstimateTemplate:** Rimosso
+- ⚠️ **SOPTemplate:** 0 record → Valutare se rimuovere o incentivare
 
-### 5. Unused Tables
-- **SOPTemplate:** 0 record → Rimuovere o incentivare
-- **EstimateTemplate:** 0 record → Duplicato con EstimatePreset
-
-### 6. Inconsistent Naming
-- `payment_collected` vs `total_collected`
-- `actual_costs` vs `material_costs + labor_costs + other_costs`
-
-### 7. Navigation Issues
+### 6. Navigation Issues
 - Nessun breadcrumb nelle pagine dettaglio
 - Client Portal isolato senza "Torna alla Dashboard"
 
@@ -130,14 +129,14 @@ GuardianSubscription (1) ──→ (N) SupportTicket
 
 ## 🎯 Productization Roadmap
 
-### Phase 1: Core Fixes (1-2 settimane)
-- [ ] Aggiungere `estimate_id` a Project
-- [ ] Implementare conversione Estimate → Project
-- [ ] Unificare campi duplicati (naming convention)
-- [ ] Implementare RLS per ruoli
+### ✅ Phase 1: Core Fixes - **COMPLETATO**
+- [x] Aggiungere `estimate_id` a Project
+- [x] Implementare conversione Estimate → Project
+- [x] Rimuovere EstimateTemplate (usare EstimatePreset)
+- [ ] Implementare RLS per ruoli (prossimo)
 
 ### Phase 2: Data Cleanup (1 settimana)
-- [ ] Rimuovere EstimateTemplate (usare EstimatePreset)
+- [x] Rimuovere EstimateTemplate
 - [ ] Rimuovere SOPTemplate se non usato
 - [ ] Aggiungere stato "Archived"
 - [ ] Migrare dati esistenti
@@ -213,4 +212,5 @@ GuardianSubscription (1) ──→ (N) SupportTicket
 ---
 
 **Ultimo Audit:** 2026-05-26  
-**Prossima Review:** Dopo Phase 1 completion
+**Phase 1 Status:** ✅ COMPLETATO  
+**Prossima Review:** Dopo implementazione RLS e Phase 2
