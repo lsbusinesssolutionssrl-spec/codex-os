@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import NotificationBell from './NotificationBell';
+import GlobalSearch from './GlobalSearch';
 import { useOfflineSync } from '../hooks/useOfflineSync';
 
 const navItems = [
@@ -94,6 +95,7 @@ export default function Layout() {
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex-1" />
+          <GlobalSearch />
           <NotificationBell />
         </header>
         <main className="flex-1 overflow-y-auto">
