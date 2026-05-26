@@ -9,6 +9,8 @@ export default function Tickets() {
   const [clients, setClients] = useState({});
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const navigate = useNavigate();
 
@@ -29,7 +31,11 @@ export default function Tickets() {
   const filtered = tickets.filter(t => {
     const q = search.toLowerCase();
     const match = !q || t.title?.toLowerCase().includes(q) || clients[t.client_id]?.toLowerCase().includes(q);
-    return match && (!statusFilter || t.status === statusFilter) && (!priorityFilter || t.priority === priorityFilter);
+    const created = t.created_date ? new Date(t.created_date) : null;
+    const from = dateFrom ? new Date(dateFrom) : null;
+    const to = dateTo ? new Date(dateTo + 'T23:59:59') : null;
+    const inRange = (!from || (created && created >= from)) && (!to || (created && created <= to));
+    return match && (!statusFilter || t.status === statusFilter) && (!priorityFilter || t.priority === priorityFilter) && inRange;
   });
 
   const createNew = async () => {
@@ -65,6 +71,8 @@ export default function Tickets() {
           <option value="">Tutti gli stati</option>
           {STATUSES.map(s => <option key={s}>{s}</option>)}
         </select>
+        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none" title="Da" />
+        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none" title="A" />
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

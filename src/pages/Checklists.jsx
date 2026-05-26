@@ -12,6 +12,8 @@ export default function Checklists() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,7 +33,11 @@ export default function Checklists() {
   const filtered = items.filter(i => {
     const q = search.toLowerCase();
     const match = !q || i.title?.toLowerCase().includes(q) || i.description?.toLowerCase().includes(q);
-    return match && (!categoryFilter || i.category === categoryFilter) && (!statusFilter || i.status === statusFilter);
+    const due = i.due_date ? new Date(i.due_date) : null;
+    const from = dateFrom ? new Date(dateFrom) : null;
+    const to = dateTo ? new Date(dateTo + 'T23:59:59') : null;
+    const inRange = (!from || (due && due >= from)) && (!to || (due && due <= to));
+    return match && (!categoryFilter || i.category === categoryFilter) && (!statusFilter || i.status === statusFilter) && inRange;
   });
 
   const createNew = async () => {
@@ -67,6 +73,8 @@ export default function Checklists() {
           <option value="Done">Done</option>
           <option value="Blocked">Blocked</option>
         </select>
+        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none" title="Scadenza da" />
+        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none" title="Scadenza a" />
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

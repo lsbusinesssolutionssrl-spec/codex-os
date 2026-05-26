@@ -11,6 +11,8 @@ export default function Documents() {
   const [clients, setClients] = useState({});
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,7 +32,11 @@ export default function Documents() {
   const filtered = documents.filter(d => {
     const q = search.toLowerCase();
     const match = !q || d.title?.toLowerCase().includes(q) || clients[d.client_id]?.toLowerCase().includes(q);
-    return match && (!typeFilter || d.type === typeFilter);
+    const exp = d.expiration_date ? new Date(d.expiration_date) : null;
+    const from = dateFrom ? new Date(dateFrom) : null;
+    const to = dateTo ? new Date(dateTo + 'T23:59:59') : null;
+    const inRange = (!from || (exp && exp >= from)) && (!to || (exp && exp <= to));
+    return match && (!typeFilter || d.type === typeFilter) && inRange;
   });
 
   const createNew = async () => {
@@ -64,6 +70,8 @@ export default function Documents() {
           <option value="">Tutti i tipi</option>
           {TYPES.slice(1).map(t => <option key={t}>{t}</option>)}
         </select>
+        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none" title="Scadenza da" />
+        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none" title="Scadenza a" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
