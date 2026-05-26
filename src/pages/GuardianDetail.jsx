@@ -16,6 +16,7 @@ export default function GuardianDetail() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [creatingTicket, setCreatingTicket] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -41,6 +42,21 @@ export default function GuardianDetail() {
     const updated = await base44.entities.GuardianSubscription.update(id, form);
     setSub(updated);
     setEditing(false);
+  };
+
+  const createTicket = async () => {
+    setCreatingTicket(true);
+    const ticket = await base44.entities.SupportTicket.create({
+      title: `Ticket Guardian · ${client?.name || ''}`,
+      client_id: sub.client_id,
+      property_id: sub.property_id || null,
+      guardian_id: id,
+      status: 'Open',
+      priority: 'Medium',
+    });
+    setTickets(prev => [ticket, ...prev]);
+    setCreatingTicket(false);
+    navigate(`/tickets/${ticket.id}`);
   };
 
   const deleteRecord = async () => {
@@ -146,7 +162,17 @@ export default function GuardianDetail() {
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <h2 className="font-semibold text-gray-900">Ticket di Supporto</h2>
-          <button onClick={() => navigate('/tickets')} className="text-xs text-blue-600 hover:underline">Vedi tutti →</button>
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate('/tickets')} className="text-xs text-blue-600 hover:underline">Vedi tutti →</button>
+            <button
+              onClick={createTicket}
+              disabled={creatingTicket}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-white rounded-lg font-medium"
+              style={{ backgroundColor: '#1147FF' }}
+            >
+              <Plus className="w-3 h-3" /> Nuovo Ticket
+            </button>
+          </div>
         </div>
         {tickets.length === 0 ? (
           <div className="py-10 text-center text-sm text-gray-400">Nessun ticket</div>

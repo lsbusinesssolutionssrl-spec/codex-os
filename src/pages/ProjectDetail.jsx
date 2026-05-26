@@ -13,6 +13,7 @@ export default function ProjectDetail() {
   const [client, setClient] = useState(null);
   const [property, setProperty] = useState(null);
   const [clients, setClients] = useState([]);
+  const [users, setUsers] = useState([]);
   const [checklists, setChecklists] = useState([]);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
@@ -48,10 +49,11 @@ export default function ProjectDetail() {
 
   useEffect(() => {
     const load = async () => {
-      const [projs, cls, checks] = await Promise.all([
+      const [projs, cls, checks, usrs] = await Promise.all([
         base44.entities.Project.filter({ id }),
         base44.entities.Client.list(),
         base44.entities.ChecklistItem.filter({ project_id: id }),
+        base44.entities.User.list(),
       ]);
       if (projs[0]) {
         setProject(projs[0]);
@@ -64,6 +66,7 @@ export default function ProjectDetail() {
         }
       }
       setClients(cls);
+      setUsers(usrs);
       setChecklists(checks);
     };
     load();
@@ -181,6 +184,29 @@ export default function ProjectDetail() {
           {field('title', 'Titolo')}
           {field('status', 'Stato', 'text', STATUSES)}
           {field('project_manager', 'Project Manager')}
+          <div key="team_members">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Membri del Team</label>
+            <div className="flex flex-wrap gap-1.5 p-2 border border-gray-200 rounded-lg min-h-[40px]">
+              {users.map(u => {
+                const selected = (form.team_members || []).includes(u.id);
+                return (
+                  <button
+                    key={u.id}
+                    type="button"
+                    onClick={() => {
+                      const members = form.team_members || [];
+                      setForm(f => ({ ...f, team_members: selected ? members.filter(m => m !== u.id) : [...members, u.id] }));
+                    }}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                      selected ? 'text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                    style={selected ? { backgroundColor: '#1147FF' } : {}}
+                  >{u.full_name || u.email}</button>
+                );
+              })}
+              {users.length === 0 && <span className="text-xs text-gray-400">Nessun utente disponibile</span>}
+            </div>
+          </div>
           {field('start_date', 'Data Inizio', 'date')}
           {field('expected_end_date', 'Data Fine Prevista', 'date')}
           {field('budget', 'Budget (€)', 'number')}
