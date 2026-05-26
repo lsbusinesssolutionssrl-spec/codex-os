@@ -27,6 +27,8 @@ import Tickets from './pages/Tickets';
 import TicketDetail from './pages/TicketDetail';
 import ProjectDetail from './pages/ProjectDetail';
 import ClientPortal from './pages/ClientPortal';
+import SOPTemplates from './pages/SOPTemplates';
+import SOPTemplateDetail from './pages/SOPTemplateDetail';
 import ChecklistDetail from './pages/ChecklistDetail';
 // Add page imports here
 
@@ -79,6 +81,8 @@ const AuthenticatedApp = () => {
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/report" element={<Report />} />
         <Route path="/portal" element={<ClientPortal />} />
+        <Route path="/sop" element={<SOPTemplates />} />
+        <Route path="/sop/:id" element={<SOPTemplateDetail />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

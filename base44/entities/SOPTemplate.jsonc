@@ -1,0 +1,38 @@
+{
+  "name": "SOPTemplate",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Titolo"
+    },
+    "category": {
+      "type": "string",
+      "title": "Categoria",
+      "enum": [
+        "Bathroom",
+        "Full Home",
+        "Electrical",
+        "Networking",
+        "Security",
+        "Roofing",
+        "Handover"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "title": "Descrizione"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "title": "Voci Procedura"
+    }
+  },
+  "required": [
+    "title",
+    "category"
+  ]
+}
