@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, TrendingUp, FileDown } from 'lucide-react';
+import { ArrowLeft, Save, TrendingUp, FileDown, FolderPlus } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 
@@ -47,6 +48,77 @@ export default function EstimateDetail() {
     setSaving(true);
     await base44.entities.Estimate.update(id, form);
     setSaving(false);
+  };
+
+  const convertToProject = async () => {
+    await base44.entities.Estimate.update(id, { ...form, status: 'Converted to Project' });
+    const project = await base44.entities.Project.create({
+      title: form.title,
+      client_id: form.client_id,
+      property_id: form.property_id,
+      status: 'Approved',
+      budget: form.revenue,
+      notes: `Creato da preventivo: ${form.title}`,
+    });
+    navigate(`/projects/${project.id}`);
+  };
+
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    const client = clients.find(c => c.id === form.client_id);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PREVENTIVO', 20, 25);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100);
+    doc.text('Codex Solution', 150, 20);
+    doc.text(new Date().toLocaleDateString('it-IT'), 150, 27);
+    doc.setDrawColor(17, 71, 255);
+    doc.line(20, 32, 190, 32);
+    doc.setTextColor(0);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(form.title || 'Preventivo', 20, 43);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    if (client) doc.text(`Cliente: ${client.name} ${client.company_name || ''}`, 20, 52);
+    if (form.estimate_type) doc.text(`Tipo: ${form.estimate_type}`, 20, 59);
+    if (form.quality_level) doc.text(`Livello: ${form.quality_level}`, 20, 66);
+    if (form.estimated_duration) doc.text(`Durata: ${form.estimated_duration}`, 20, 73);
+    let y = 85;
+    doc.setFont('helvetica', 'bold');
+    doc.text('RIEPILOGO ECONOMICO', 20, y); y += 8;
+    doc.setFont('helvetica', 'normal');
+    const rows = [
+      ['Ricavi Stimati', `€ ${(form.revenue || 0).toLocaleString('it-IT')}`],
+      ['Costo Materiali', `€ ${(form.material_cost || 0).toLocaleString('it-IT')}`],
+      ['Costo Manodopera', `€ ${(form.labor_cost || 0).toLocaleString('it-IT')}`],
+      ['Altri Costi', `€ ${(form.other_costs || 0).toLocaleString('it-IT')}`],
+      ['Margine Lordo', `€ ${(form.gross_margin || 0).toLocaleString('it-IT')} (${form.gross_margin_pct || 0}%)`],
+    ];
+    rows.forEach(([label, val]) => {
+      doc.text(label, 25, y);
+      doc.text(val, 140, y);
+      y += 7;
+    });
+    if (form.included_works) {
+      y += 5;
+      doc.setFont('helvetica', 'bold');
+      doc.text('LAVORI INCLUSI', 20, y); y += 7;
+      doc.setFont('helvetica', 'normal');
+      const lines = doc.splitTextToSize(form.included_works, 165);
+      doc.text(lines, 20, y); y += lines.length * 6;
+    }
+    if (form.excluded_works) {
+      y += 5;
+      doc.setFont('helvetica', 'bold');
+      doc.text('LAVORI ESCLUSI', 20, y); y += 7;
+      doc.setFont('helvetica', 'normal');
+      const lines = doc.splitTextToSize(form.excluded_works, 165);
+      doc.text(lines, 20, y);
+    }
+    doc.save(`preventivo-${(form.title || 'codex').replace(/\s+/g, '-').toLowerCase()}.pdf`);
   };
 
   const clientProperties = properties.filter(p => p.client_id === form.client_id);
@@ -150,13 +222,18 @@ export default function EstimateDetail() {
         </div>
       </div>
 
-      <div className="flex gap-3">
-        <button onClick={save} className="flex items-center gap-2 px-5 py-2 text-sm text-white rounded-lg font-medium" style={{ backgroundColor: '#1147FF' }}>
+      <div className="flex gap-3 flex-wrap">
+        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2 text-sm text-white rounded-lg font-medium" style={{ backgroundColor: '#1147FF' }}>
           <Save className="w-4 h-4" /> Salva Preventivo
         </button>
-        <button className="flex items-center gap-2 px-5 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">
-          <FileDown className="w-4 h-4" /> Genera PDF (placeholder)
+        <button onClick={exportPDF} className="flex items-center gap-2 px-5 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">
+          <FileDown className="w-4 h-4" /> Esporta PDF
         </button>
+        {(form.status === 'Accepted' || form.status === 'Sent') && (
+          <button onClick={convertToProject} className="flex items-center gap-2 px-5 py-2 text-sm text-white rounded-lg font-medium" style={{ backgroundColor: '#10B981' }}>
+            <FolderPlus className="w-4 h-4" /> Converti in Progetto
+          </button>
+        )}
       </div>
     </div>
   );
