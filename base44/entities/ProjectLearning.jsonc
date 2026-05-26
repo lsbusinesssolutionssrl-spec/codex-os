@@ -1,0 +1,112 @@
+{
+  "name": "ProjectLearning",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "title": "Progetto"
+    },
+    "project_type": {
+      "type": "string",
+      "title": "Tipo Progetto"
+    },
+    "category": {
+      "type": "string",
+      "title": "Categoria"
+    },
+    "square_meters": {
+      "type": "number",
+      "title": "Metri Quadrati"
+    },
+    "revenue": {
+      "type": "number",
+      "title": "Ricavi (\u20ac)"
+    },
+    "estimated_costs": {
+      "type": "number",
+      "title": "Costi Stimati (\u20ac)"
+    },
+    "actual_costs": {
+      "type": "number",
+      "title": "Costi Reali (\u20ac)"
+    },
+    "estimated_duration": {
+      "type": "string",
+      "title": "Durata Stimata"
+    },
+    "actual_duration": {
+      "type": "string",
+      "title": "Durata Reale"
+    },
+    "gross_margin": {
+      "type": "number",
+      "title": "Margine Lordo (\u20ac)"
+    },
+    "gross_margin_pct": {
+      "type": "number",
+      "title": "Margine Lordo %"
+    },
+    "net_margin_pct": {
+      "type": "number",
+      "title": "Margine Netto %"
+    },
+    "estimate_accuracy_pct": {
+      "type": "number",
+      "title": "Precisione Preventivo %"
+    },
+    "duration_accuracy_pct": {
+      "type": "number",
+      "title": "Precisione Durata %"
+    },
+    "cost_accuracy_pct": {
+      "type": "number",
+      "title": "Precisione Costi %"
+    },
+    "customer_satisfaction": {
+      "type": "number",
+      "title": "Soddisfazione Cliente",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "what_went_well": {
+      "type": "string",
+      "title": "Cosa \u00e8 andato bene"
+    },
+    "what_went_wrong": {
+      "type": "string",
+      "title": "Cosa \u00e8 andato male"
+    },
+    "improvements": {
+      "type": "string",
+      "title": "Miglioramenti"
+    },
+    "would_repeat": {
+      "type": "boolean",
+      "title": "Ripeteresti questo approccio?"
+    },
+    "team_members": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Team Members"
+    },
+    "suppliers_involved": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Fornitori Coinvolti"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Note"
+    }
+  },
+  "required": [
+    "project_id",
+    "revenue",
+    "actual_costs",
+    "gross_margin_pct"
+  ]
+}

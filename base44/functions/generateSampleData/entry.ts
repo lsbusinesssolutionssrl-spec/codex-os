@@ -128,6 +128,22 @@ Deno.serve(async (req) => {
       { alert_type: 'Project Over Budget', project_id: projects[2].id, severity: 'Medium', message: 'Costi superano budget del 10%', amount: 4500, created_date: '2026-04-10' },
     ]);
 
+    // 5 Knowledge Base entries
+    const knowledgeBase = await base44.asServiceRole.entities.KnowledgeBase.bulkCreate([
+      { title: 'Ottimizzazione Tempi Posa Pavimenti', category: 'Full Home', project_id: projects[2].id, problem: 'Tempi di posa superiori al previsto', cause: 'Coordinamento insufficiente tra team', solution: 'Implementare check giornaliero avanzamento', recommendations: 'Usare checklist dettagliata per ogni fase', lessons_learned: 'Coordinamento team è critico per rispettare timeline', tags: ['pavimenti', 'coordinamento', 'efficienza'] },
+      { title: 'Gestione Perdite Acqua in Appartamento', category: 'Waterproofing', project_id: projects[3].id, problem: 'Perdita individuata tardi', cause: 'Ispezione iniziale incompleta', solution: 'Test pressione completo prima di iniziare', recommendations: 'Sempre test idraulico completo in fase di survey', lessons_learned: 'Investire tempo in survey previene problemi costosi', tags: ['idraulica', 'survey', 'prevenzione'] },
+      { title: 'Best Practice Cablaggio Rack', category: 'Networking', project_id: projects[1].id, problem: 'Cavi disordinati nel rack', cause: 'Mancanza di standardizzazione', solution: 'Usare etichette e organizzatori cavi', recommendations: 'Documentare schema cablaggio per manutenzione futura', lessons_learned: 'Organizzazione cavi facilita troubleshooting', tags: ['networking', 'organizzazione', 'best-practice'] },
+      { title: 'Riduzione Sprechi Materiale Elettrico', category: 'Electrical', problem: 'Spreco cavi e connettori', cause: 'Tagli non ottimizzati', solution: 'Pianificare tagli con software', recommendations: 'Creare template per progetti ricorrenti', lessons_learned: 'Pianificazione riduce sprechi del 15%', tags: ['elettrico', 'efficienza', 'costi'] },
+      { title: 'Gestione Cliente Difficile', category: 'Customer Management', problem: 'Cliente richiedeva variazioni continue', cause: 'Scope non definito chiaramente', solution: 'Documentare tutte le variazioni per iscritto', recommendations: 'Usare change order form per ogni modifica', lessons_learned: 'Documentazione chiara previene dispute', tags: ['customer', 'documentazione', 'processo'] },
+    ]);
+
+    // 3 Project Learning records
+    const projectLearning = await base44.asServiceRole.entities.ProjectLearning.bulkCreate([
+      { project_id: projects[3].id, project_type: 'Full Home', category: 'Residential', revenue: 35000, estimated_costs: 30000, actual_costs: 31000, gross_margin: 4000, gross_margin_pct: 11.4, what_went_well: 'Cliente soddisfatto, consegna in anticipo', what_went_wrong: 'Margine inferiore al target per imprevisti idraulici', improvements: 'Migliorare survey iniziale per identificare problemi nascosti', would_repeat: false, notes: 'Progetto completato ma margine critico' },
+      { project_id: projects[2].id, project_type: 'Full Home', category: 'Residential', revenue: 45000, estimated_costs: 38000, actual_costs: 40000, gross_margin: 5000, gross_margin_pct: 11.1, what_went_well: 'Qualità esecuzione eccellente', what_went_wrong: 'Costi materiali superiori per aumenti prezzi', improvements: 'Includere clausola adeguamento prezzi nei contratti', would_repeat: true, notes: 'Lezione: proteggere da volatilità costi' },
+      { project_id: projects[1].id, project_type: 'Networking', category: 'Commercial', revenue: 25000, estimated_costs: 20000, actual_costs: 22000, gross_margin: 3000, gross_margin_pct: 12.0, what_went_well: 'Tecnologia all\'avanguardia installata', what_went_wrong: 'Tempistiche più lunghe del previsto', improvements: 'Buffer temporale del 20% per progetti complessi', would_repeat: true, notes: 'Networking richiede più tempo di stima' },
+    ]);
+
     // 3 Guardian Subscriptions
     const guardians = await base44.asServiceRole.entities.GuardianSubscription.bulkCreate([
       { client_id: clients[0].id, property_id: properties[0].id, start_date: '2026-01-01', monthly_price: 99, status: 'Active', included_services: 'Monitoraggio 24/7, intervento urgente', notes: 'Villa Rossi' },
@@ -150,6 +166,8 @@ Deno.serve(async (req) => {
         purchaseOrders: purchaseOrders.length,
         financialAlerts: financialAlerts.length,
         guardians: guardians.length,
+        knowledgeBase: knowledgeBase.length,
+        projectLearning: projectLearning.length,
       },
     });
   } catch (error) {

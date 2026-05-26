@@ -1,0 +1,86 @@
+{
+  "name": "KnowledgeBase",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Titolo"
+    },
+    "category": {
+      "type": "string",
+      "title": "Categoria",
+      "enum": [
+        "Bathroom",
+        "Full Home",
+        "Electrical",
+        "Networking",
+        "Security",
+        "Roofing",
+        "Waterproofing",
+        "HVAC",
+        "Customer Management",
+        "Financial"
+      ]
+    },
+    "project_id": {
+      "type": "string",
+      "title": "Progetto"
+    },
+    "problem": {
+      "type": "string",
+      "title": "Problema"
+    },
+    "cause": {
+      "type": "string",
+      "title": "Causa"
+    },
+    "solution": {
+      "type": "string",
+      "title": "Soluzione"
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Foto"
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Documenti"
+    },
+    "recommendations": {
+      "type": "string",
+      "title": "Raccomandazioni"
+    },
+    "lessons_learned": {
+      "type": "string",
+      "title": "Lessons Learned"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Tags"
+    },
+    "created_by": {
+      "type": "string",
+      "title": "Creato da"
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Attivo",
+      "default": true
+    }
+  },
+  "required": [
+    "title",
+    "category",
+    "problem",
+    "solution"
+  ]
+}

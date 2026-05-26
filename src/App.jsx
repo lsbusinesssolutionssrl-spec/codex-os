@@ -41,6 +41,10 @@ import Suppliers from './pages/Suppliers';
 import Timesheets from './pages/Timesheets';
 import PurchaseOrders from './pages/PurchaseOrders';
 import CashFlow from './pages/CashFlow';
+import CodexIntelligence from './pages/CodexIntelligence';
+import KnowledgeBase from './pages/KnowledgeBase';
+import AIAdvisor from './pages/AIAdvisor';
+import ExecutiveInsights from './pages/ExecutiveInsights';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -103,6 +107,10 @@ const AuthenticatedApp = () => {
         <Route path="/timesheets" element={<Timesheets />} />
         <Route path="/purchase-orders" element={<PurchaseOrders />} />
         <Route path="/cash-flow" element={<CashFlow />} />
+        <Route path="/intelligence" element={<CodexIntelligence />} />
+        <Route path="/knowledge-base" element={<KnowledgeBase />} />
+        <Route path="/ai-advisor" element={<AIAdvisor />} />
+        <Route path="/executive-insights" element={<ExecutiveInsights />} />
       </Route>
       <Route element={<PortalLayout />}>
         <Route path="/portal" element={<ClientPortal />} />

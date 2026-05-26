@@ -1,0 +1,94 @@
+{
+  "name": "IntelligenceInsight",
+  "type": "object",
+  "properties": {
+    "insight_type": {
+      "type": "string",
+      "title": "Tipo Insight",
+      "enum": [
+        "Profitability",
+        "Pricing",
+        "Team Performance",
+        "Supplier Performance",
+        "Project Health",
+        "Trend",
+        "Risk",
+        "Opportunity"
+      ]
+    },
+    "category": {
+      "type": "string",
+      "title": "Categoria"
+    },
+    "severity": {
+      "type": "string",
+      "title": "Severit\u00e0",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "default": "Medium"
+    },
+    "title": {
+      "type": "string",
+      "title": "Titolo"
+    },
+    "description": {
+      "type": "string",
+      "title": "Descrizione"
+    },
+    "recommendation": {
+      "type": "string",
+      "title": "Raccomandazione"
+    },
+    "impact": {
+      "type": "string",
+      "title": "Impatto"
+    },
+    "metrics": {
+      "type": "object",
+      "title": "Metriche",
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "trend": {
+          "type": "string",
+          "enum": [
+            "up",
+            "down",
+            "stable"
+          ]
+        },
+        "change_pct": {
+          "type": "number"
+        }
+      }
+    },
+    "project_id": {
+      "type": "string",
+      "title": "Progetto"
+    },
+    "is_actionable": {
+      "type": "boolean",
+      "title": "Azionabile",
+      "default": true
+    },
+    "is_read": {
+      "type": "boolean",
+      "title": "Letto",
+      "default": false
+    },
+    "created_date": {
+      "type": "string",
+      "title": "Data Creazione"
+    }
+  },
+  "required": [
+    "insight_type",
+    "title",
+    "description"
+  ]
+}
