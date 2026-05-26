@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Home, FileText, Ticket, Archive, AlertCircle, ChevronRight, Plus, X } from 'lucide-react';
+import { Home, FileText, Ticket, Archive, AlertCircle, ChevronRight, Plus, X, Download } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 
@@ -239,10 +239,28 @@ export default function ClientPortal() {
                     <p className="text-xs text-gray-400">{d.type}</p>
                   </div>
                 </div>
-                {d.file_url && (
-                  <a href={d.file_url} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                    Apri <ChevronRight className="w-3 h-3" />
-                  </a>
+{d.file_url && (
+                  <div className="flex items-center gap-2">
+                    <a href={d.file_url} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                      Apri <ChevronRight className="w-3 h-3" />
+                    </a>
+                    <button
+                      onClick={async () => {
+                        const res = await fetch(d.file_url);
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = d.title || 'documento';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                      className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700"
+                      title="Scarica"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 )}
               </div>
             ))}

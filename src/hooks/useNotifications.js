@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 
 export function useNotifications() {
@@ -23,6 +24,12 @@ export function useNotifications() {
       localStorage.setItem('codex_notifications', JSON.stringify(updated));
       return updated;
     });
+    // In-app toast
+    if (type === 'success') toast.success(message);
+    else if (type === 'warning') toast.warning(message);
+    else if (type === 'ticket') toast.info(message);
+    else toast.message(message);
+    // Browser push
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('Codex OS', { body: message, icon: '/favicon.ico' });
     }
@@ -50,6 +57,8 @@ export function useNotifications() {
         addNotification(`🎫 Nuovo ticket: ${event.data?.title || 'N/A'}`, 'ticket');
       } else if (event.type === 'update' && event.data?.assigned_technician) {
         addNotification(`👷 Ticket assegnato: ${event.data?.title || 'N/A'}`, 'assignment');
+      } else if (event.type === 'update' && ['Resolved','Closed'].includes(event.data?.status)) {
+        addNotification(`✅ Ticket risolto: ${event.data?.title || 'N/A'}`, 'success');
       }
     });
 
@@ -64,7 +73,20 @@ export function useNotifications() {
       }
     });
 
-    return () => { unsubTicket(); unsubChecklist(); };
+    const unsubProject = base44.entities.Project.subscribe((event) => {
+      if (event.type === 'update' && event.data?.status) {
+        addNotification(`📁 Progetto "${event.data?.title || 'N/A'}" → ${event.data.status}`, 'info');
+      }
+    });
+
+    const unsubEstimate = base44.entities.Estimate.subscribe((event) => {
+      if (event.type === 'update' && ['Accepted','Rejected'].includes(event.data?.status)) {
+        const icon = event.data.status === 'Accepted' ? '🎉' : '❌';
+        addNotification(`${icon} Preventivo ${event.data.status}: ${event.data?.title || 'N/A'}`, event.data.status === 'Accepted' ? 'success' : 'warning');
+      }
+    });
+
+    return () => { unsubTicket(); unsubChecklist(); unsubProject(); unsubEstimate(); };
   }, [addNotification, requestPermission]);
 
   return { notifications, unread, markAllRead, addNotification };
