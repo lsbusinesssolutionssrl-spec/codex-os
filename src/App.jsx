@@ -27,6 +27,7 @@ import Tickets from './pages/Tickets';
 import TicketDetail from './pages/TicketDetail';
 import ProjectDetail from './pages/ProjectDetail';
 import ClientPortal from './pages/ClientPortal';
+import PortalLayout from './components/PortalLayout';
 import SOPTemplates from './pages/SOPTemplates';
 import SOPTemplateDetail from './pages/SOPTemplateDetail';
 import ChecklistDetail from './pages/ChecklistDetail';
@@ -80,9 +81,11 @@ const AuthenticatedApp = () => {
         <Route path="/ai" element={<AI />} />
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/report" element={<Report />} />
-        <Route path="/portal" element={<ClientPortal />} />
         <Route path="/sop" element={<SOPTemplates />} />
         <Route path="/sop/:id" element={<SOPTemplateDetail />} />
+      </Route>
+      <Route element={<PortalLayout />}>
+        <Route path="/portal" element={<ClientPortal />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
