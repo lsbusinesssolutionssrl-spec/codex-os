@@ -42,7 +42,15 @@ export default function Layout() {
     }).catch(() => {});
   }, []);
 
-  const visibleNav = userRole === 'client' ? [] : navItems;
+  const NAV_BY_ROLE = {
+    admin: null, // all
+    project_manager: ['/', '/projects', '/checklists', '/documents', '/calendar', '/report', '/team'],
+    technician: ['/', '/projects', '/checklists', '/tickets'],
+    sales: ['/', '/clients', '/properties', '/estimates', '/documents'],
+    client: [],
+  };
+  const allowedPaths = userRole ? NAV_BY_ROLE[userRole] : null;
+  const visibleNav = allowedPaths === null ? navItems : navItems.filter(i => allowedPaths.includes(i.path));
 
   const isActive = (path) => path === '/'
     ? location.pathname === '/'
