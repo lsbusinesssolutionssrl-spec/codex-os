@@ -22,6 +22,7 @@ import DocumentDetail from './pages/DocumentDetail';
 import Team from './pages/Team';
 import AI from './pages/AI';
 import Calendar from './pages/Calendar';
+import Report from './pages/Report';
 import Tickets from './pages/Tickets';
 import TicketDetail from './pages/TicketDetail';
 import ProjectDetail from './pages/ProjectDetail';
@@ -75,6 +76,7 @@ const AuthenticatedApp = () => {
         <Route path="/team" element={<Team />} />
         <Route path="/ai" element={<AI />} />
         <Route path="/calendar" element={<Calendar />} />
+        <Route path="/report" element={<Report />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
