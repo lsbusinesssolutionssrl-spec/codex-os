@@ -195,32 +195,22 @@ export default function ArchitectureReview() {
         Document: { records: documents.length, fields: 9, issues: 0, status: 'good' },
       },
     };
-    } catch (error) {
-      console.error('Audit failed:', error);
-      setAudit({
-        summary: { totalEntities: 0, totalRecords: 0, criticalIssues: 0, mediumIssues: 0, lowIssues: 0 },
-        duplicatedFields: [],
-        optimizationOpportunities: [],
-        relationships: [],
-        entityHealth: {},
-        permissionIssues: [],
-        navigationIssues: [],
-      });
-    } catch (error) {
-      console.error('Audit failed:', error);
-      setAudit({
-        summary: { totalEntities: 0, totalRecords: 0, criticalIssues: 0, mediumIssues: 0, lowIssues: 0 },
-        duplicatedFields: [],
-        optimizationOpportunities: [],
-        relationships: [],
-        entityHealth: {},
-        permissionIssues: [],
-        navigationIssues: [],
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (error) {
+    console.error('Audit failed:', error);
+    setAudit({
+      summary: { totalEntities: 0, totalRecords: 0, criticalIssues: 0, mediumIssues: 0, lowIssues: 0 },
+      duplicatedFields: [],
+      optimizationOpportunities: [],
+      relationships: [],
+      entityHealth: {},
+      permissionIssues: [],
+      navigationIssues: [],
+      unusedTables: [],
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (loading) {
     return (
