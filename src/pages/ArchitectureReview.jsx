@@ -13,26 +13,37 @@ export default function ArchitectureReview() {
   }, []);
 
   const runAudit = async () => {
-    // Fetch entities with limit to avoid rate limiting
-    const entities = await Promise.all([
-      base44.entities.Estimate.list(undefined, 100),
-      base44.entities.Project.list(undefined, 100),
-      base44.entities.Client.list(undefined, 100),
-      base44.entities.Property.list(undefined, 100),
-      base44.entities.ProjectCost.list(undefined, 100),
-      base44.entities.Timesheet.list(undefined, 100),
-      base44.entities.PurchaseOrder.list(undefined, 100),
-      base44.entities.Supplier.list(undefined, 100),
-      base44.entities.SupportTicket.list(undefined, 100),
-      base44.entities.GuardianSubscription.list(undefined, 100),
-      base44.entities.ChecklistItem.list(undefined, 100),
-      base44.entities.Document.list(undefined, 100),
-      base44.entities.EstimatePreset.list(undefined, 100),
-      base44.entities.FinancialAlert.list(undefined, 100),
-      base44.entities.KnowledgeBase.list(undefined, 100),
-      base44.entities.ProjectLearning.list(undefined, 100),
-      base44.entities.IntelligenceInsight.list(undefined, 100),
+    // Fetch entities in batches to avoid rate limiting
+    const batch1 = await Promise.all([
+      base44.entities.Estimate.list(undefined, 50),
+      base44.entities.Project.list(undefined, 50),
+      base44.entities.Client.list(undefined, 50),
+      base44.entities.Property.list(undefined, 50),
     ]);
+    
+    const batch2 = await Promise.all([
+      base44.entities.ProjectCost.list(undefined, 50),
+      base44.entities.Timesheet.list(undefined, 50),
+      base44.entities.PurchaseOrder.list(undefined, 50),
+      base44.entities.Supplier.list(undefined, 50),
+    ]);
+    
+    const batch3 = await Promise.all([
+      base44.entities.SupportTicket.list(undefined, 50),
+      base44.entities.GuardianSubscription.list(undefined, 50),
+      base44.entities.ChecklistItem.list(undefined, 50),
+      base44.entities.Document.list(undefined, 50),
+    ]);
+    
+    const batch4 = await Promise.all([
+      base44.entities.EstimatePreset.list(undefined, 50),
+      base44.entities.FinancialAlert.list(undefined, 50),
+      base44.entities.KnowledgeBase.list(undefined, 50),
+      base44.entities.ProjectLearning.list(undefined, 50),
+      base44.entities.IntelligenceInsight.list(undefined, 50),
+    ]);
+
+    const entities = [...batch1, ...batch2, ...batch3, ...batch4];
 
     const [
       estimates, projects, clients, properties, projectCosts, timesheets, 
