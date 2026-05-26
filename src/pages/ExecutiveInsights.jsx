@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, TrendingDown, DollarSign, Users, Award, AlertTriangle, BarChart3, PieChart, Activity, Target, Zap, Crown, Brain, BookOpen, CheckCircle, Bot } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Users, Award, AlertTriangle, BarChart3, PieChart, Activity, Target, Zap, Crown, Brain, BookOpen, CheckCircle, Bot, Bell, Settings } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
+import LiveKpiWidgets from '../components/LiveKpiWidgets';
+import AlertSettings from '../components/AlertSettings';
 
 export default function ExecutiveInsights() {
   const navigate = useNavigate();
@@ -17,12 +20,23 @@ export default function ExecutiveInsights() {
     riskIndicators: [],
     knowledgeScore: 0,
   });
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [criticalAlerts, setCriticalAlerts] = useState([]);
+  const [showAlertSettings, setShowAlertSettings] = useState(false);
+  const previousDataRef = useRef(null);
 
   useEffect(() => {
     loadExecutiveData();
+    
+    // Polling ottimizzato: aggiorna ogni 30 secondi
+    const pollInterval = setInterval(() => {
+      loadExecutiveData(true);
+    }, 30000);
+
+    return () => clearInterval(pollInterval);
   }, []);
 
-  const loadExecutiveData = async () => {
+  const loadExecutiveData = async (isRefresh = false) => {
     const [projects, costs, clients, suppliers, timesheets, guardians, knowledgeBase, projectLearning] = await Promise.all([
       base44.entities.Project.list(),
       base44.entities.ProjectCost.list(),
@@ -33,6 +47,9 @@ export default function ExecutiveInsights() {
       base44.entities.KnowledgeBase.list(),
       base44.entities.ProjectLearning.list(),
     ]);
+
+    // Rileva margini critici e invia notifiche
+    checkCriticalMargins(projects, isRefresh);
 
     // Revenue & Margin Trend (last 6 months)
     const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu'];
@@ -181,7 +198,7 @@ export default function ExecutiveInsights() {
     const maxScore = Math.max(1, projects.length * 4);
     const knowledgeScore = Math.round(((documentedProjects + lessonsLearned + knowledgeBase.length) / maxScore) * 100);
 
-    setExecData({
+    const newData = {
       revenueTrend: revenueByMonth,
       marginTrend: marginByMonth,
       bestCustomers: clientList.slice(0, 5),
@@ -191,9 +208,57 @@ export default function ExecutiveInsights() {
       growthOpportunities: opportunities,
       riskIndicators: risks,
       knowledgeScore,
+    };
+
+    // Salva dati precedenti per confronto
+    previousDataRef.current = execData;
+    setExecData(newData);
+    setLastUpdated(new Date());
+    setLoading(false);
+  };
+
+  const checkCriticalMargins = (projects, isRefresh) => {
+    const criticalProjects = projects.filter(p => 
+      (p.gross_margin_pct || 0) < 25 && 
+      ['In Progress', 'Approved'].includes(p.status)
+    );
+
+    const newAlerts = [];
+    
+    criticalProjects.forEach(project => {
+      const prevProject = previousDataRef.current?.projects?.find(p => p.id === project.id);
+      const marginNow = project.gross_margin_pct || 0;
+      const marginBefore = prevProject?.gross_margin_pct || null;
+      
+      // Notifica solo se il margine è sceso sotto soglia o è nuovo alert
+      if (marginNow < 25 && (marginBefore === null || marginBefore >= 25)) {
+        newAlerts.push({
+          project_id: project.id,
+          title: project.title,
+          margin: marginNow,
+          timestamp: new Date(),
+        });
+      }
     });
 
-    setLoading(false);
+    if (newAlerts.length > 0) {
+      setCriticalAlerts(prev => [...prev, ...newAlerts]);
+      
+      // Invia notifica toast
+      newAlerts.forEach(alert => {
+        toast.error(
+          `⚠️ Margine Critico: ${alert.title}`,
+          {
+            description: `Margine sceso al ${alert.margin.toFixed(1)}% - Sotto soglia 25%`,
+            duration: 8000,
+            action: {
+              label: 'Vedi Progetto',
+              onClick: () => navigate(`/projects/${alert.project_id}`),
+            },
+          }
+        );
+      });
+    }
   };
 
   if (loading) return <div className="p-6 text-center text-gray-400">Caricamento Executive Insights...</div>;
@@ -208,16 +273,45 @@ export default function ExecutiveInsights() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Executive Insights</h1>
-            <p className="text-sm text-gray-500">Panoramica strategica per Stefano Desiato</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <p className="text-sm text-gray-500">Panoramica strategica per Stefano Desiato</p>
+              <span className="text-xs text-green-600 flex items-center gap-1">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                Live
+              </span>
+            </div>
           </div>
         </div>
-        <div className="text-right">
-          <p className="text-xs text-gray-500 font-medium">Knowledge Score</p>
-          <p className={`text-2xl font-bold ${execData.knowledgeScore >= 75 ? 'text-green-600' : execData.knowledgeScore >= 50 ? 'text-orange-600' : 'text-red-600'}`}>
-            {execData.knowledgeScore}/100
-          </p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setShowAlertSettings(true)}
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            title="Configura Alert"
+          >
+            <Settings className="w-5 h-5 text-gray-600" />
+          </button>
+          {criticalAlerts.length > 0 && (
+            <div className="relative">
+              <Bell className="w-5 h-5 text-red-500 animate-bounce" />
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-[9px] text-white flex items-center justify-center">
+                {criticalAlerts.length}
+              </span>
+            </div>
+          )}
+          <div className="text-right">
+            <p className="text-xs text-gray-500 font-medium">Knowledge Score</p>
+            <p className={`text-2xl font-bold ${execData.knowledgeScore >= 75 ? 'text-green-600' : execData.knowledgeScore >= 50 ? 'text-orange-600' : 'text-red-600'}`}>
+              {execData.knowledgeScore}/100
+            </p>
+            <p className="text-[10px] text-gray-400 mt-0.5">
+              Aggiornato: {lastUpdated.toLocaleTimeString('it-IT')}
+            </p>
+          </div>
         </div>
       </div>
+
+      {/* Live KPI Widgets */}
+      <LiveKpiWidgets />
 
       {/* Revenue & Margin Trends */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -303,6 +397,41 @@ export default function ExecutiveInsights() {
         </div>
       </div>
 
+      {/* Critical Margin Alerts - Real-time */}
+      {criticalAlerts.length > 0 && (
+        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-5 animate-pulse">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-100">
+              <AlertTriangle className="w-4 h-4 text-red-600" />
+            </div>
+            <h3 className="font-semibold text-red-900">Alert Margini Critici (Real-time)</h3>
+            <span className="ml-auto text-xs font-semibold bg-red-200 text-red-800 px-2 py-1 rounded-full">
+              {criticalAlerts.length} alert{criticalAlerts.length > 1 ? 's' : ''}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {criticalAlerts.slice(-5).map((alert, idx) => (
+              <div 
+                key={idx} 
+                onClick={() => navigate(`/projects/${alert.project_id}`)}
+                className="flex items-center justify-between p-3 bg-white border border-red-100 rounded-lg cursor-pointer hover:bg-red-50 transition-colors"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-red-900">{alert.title}</p>
+                  <p className="text-xs text-red-700 mt-0.5">
+                    Margine: <span className="font-bold">{alert.margin.toFixed(1)}%</span> · 
+                    Rilevato: {alert.timestamp.toLocaleTimeString('it-IT')}
+                  </p>
+                </div>
+                <button className="text-xs font-semibold text-white bg-red-600 px-3 py-1.5 rounded-lg hover:bg-red-700">
+                  Vedi Progetto
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Risk Indicators */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <div className="flex items-center gap-2 mb-4">
@@ -352,18 +481,23 @@ export default function ExecutiveInsights() {
           <p className="text-xs text-white/80">Chiedi insights</p>
         </button>
       </div>
+
+      {/* Alert Settings Modal */}
+      {showAlertSettings && (
+        <AlertSettings onClose={() => setShowAlertSettings(false)} />
+      )}
     </div>
   );
 }
 
-function TrendCard({ title, icon: IconComponent, color, data, format }) {
+function TrendCard({ title, icon: Icon, color, data, format }) {
   const maxValue = Math.max(...data, 1);
   
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${color}15` }}>
-          <IconComponent className="w-4 h-4" style={{ color }} />
+          <Icon className="w-4 h-4" style={{ color }} />
         </div>
         <h3 className="font-semibold text-gray-900">{title}</h3>
       </div>
@@ -386,12 +520,12 @@ function TrendCard({ title, icon: IconComponent, color, data, format }) {
   );
 }
 
-function RankingCard({ title, icon: IconComponent, color, data, valueKey, valueFormat }) {
+function RankingCard({ title, icon: Icon, color, data, valueKey, valueFormat }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${color}15` }}>
-          <IconComponent className="w-4 h-4" style={{ color }} />
+          <Icon className="w-4 h-4" style={{ color }} />
         </div>
         <h3 className="font-semibold text-gray-900">{title}</h3>
       </div>
