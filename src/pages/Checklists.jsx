@@ -14,6 +14,7 @@ export default function Checklists() {
   const [statusFilter, setStatusFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [anomalyOnly, setAnomalyOnly] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export default function Checklists() {
     const from = dateFrom ? new Date(dateFrom) : null;
     const to = dateTo ? new Date(dateTo + 'T23:59:59') : null;
     const inRange = (!from || (due && due >= from)) && (!to || (due && due <= to));
-    return match && (!categoryFilter || i.category === categoryFilter) && (!statusFilter || i.status === statusFilter) && inRange;
+    return match && (!categoryFilter || i.category === categoryFilter) && (!statusFilter || i.status === statusFilter) && inRange && (!anomalyOnly || i.is_anomaly);
   });
 
   const createNew = async () => {
@@ -75,6 +76,12 @@ export default function Checklists() {
         </select>
         <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none" title="Scadenza da" />
         <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none" title="Scadenza a" />
+        <button
+          onClick={() => setAnomalyOnly(a => !a)}
+          className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg border transition-colors font-medium ${
+            anomalyOnly ? 'bg-red-500 text-white border-red-500' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+          }`}
+        >⚠️ Solo anomalie</button>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

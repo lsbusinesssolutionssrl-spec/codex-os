@@ -38,11 +38,20 @@ export default function Layout() {
   useEffect(() => {
     base44.auth.me().then(u => {
       setUserRole(u?.role);
-      if (u?.role === 'client' && !location.pathname.startsWith('/portal')) {
-        navigate('/portal', { replace: true });
-      }
     }).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!userRole) return;
+    if (userRole === 'client') {
+      if (!location.pathname.startsWith('/portal')) navigate('/portal', { replace: true });
+      return;
+    }
+    const allowed = NAV_BY_ROLE[userRole];
+    if (!allowed) return; // admin: tutto permesso
+    const ok = allowed.some(p => p === '/' ? location.pathname === '/' : location.pathname.startsWith(p));
+    if (!ok) navigate('/', { replace: true });
+  }, [userRole, location.pathname]);
 
   const NAV_BY_ROLE = {
     admin: null, // all

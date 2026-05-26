@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, X, Camera, AlertTriangle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, X, Camera, AlertTriangle, Trash2, MapPin, PenLine } from 'lucide-react';
+import SignaturePad from '../components/SignaturePad';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 
@@ -16,6 +17,8 @@ export default function ChecklistDetail() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showSignature, setShowSignature] = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -40,6 +43,27 @@ export default function ChecklistDetail() {
   const deleteRecord = async () => {
     await base44.entities.ChecklistItem.delete(id);
     navigate('/checklists');
+  };
+
+  const captureGPS = () => {
+    if (!navigator.geolocation) return;
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        setForm(f => ({ ...f, geo_lat: pos.coords.latitude, geo_lng: pos.coords.longitude }));
+        setGpsLoading(false);
+      },
+      () => setGpsLoading(false)
+    );
+  };
+
+  const handleSignature = async (dataUrl) => {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], 'signature.png', { type: 'image/png' });
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setForm(f => ({ ...f, signature_url: file_url }));
+    setShowSignature(false);
   };
 
   const handlePhotoUpload = async (e) => {
@@ -133,6 +157,19 @@ export default function ChecklistDetail() {
           <textarea value={form.notes || ''} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none resize-none" />
         </div>
 
+        {/* GPS */}
+        <div className="flex items-center gap-3">
+          <button type="button" onClick={captureGPS} disabled={gpsLoading}
+            className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600">
+            <MapPin className="w-4 h-4" style={{ color: '#1147FF' }} />
+            {gpsLoading ? 'Rilevamento...' : form.geo_lat ? `GPS: ${form.geo_lat.toFixed(5)}, ${form.geo_lng.toFixed(5)}` : 'Cattura posizione GPS'}
+          </button>
+          {form.geo_lat && (
+            <a href={`https://maps.google.com/?q=${form.geo_lat},${form.geo_lng}`} target="_blank" rel="noreferrer"
+              className="text-xs text-blue-500 hover:underline">Vedi mappa</a>
+          )}
+        </div>
+
         {/* Anomaly flag */}
         <label className="flex items-center gap-3 cursor-pointer">
           <input type="checkbox" checked={!!form.is_anomaly} onChange={e => setForm(f => ({ ...f, is_anomaly: e.target.checked }))} className="w-4 h-4 rounded border-gray-300" />
@@ -141,6 +178,26 @@ export default function ChecklistDetail() {
             <span className="text-sm text-gray-700 font-medium">Segnala come anomalia</span>
           </div>
         </label>
+      </div>
+
+      {/* Signature */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold text-gray-900">Firma Cliente</h2>
+          {!showSignature && (
+            <button onClick={() => setShowSignature(true)}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+              <PenLine className="w-3.5 h-3.5" /> {form.signature_url ? 'Rifirma' : 'Acquisisci Firma'}
+            </button>
+          )}
+        </div>
+        {showSignature ? (
+          <SignaturePad onSave={handleSignature} onCancel={() => setShowSignature(false)} />
+        ) : form.signature_url ? (
+          <img src={form.signature_url} alt="Firma" className="h-24 border border-gray-100 rounded-lg bg-gray-50 p-2" />
+        ) : (
+          <p className="text-sm text-gray-400 text-center py-4">Nessuna firma acquisita</p>
+        )}
       </div>
 
       {/* Photos */}
