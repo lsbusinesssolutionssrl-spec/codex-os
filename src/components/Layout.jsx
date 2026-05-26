@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Home, FileText, FolderKanban,
-  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket
+  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import NotificationBell from './NotificationBell';
@@ -21,6 +21,7 @@ const navItems = [
   { path: '/documents', icon: Archive, label: 'Documenti' },
   { path: '/team', icon: Users2, label: 'Team' },
   { path: '/ai', icon: Bot, label: 'Codex AI' },
+  { path: '/calendar', icon: CalendarDays, label: 'Calendario' },
 ];
 
 export default function Layout() {
