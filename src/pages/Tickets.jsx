@@ -52,7 +52,7 @@ export default function Tickets() {
   });
 
   const createNew = async () => {
-    const t = await base44.entities.SupportTicket.create({ title: 'Nuovo Ticket', priority: 'Medium', status: 'Open', client_id: '' });
+    const t = await base44.entities.SupportTicket.create({ title: 'Nuovo Ticket', priority: 'Medium', status: 'Open' });
     navigate(`/tickets/${t.id}`);
   };
 

@@ -174,24 +174,29 @@ export default function ProjectDetail() {
 
   const generateHomePassport = async () => {
     if (!property) return;
+    // Ensure actual_end_date is set when generating Home Passport
+    const endDate = project.actual_end_date || new Date().toISOString().split('T')[0];
+    if (!project.actual_end_date) {
+      await base44.entities.Project.update(id, { actual_end_date: endDate });
+    }
     const projectSummary = {
       title: project.title,
       start_date: project.start_date,
-      end_date: project.actual_end_date || project.expected_end_date,
+      end_date: endDate,
       status: project.status,
       contract_value: project.contract_value,
+      estimate_type: project.estimate_type,
+      quality_level: project.quality_level,
       photos_before: project.photos_before || [],
       photos_during: project.photos_during || [],
       photos_after: project.photos_after || [],
       documents: project.documents || [],
       notes: project.notes,
+      project_id: project.id,
+      recorded_at: new Date().toISOString(),
     };
-    const interventions = (property.interventions || []);
-    interventions.push(projectSummary);
-    const updated = await base44.entities.Property.update(property.id, {
-      interventions,
-      notes: (property.notes || '') + `\n\n[${new Date().toLocaleDateString('it-IT')}] Progetto "${project.title}" completato. Aggiornato Home Passport.`,
-    });
+    const interventions = [...(property.interventions || []), projectSummary];
+    const updated = await base44.entities.Property.update(property.id, { interventions });
     setProperty(updated);
     navigate(`/properties/${property.id}`);
   };

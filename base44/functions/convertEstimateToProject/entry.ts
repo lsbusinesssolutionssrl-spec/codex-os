@@ -28,6 +28,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Estimate already converted' }, { status: 400 });
     }
 
+    // Validate required fields
+    if (!estimate.client_id) {
+      return Response.json({ error: 'Preventivo senza cliente associato — impossibile convertire' }, { status: 400 });
+    }
+    if (!estimate.property_id) {
+      return Response.json({ error: 'Preventivo senza proprietà associata — impossibile convertire' }, { status: 400 });
+    }
+
     // Create project from estimate
     const project = await base44.asServiceRole.entities.Project.create({
       title: estimate.title,
