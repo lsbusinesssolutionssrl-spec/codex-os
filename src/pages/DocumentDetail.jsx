@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Upload, ExternalLink, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Upload, ExternalLink, X, Trash2, Clock, Download } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 const TYPES = ['Contract', 'Estimate', 'Invoice', 'Certification', 'Warranty', 'Floor Plan', 'Photo', 'Other'];
@@ -16,6 +16,8 @@ export default function DocumentDetail() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [signedUrl, setSignedUrl] = useState(null);
+  const [generatingUrl, setGeneratingUrl] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -52,7 +54,41 @@ export default function DocumentDetail() {
     setUploading(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     setForm(f => ({ ...f, file_url }));
+    setSignedUrl(null); // Reset signed URL when file changes
     setUploading(false);
+  };
+
+  const generateSignedUrl = async () => {
+    if (!doc?.id || generatingUrl) return;
+    setGeneratingUrl(true);
+    try {
+      const res = await base44.functions.invoke('getDocumentSignedUrl', { 
+        document_id: doc.id 
+      });
+      const { signed_url, expires_at } = res.data;
+      setSignedUrl(signed_url);
+    } catch (error) {
+      console.error('Failed to generate signed URL:', error);
+    } finally {
+      setGeneratingUrl(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!form.file_url) return;
+    try {
+      const url = signedUrl || form.file_url;
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = form.title || 'documento';
+      a.click();
+      URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+    }
   };
 
   if (!doc) return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
@@ -136,24 +172,55 @@ export default function DocumentDetail() {
           </label>
         </div>
         {form.file_url ? (
-          <div className="space-y-3">
-            {isImage ? (
-              <img src={form.file_url} alt="" className="max-h-64 rounded-lg object-contain bg-gray-50 w-full" />
-            ) : (
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="text-2xl">📄</div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-700 truncate">Documento caricato</p>
-                  <p className="text-xs text-gray-400 truncate">{form.file_url}</p>
-                </div>
-              </div>
-            )}
-            <a href={form.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-blue-600 hover:underline">
-              <ExternalLink className="w-3.5 h-3.5" /> Apri file
-            </a>
-          </div>
+        <div className="space-y-3">
+        {isImage ? (
+          <img src={form.file_url} alt="" className="max-h-64 rounded-lg object-contain bg-gray-50 w-full" />
         ) : (
-          <p className="text-sm text-gray-400 text-center py-6">Nessun file caricato</p>
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <div className="text-2xl">📄</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-700 truncate">Documento caricato</p>
+              <p className="text-xs text-gray-400 truncate">{form.file_url}</p>
+            </div>
+          </div>
+        )}
+        <div className="flex items-center gap-3 pt-2">
+          <button
+            onClick={generateSignedUrl}
+            disabled={generatingUrl}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 disabled:opacity-50"
+          >
+            {generatingUrl ? (
+              <div className="w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                <Clock className="w-3.5 h-3.5" />
+                Genera URL Sicuro (7gg)
+              </>
+            )}
+          </button>
+          <button
+            onClick={handleDownload}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Scarica
+          </button>
+          {signedUrl && (
+            <a
+              href={signedUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-green-600 hover:underline"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Apri URL Sicuro
+            </a>
+          )}
+        </div>
+        </div>
+        ) : (
+        <p className="text-sm text-gray-400 text-center py-6">Nessun file caricato</p>
         )}
       </div>
     </div>

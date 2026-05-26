@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Home, FileText, Ticket, Archive, AlertCircle, ChevronRight, Plus, X, Download, FolderKanban } from 'lucide-react';
+import { Home, FileText, Ticket, Archive, AlertCircle, ChevronRight, Plus, X, Download, FolderKanban, Lock } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 import SecureDocumentLink from '../components/SecureDocumentLink';
@@ -263,9 +263,10 @@ export default function ClientPortal() {
                   <div>
                     <p className="font-medium text-gray-900">{d.title}</p>
                     <p className="text-xs text-gray-400">{d.type}</p>
+                    {d.signed_url && <p className="text-xs text-green-600 flex items-center gap-1"><Lock className="w-3 h-3" /> URL Sicuro disponibile</p>}
                   </div>
                 </div>
-<SecureDocumentLink document={d} showLabel={false} />
+                <SecureDocumentLink document={d.signed_url ? { ...d, file_url: d.signed_url } : d} showLabel={false} />
               </div>
             ))}
           </div>

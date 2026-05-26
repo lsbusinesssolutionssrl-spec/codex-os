@@ -64,6 +64,26 @@ Deno.serve(async (req) => {
       created_date: t.created_date,
     }));
 
+    // Generate signed URLs for documents (7-day expiration)
+    const documentsWithUrls = await Promise.all(
+      documents.map(async (doc) => {
+        try {
+          if (doc.file_url) {
+            const file_uri = doc.file_uri || `/files/${doc.file_url.split('/').pop()}`;
+            const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({
+              file_uri,
+              expires_in: 604800 // 7 days
+            });
+            return { ...doc, signed_url };
+          }
+          return doc;
+        } catch (error) {
+          console.error('Failed to generate signed URL:', error);
+          return doc;
+        }
+      })
+    );
+
     return Response.json({
       client: {
         id: client.id,
@@ -76,7 +96,7 @@ Deno.serve(async (req) => {
       estimates: safeEstimates,
       projects: safeProjects,
       tickets: safeTickets,
-      documents,
+      documents: documentsWithUrls,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
