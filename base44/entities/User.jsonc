@@ -11,56 +11,30 @@
       "title": "Role",
       "enum": [
         "admin",
+        "company_admin",
         "project_manager",
         "technician",
         "sales",
-        "client",
-        "company_admin"
+        "client"
       ],
       "default": "user"
-    },
-    "department": {
-      "type": "string",
-      "title": "Department"
     },
     "phone": {
       "type": "string",
       "title": "Phone"
     },
-    "avatar_url": {
+    "department": {
       "type": "string",
-      "title": "Avatar URL"
+      "title": "Department"
     },
     "job_title": {
       "type": "string",
       "title": "Job Title"
     },
-    "is_active": {
-      "type": "boolean",
-      "title": "Active",
-      "default": true
-    },
-    "last_login": {
+    "avatar_url": {
       "type": "string",
-      "title": "Last Login"
-    },
-    "preferences": {
-      "type": "object",
-      "title": "User Preferences",
-      "properties": {
-        "language": {
-          "type": "string",
-          "default": "it"
-        },
-        "theme": {
-          "type": "string",
-          "default": "light"
-        },
-        "notifications_enabled": {
-          "type": "boolean",
-          "default": true
-        }
-      }
+      "title": "Avatar URL"
     }
-  }
+  },
+  "required": []
 }
