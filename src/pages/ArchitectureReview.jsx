@@ -216,7 +216,7 @@ export default function ArchitectureReview() {
   }
 };
 
-  if (loading) {
+  if (loading || !audit) {
     return (
       <div className="p-6 text-center text-gray-400">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin mx-auto mb-4" />
@@ -244,11 +244,11 @@ export default function ArchitectureReview() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <SummaryCard label="Entità Totali" value={audit.summary.totalEntities} icon={Database} color="#1147FF" />
-        <SummaryCard label="Record Totali" value={audit.summary.totalRecords} icon={Layers} color="#10B981" />
-        <SummaryCard label="Criticità" value={audit.summary.criticalIssues} icon={AlertOctagon} color="#EF4444" />
-        <SummaryCard label="Problemi Media" value={audit.summary.mediumIssues} icon={AlertTriangle} color="#F59E0B" />
-        <SummaryCard label="Problemi Low" value={audit.summary.lowIssues} icon={AlertCircle} color="#6B7280" />
+        <SummaryCard label="Entità Totali" value={audit.summary?.totalEntities || 0} icon={Database} color="#1147FF" />
+        <SummaryCard label="Record Totali" value={audit.summary?.totalRecords || 0} icon={Layers} color="#10B981" />
+        <SummaryCard label="Criticità" value={audit.summary?.criticalIssues || 0} icon={AlertOctagon} color="#EF4444" />
+        <SummaryCard label="Problemi Media" value={audit.summary?.mediumIssues || 0} icon={AlertTriangle} color="#F59E0B" />
+        <SummaryCard label="Problemi Low" value={audit.summary?.lowIssues || 0} icon={AlertCircle} color="#6B7280" />
       </div>
 
       {/* Resolved Issues Summary */}
@@ -278,7 +278,7 @@ export default function ArchitectureReview() {
       </div>
 
       {/* Duplicated Fields */}
-      {audit.duplicatedFields.length > 0 && (
+      {(audit.duplicatedFields || []).length > 0 && (
         <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <GitBranch className="w-5 h-5 text-orange-600" />
@@ -299,7 +299,7 @@ export default function ArchitectureReview() {
           <h2 className="font-bold text-green-900">Optimization Opportunities</h2>
         </div>
         <div className="space-y-3">
-          {audit.optimizationOpportunities.map((opp, idx) => (
+          {(audit.optimizationOpportunities || []).map((opp, idx) => (
             <div key={idx} className="bg-white rounded-lg p-3 border border-green-100">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold text-gray-900">{opp.opportunity}</h3>
@@ -323,7 +323,7 @@ export default function ArchitectureReview() {
           <h2 className="font-bold text-gray-900">Entity Relationships</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {audit.relationships.map((rel, idx) => (
+          {(audit.relationships || []).map((rel, idx) => (
             <div key={idx} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
               <span className="text-xs font-semibold text-gray-700">{rel.from}</span>
               <span className="text-gray-400">→</span>
@@ -335,7 +335,7 @@ export default function ArchitectureReview() {
       </div>
 
       {/* Permission & Navigation Issues */}
-      {(audit.permissionIssues.length > 0 || audit.navigationIssues.length > 0) && (
+      {((audit.permissionIssues || []).length > 0 || (audit.navigationIssues || []).length > 0) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {audit.permissionIssues.length > 0 && (
             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-5">
@@ -344,7 +344,7 @@ export default function ArchitectureReview() {
                 <h2 className="font-bold text-yellow-900">Permission Issues</h2>
               </div>
               <div className="space-y-3">
-                {audit.permissionIssues.map((issue, idx) => (
+                {(audit.permissionIssues || []).map((issue, idx) => (
                   <IssueRow key={idx} issue={issue} />
                 ))}
               </div>
@@ -358,7 +358,7 @@ export default function ArchitectureReview() {
                 <h2 className="font-bold text-blue-900">Navigation Issues</h2>
               </div>
               <div className="space-y-3">
-                {audit.navigationIssues.map((issue, idx) => (
+                {(audit.navigationIssues || []).map((issue, idx) => (
                   <IssueRow key={idx} issue={issue} />
                 ))}
               </div>
@@ -368,7 +368,7 @@ export default function ArchitectureReview() {
       )}
 
       {/* Unused Tables */}
-      {audit.unusedTables.length > 0 && (
+      {(audit.unusedTables || []).length > 0 && (
         <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <Box className="w-5 h-5 text-gray-600" />
@@ -406,7 +406,7 @@ export default function ArchitectureReview() {
               </tr>
             </thead>
             <tbody>
-              {Object.entries(audit.entityHealth).map(([name, data]) => (
+              {Object.entries(audit.entityHealth || {}).map(([name, data]) => (
                 <tr key={name} className={`border-b ${data.status === 'removed' ? 'bg-gray-50 opacity-50' : 'border-gray-100'}`}>
                   <td className="py-2 px-3 font-medium text-gray-900">
                     {name}
