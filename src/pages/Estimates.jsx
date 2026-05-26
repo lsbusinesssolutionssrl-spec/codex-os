@@ -35,7 +35,7 @@ export default function Estimates() {
   });
 
   const createNew = async () => {
-    const created = await base44.entities.Estimate.create({ title: 'Nuovo Preventivo', status: 'Draft' });
+    const created = await base44.entities.Estimate.create({ title: 'Nuovo Preventivo', status: 'Draft', client_id: '' });
     navigate(`/estimates/${created.id}`);
   };
 
