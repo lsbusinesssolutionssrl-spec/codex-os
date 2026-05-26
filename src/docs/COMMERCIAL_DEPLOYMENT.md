@@ -6,12 +6,12 @@
 ## 1. Pre-Launch Setup
 
 ### Stripe Configuration
-- [ ] Crea Stripe account
-- [ ] Configura 3 Products (Starter, Professional, Enterprise)
-- [ ] Crea Prices per ogni piano (monthly + yearly)
-- [ ] Popola `stripe_price_id_monthly` e `stripe_price_id_yearly` in SubscriptionPlan
-- [ ] Configura webhook endpoint: `https://yourdomain.com/api/stripe-webhook`
-- [ ] Testa checkout flow in modalità test
+- ⚠️ Crea Stripe account
+- ⚠️ Configura 3 Products (Starter, Professional, Enterprise)
+- ⚠️ Crea Prices per ogni piano (monthly + yearly)
+- ⚠️ Popola `stripe_price_id_monthly` e `stripe_price_id_yearly` in SubscriptionPlan
+- ⚠️ Configura webhook endpoint: `https://yourdomain.com/api/stripe-webhook`
+- ⚠️ Testa checkout flow in modalità test
 
 ### Domain & Branding
 - [ ] Configura dominio principale (es. app.codexos.io)
@@ -24,10 +24,10 @@
   - Quota exceeded warning
 
 ### Database Migration
-- [ ] Esegui script per aggiungere `company_id` a entity esistenti
-- [ ] Crea company "default" per dati legacy
-- [ ] Associa tutti gli utenti esistenti alla company default
-- [ ] Verifica RLS filters funzionano correttamente
+- ✅ Esegui script per aggiungere `company_id` a entity esistenti
+- ✅ Crea company "default" per dati legacy
+- ✅ Associa tutti gli utenti esistenti alla company default
+- ✅ Verifica RLS filters funzionano correttamente
 
 ---
 

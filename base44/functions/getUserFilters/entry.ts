@@ -9,23 +9,33 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Return filter based on user role
+    // Get user's company_id for multi-tenant isolation
+    const users = await base44.entities.User.filter({ email: user.email });
+    const company_id = users[0]?.company_id || null;
+
+    // Return filter based on user role - ALL filtered by company_id
     const filters = {
-      Project: {},
-      Estimate: {},
-      Client: {},
-      Property: {},
-      Document: {},
-      SupportTicket: {},
-      GuardianSubscription: {},
-      ChecklistItem: {},
-      ProjectCost: {},
-      Timesheet: {},
-      PurchaseOrder: {},
+      Project: { company_id },
+      Estimate: { company_id },
+      Client: { company_id },
+      Property: { company_id },
+      Document: { company_id },
+      SupportTicket: { company_id },
+      GuardianSubscription: { company_id },
+      ChecklistItem: { company_id },
+      ProjectCost: { company_id },
+      Timesheet: { company_id },
+      PurchaseOrder: { company_id },
+      Supplier: { company_id },
+      KnowledgeBase: { company_id },
+      ProjectLearning: { company_id },
+      IntelligenceInsight: { company_id },
+      EstimatePreset: { company_id },
+      FinancialAlert: { company_id },
     };
 
-    // Admin vede tutto
-    if (user.role === 'admin') {
+    // Admin vede tutto (ma solo della propria company)
+    if (user.role === 'admin' || user.role === 'company_admin') {
       return Response.json({ filters });
     }
 
