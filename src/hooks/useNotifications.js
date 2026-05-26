@@ -52,17 +52,26 @@ export function useNotifications() {
   useEffect(() => {
     requestPermission();
 
-    const unsubTicket = base44.entities.SupportTicket.subscribe((event) => {
+    // Ticket notifications
+    const unsubTicket = base44.entities.SupportTicket.subscribe(async (event) => {
+      const user = await base44.auth.me();
       if (event.type === 'create') {
         addNotification(`🎫 Nuovo ticket: ${event.data?.title || 'N/A'}`, 'ticket');
-      } else if (event.type === 'update' && event.data?.assigned_technician) {
-        addNotification(`👷 Ticket assegnato: ${event.data?.title || 'N/A'}`, 'assignment');
-      } else if (event.type === 'update' && ['Resolved','Closed'].includes(event.data?.status)) {
-        addNotification(`✅ Ticket risolto: ${event.data?.title || 'N/A'}`, 'success');
+      } else if (event.type === 'update') {
+        // Assignment notification (only for assigned technician)
+        if (event.data?.assigned_technician && user?.full_name === event.data.assigned_technician) {
+          addNotification(`👷 Ticket assegnato a te: ${event.data?.title || 'N/A'}`, 'assignment');
+        }
+        // Status change notification
+        if (['Resolved','Closed'].includes(event.data?.status)) {
+          addNotification(`✅ Ticket risolto: ${event.data?.title || 'N/A'}`, 'success');
+        }
       }
     });
 
-    const unsubChecklist = base44.entities.ChecklistItem.subscribe((event) => {
+    // Checklist notifications with photo upload detection
+    const unsubChecklist = base44.entities.ChecklistItem.subscribe(async (event) => {
+      const user = await base44.auth.me();
       if (event.type === 'update') {
         if (event.data?.status === 'Done') {
           addNotification(`✅ Checklist completata: ${event.data?.title || 'N/A'}`, 'success');
@@ -70,12 +79,30 @@ export function useNotifications() {
         if (event.data?.is_anomaly) {
           addNotification(`⚠️ Anomalia segnalata: ${event.data?.title || 'N/A'}`, 'warning');
         }
+        // Photo upload notification
+        if (event.old_data?.photos && event.data?.photos && 
+            event.data.photos.length > event.old_data.photos.length) {
+          addNotification(`📷 Nuove foto caricate: ${event.data?.title || 'N/A'}`, 'info');
+        }
       }
     });
 
-    const unsubProject = base44.entities.Project.subscribe((event) => {
-      if (event.type === 'update' && event.data?.status) {
-        addNotification(`📁 Progetto "${event.data?.title || 'N/A'}" → ${event.data.status}`, 'info');
+    // Project notifications
+    const unsubProject = base44.entities.Project.subscribe(async (event) => {
+      const user = await base44.auth.me();
+      if (event.type === 'update') {
+        if (event.data?.status) {
+          addNotification(`📁 Progetto "${event.data?.title || 'N/A'}" → ${event.data.status}`, 'info');
+        }
+        // Photo upload in project galleries
+        const photoKeys = ['photos_before', 'photos_during', 'photos_after'];
+        for (const key of photoKeys) {
+          if (event.old_data?.[key] && event.data?.[key] && 
+              event.data[key].length > event.old_data[key].length) {
+            addNotification(`📷 Nuove foto nel progetto: ${event.data?.title || 'N/A'}`, 'info');
+            break;
+          }
+        }
       }
     });
 
@@ -86,7 +113,44 @@ export function useNotifications() {
       }
     });
 
-    return () => { unsubTicket(); unsubChecklist(); unsubProject(); unsubEstimate(); };
+    // Deadline reminders - check every 5 minutes
+    const checkDeadlines = async () => {
+      try {
+        const user = await base44.auth.me();
+        if (!user) return;
+        
+        const projects = await base44.entities.Project.list();
+        const now = new Date();
+        const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+        
+        projects.forEach(p => {
+          if (p.expected_end_date) {
+            const endDate = new Date(p.expected_end_date);
+            const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+            
+            // Notify if deadline is within 14 days and not already delivered
+            if (daysLeft > 0 && daysLeft <= 14 && p.status !== 'Delivered') {
+              const urgency = daysLeft <= 3 ? '⚠️ URGENTE:' : '📅 Scadenza:';
+              addNotification(`${urgency} ${p.title} scade tra ${daysLeft} giorni`, 'warning');
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Error checking deadlines:', error);
+      }
+    };
+
+    // Check deadlines on mount and every 5 minutes
+    checkDeadlines();
+    const deadlineInterval = setInterval(checkDeadlines, 5 * 60 * 1000);
+
+    return () => { 
+      unsubTicket(); 
+      unsubChecklist(); 
+      unsubProject(); 
+      unsubEstimate();
+      clearInterval(deadlineInterval);
+    };
   }, [addNotification, requestPermission]);
 
   return { notifications, unread, markAllRead, addNotification };

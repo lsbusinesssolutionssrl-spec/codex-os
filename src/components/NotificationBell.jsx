@@ -8,6 +8,18 @@ const typeColors = {
   success: 'bg-green-100 text-green-700',
   warning: 'bg-orange-100 text-orange-700',
   info: 'bg-gray-100 text-gray-700',
+  deadline: 'bg-red-100 text-red-700',
+  photo: 'bg-pink-100 text-pink-700',
+};
+
+const typeIcons = {
+  ticket: '🎫',
+  assignment: '👷',
+  success: '✅',
+  warning: '⚠️',
+  info: 'ℹ️',
+  deadline: '📅',
+  photo: '📷',
 };
 
 export default function NotificationBell() {
@@ -50,14 +62,33 @@ export default function NotificationBell() {
           <div className="max-h-80 overflow-y-auto divide-y divide-gray-50">
             {notifications.length === 0 ? (
               <div className="px-4 py-8 text-center text-sm text-gray-400">Nessuna notifica</div>
-            ) : notifications.map(n => (
-              <div key={n.id} className="px-4 py-3 hover:bg-gray-50">
-                <p className="text-sm text-gray-800">{n.message}</p>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {new Date(n.time).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                </p>
-              </div>
-            ))}
+            ) : notifications.map(n => {
+              const icon = typeIcons[n.type] || 'ℹ️';
+              const color = typeColors[n.type] || typeColors.info;
+              return (
+                <div key={n.id} className="px-4 py-3 hover:bg-gray-50">
+                  <div className="flex items-start gap-2">
+                    <span className="text-lg flex-shrink-0">{icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-800">{n.message}</p>
+                      <div className="flex items-center gap-2 flex items-center mt-1">
+                        <span className={`text-xs px-1.5 py-0.5 rounded ${color}`}>
+                          {n.type}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {new Date(n.time).toLocaleString('it-IT', { 
+                            day: '2-digit', 
+                            month: '2-digit', 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
