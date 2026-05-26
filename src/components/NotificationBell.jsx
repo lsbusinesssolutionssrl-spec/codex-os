@@ -71,7 +71,7 @@ export default function NotificationBell() {
                     <span className="text-lg flex-shrink-0">{icon}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-800">{n.message}</p>
-                      <div className="flex items-center gap-2 flex items-center mt-1">
+                      <div className="flex items-center gap-2 mt-1">
                         <span className={`text-xs px-1.5 py-0.5 rounded ${color}`}>
                           {n.type}
                         </span>
