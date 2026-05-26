@@ -19,11 +19,24 @@ export default function Checklists() {
 
   useEffect(() => {
     const load = async () => {
-      const [checks, projs] = await Promise.all([
+      const [filtersRes, checks, projs] = await Promise.all([
+        base44.functions.invoke('getUserFilters', {}),
         base44.entities.ChecklistItem.list('-due_date'),
         base44.entities.Project.list(),
       ]);
-      setItems(checks);
+      // Apply RLS filters
+      const filters = filtersRes.data.filters;
+      const filteredItems = checks.filter(i => {
+        if (!filters.ChecklistItem || Object.keys(filters.ChecklistItem).length === 0) return true;
+        if (filters.ChecklistItem.assigned_person) {
+          return i.assigned_person === filters.ChecklistItem.assigned_person;
+        }
+        if (filters.ChecklistItem.created_by) {
+          return i.created_by === filters.ChecklistItem.created_by;
+        }
+        return true;
+      });
+      setItems(filteredItems);
       const map = {};
       projs.forEach(p => { map[p.id] = p.title; });
       setProjects(map);

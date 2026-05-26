@@ -17,11 +17,21 @@ export default function Documents() {
 
   useEffect(() => {
     const load = async () => {
-      const [docs, cls] = await Promise.all([
+      const [filtersRes, docs, cls] = await Promise.all([
+        base44.functions.invoke('getUserFilters', {}),
         base44.entities.Document.list('-created_date'),
         base44.entities.Client.list(),
       ]);
-      setDocuments(docs);
+      // Apply RLS filters
+      const filters = filtersRes.data.filters;
+      const filteredDocs = docs.filter(d => {
+        if (!filters.Document || Object.keys(filters.Document).length === 0) return true;
+        if (filters.Document.client_id?.$in) {
+          return filters.Document.client_id.$in.includes(d.client_id);
+        }
+        return true;
+      });
+      setDocuments(filteredDocs);
       const map = {};
       cls.forEach(c => { map[c.id] = c.name + (c.company_name ? ` ${c.company_name}` : ''); });
       setClients(map);

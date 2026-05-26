@@ -15,6 +15,13 @@ Deno.serve(async (req) => {
       Estimate: {},
       Client: {},
       Property: {},
+      Document: {},
+      SupportTicket: {},
+      GuardianSubscription: {},
+      ChecklistItem: {},
+      ProjectCost: {},
+      Timesheet: {},
+      PurchaseOrder: {},
     };
 
     // Admin vede tutto
@@ -22,12 +29,12 @@ Deno.serve(async (req) => {
       return Response.json({ filters });
     }
 
-    // Project Manager vede tutti i progetti
+    // Project Manager vede tutto tranne financial control
     if (user.role === 'project_manager') {
       return Response.json({ filters });
     }
 
-    // Technician vede solo progetti dove è assegnato o creatore
+    // Technician vede solo progetti/attività dove è assegnato
     if (user.role === 'technician') {
       filters.Project = {
         $or: [
@@ -36,22 +43,38 @@ Deno.serve(async (req) => {
         ]
       };
       filters.Estimate = { created_by: user.email };
+      filters.ChecklistItem = {
+        $or: [
+          { assigned_person: user.email },
+          { created_by: user.email }
+        ]
+      };
+      filters.SupportTicket = { assigned_technician: user.email };
+      filters.Timesheet = { employee_id: user.email };
+      filters.Document = {}; // Technician può vedere tutti i documenti
     }
 
-    // Sales vede tutti i clienti e preventivi, ma solo progetti collegati ai suoi clienti
+    // Sales vede tutti i clienti, proprietà, preventivi
     if (user.role === 'sales') {
-      filters.Estimate = {};
       filters.Client = {};
       filters.Property = {};
-      // Progetti solo per i suoi clienti (da filtrare in frontend)
+      filters.Estimate = {};
+      // Progetti solo per i suoi clienti (filtrato in frontend)
     }
 
     // Client vede solo i propri dati
     if (user.role === 'client') {
+      // Prima fetch i client ID dell'utente
+      const userClients = await base44.entities.Client.filter({ email: user.email });
+      const clientIds = userClients.map(c => c.id);
+      
       filters.Client = { email: user.email };
-      filters.Property = { client_id: { $in: [] } }; // Da popolare con i client ID
-      filters.Estimate = { client_id: { $in: [] } };
-      filters.Project = { client_id: { $in: [] } };
+      filters.Property = clientIds.length > 0 ? { client_id: { $in: clientIds } } : { id: null };
+      filters.Estimate = clientIds.length > 0 ? { client_id: { $in: clientIds } } : { id: null };
+      filters.Project = clientIds.length > 0 ? { client_id: { $in: clientIds } } : { id: null };
+      filters.Document = clientIds.length > 0 ? { client_id: { $in: clientIds } } : { id: null };
+      filters.SupportTicket = clientIds.length > 0 ? { client_id: { $in: clientIds } } : { id: null };
+      filters.GuardianSubscription = clientIds.length > 0 ? { client_id: { $in: clientIds } } : { id: null };
     }
 
     return Response.json({ filters });

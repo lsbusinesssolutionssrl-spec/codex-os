@@ -15,7 +15,15 @@ export default function Clients() {
   const [form, setForm] = useState({ name: '', company_name: '', phone: '', email: '', address: '', type: 'Private', source: '', notes: '' });
   const navigate = useNavigate();
 
-  useEffect(() => { base44.entities.Client.list('-created_date').then(setClients); }, []);
+  useEffect(() => {
+    const load = async () => {
+      const filtersRes = await base44.functions.invoke('getUserFilters', {});
+      const filters = filtersRes.data.filters;
+      const data = await base44.entities.Client.filter(filters.Client || {}, '-created_date');
+      setClients(data);
+    };
+    load();
+  }, []);
 
   const filtered = clients.filter(c => {
     const q = search.toLowerCase();

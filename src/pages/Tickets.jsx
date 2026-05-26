@@ -16,11 +16,24 @@ export default function Tickets() {
 
   useEffect(() => {
     const load = async () => {
-      const [tkts, cls] = await Promise.all([
+      const [filtersRes, tkts, cls] = await Promise.all([
+        base44.functions.invoke('getUserFilters', {}),
         base44.entities.SupportTicket.list('-created_date'),
         base44.entities.Client.list(),
       ]);
-      setTickets(tkts);
+      // Apply RLS filters
+      const filters = filtersRes.data.filters;
+      const filteredTkts = tkts.filter(t => {
+        if (!filters.SupportTicket || Object.keys(filters.SupportTicket).length === 0) return true;
+        if (filters.SupportTicket.client_id?.$in) {
+          return filters.SupportTicket.client_id.$in.includes(t.client_id);
+        }
+        if (filters.SupportTicket.assigned_technician) {
+          return t.assigned_technician === filters.SupportTicket.assigned_technician;
+        }
+        return true;
+      });
+      setTickets(filteredTkts);
       const map = {};
       cls.forEach(c => { map[c.id] = c.name; });
       setClients(map);

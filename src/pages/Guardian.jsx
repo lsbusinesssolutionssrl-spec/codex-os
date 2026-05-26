@@ -16,11 +16,21 @@ export default function Guardian() {
 
   useEffect(() => {
     const load = async () => {
-      const [subs, cls] = await Promise.all([
+      const [filtersRes, subs, cls] = await Promise.all([
+        base44.functions.invoke('getUserFilters', {}),
         base44.entities.GuardianSubscription.list('-created_date'),
         base44.entities.Client.list(),
       ]);
-      setSubscriptions(subs);
+      // Apply RLS filters
+      const filters = filtersRes.data.filters;
+      const filteredSubs = subs.filter(s => {
+        if (!filters.GuardianSubscription || Object.keys(filters.GuardianSubscription).length === 0) return true;
+        if (filters.GuardianSubscription.client_id?.$in) {
+          return filters.GuardianSubscription.client_id.$in.includes(s.client_id);
+        }
+        return true;
+      });
+      setSubscriptions(filteredSubs);
       setClientList(cls);
       const map = {};
       cls.forEach(c => { map[c.id] = c.name + (c.company_name ? ` ${c.company_name}` : ''); });
