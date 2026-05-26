@@ -15,9 +15,10 @@ Deno.serve(async (req) => {
     if (!client) return Response.json({ client: null });
 
     // Fetch all data filtered by client_id — server-side only
-    const [properties, estimates, tickets, documents] = await Promise.all([
+    const [properties, estimates, projects, tickets, documents] = await Promise.all([
       base44.asServiceRole.entities.Property.filter({ client_id: client.id }),
       base44.asServiceRole.entities.Estimate.filter({ client_id: client.id }),
+      base44.asServiceRole.entities.Project.filter({ client_id: client.id }),
       base44.asServiceRole.entities.SupportTicket.filter({ client_id: client.id }),
       base44.asServiceRole.entities.Document.filter({ client_id: client.id }),
     ]);
@@ -35,6 +36,20 @@ Deno.serve(async (req) => {
       excluded_works: e.excluded_works,
       payment_terms: e.payment_terms,
       created_date: e.created_date,
+    }));
+
+    // Strip internal cost fields from projects
+    const safeProjects = projects.map(p => ({
+      id: p.id,
+      title: p.title,
+      status: p.status,
+      start_date: p.start_date,
+      expected_end_date: p.expected_end_date,
+      actual_end_date: p.actual_end_date,
+      estimate_type: p.estimate_type,
+      quality_level: p.quality_level,
+      notes: p.notes,
+      created_date: p.created_date,
     }));
 
     // Strip internal cost fields from tickets
@@ -59,6 +74,7 @@ Deno.serve(async (req) => {
       },
       properties,
       estimates: safeEstimates,
+      projects: safeProjects,
       tickets: safeTickets,
       documents,
     });

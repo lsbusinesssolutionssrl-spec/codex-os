@@ -149,9 +149,11 @@ export default function ProjectDetail() {
       start_date: project.start_date,
       end_date: project.actual_end_date || project.expected_end_date,
       status: project.status,
+      contract_value: project.contract_value,
       photos_before: project.photos_before || [],
       photos_during: project.photos_during || [],
       photos_after: project.photos_after || [],
+      documents: project.documents || [],
       notes: project.notes,
     };
     const interventions = (property.interventions || []);

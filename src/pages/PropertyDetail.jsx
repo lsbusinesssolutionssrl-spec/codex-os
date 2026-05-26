@@ -31,8 +31,9 @@ export default function PropertyDetail() {
         const cls = await base44.entities.Client.filter({ id: props[0].client_id });
         if (cls[0]) setClient(cls[0]);
       }
+      const interventions = props[0].interventions || [];
       const projects = await base44.entities.Project.filter({ property_id: id });
-      setInterventions(projects);
+      setInterventions([...interventions, ...projects]);
     };
     load();
   }, [id]);
@@ -148,8 +149,9 @@ export default function PropertyDetail() {
 
       {/* Interventions Timeline */}
       <div className="bg-white rounded-xl border border-gray-200">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900 text-sm">Timeline Interventi</h3>
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 className="font-semibold text-gray-900 text-sm">Timeline Interventi</h3>
+        <span className="text-xs text-gray-400">{interventions.length} interventi</span>
         </div>
         {interventions.length === 0 ? (
           <div className="py-8 text-center text-sm text-gray-400">Nessun intervento registrato</div>
@@ -160,26 +162,31 @@ export default function PropertyDetail() {
               <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-100" />
               <div className="space-y-6">
                 {[...interventions]
-                  .sort((a, b) => new Date(b.start_date || b.created_date) - new Date(a.start_date || a.created_date))
-                  .map((p, idx) => {
+                  .sort((a, b) => new Date(b.end_date || b.actual_end_date || b.expected_end_date || b.start_date || b.created_date) - new Date(a.end_date || a.actual_end_date || a.expected_end_date || a.start_date || a.created_date))
+                  .map((item, idx) => {
+                    const isProject = !!item.id && item.status;
                     const statusColors = {
                       'Lead': '#9CA3AF', 'Survey': '#8B5CF6', 'Estimate': '#3B82F6',
                       'Approved': '#0D9488', 'In Progress': '#1147FF', 'Testing': '#F59E0B',
                       'Delivered': '#10B981', 'Guardian Active': '#059669'
                     };
-                    const color = statusColors[p.status] || '#9CA3AF';
-                    const dateStr = p.start_date
-                      ? new Date(p.start_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
-                      : p.created_date
-                      ? new Date(p.created_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
+                    const color = isProject ? (statusColors[item.status] || '#9CA3AF') : '#1147FF';
+                    const dateStr = item.start_date
+                      ? new Date(item.start_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
+                      : item.created_date
+                      ? new Date(item.created_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
                       : null;
-                    const endStr = p.actual_end_date
-                      ? new Date(p.actual_end_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
-                      : p.expected_end_date
-                      ? new Date(p.expected_end_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
+                    const endStr = item.end_date
+                      ? new Date(item.end_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
+                      : item.actual_end_date
+                      ? new Date(item.actual_end_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
+                      : item.expected_end_date
+                      ? new Date(item.expected_end_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
                       : null;
+                    const title = item.title || item.property_name || 'Intervento';
+                    const onClick = isProject ? () => navigate(`/projects/${item.id}`) : undefined;
                     return (
-                      <div key={p.id} className="relative flex items-start gap-4 pl-10">
+                      <div key={idx} className="relative flex items-start gap-4 pl-10">
                         {/* dot */}
                         <div
                           className="absolute left-[11px] top-1 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center flex-shrink-0"
@@ -188,12 +195,12 @@ export default function PropertyDetail() {
                           <div className="w-2 h-2 rounded-full bg-white" />
                         </div>
                         <div
-                          className="flex-1 bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-gray-200 cursor-pointer transition-all"
-                          onClick={() => navigate(`/projects/${p.id}`)}
+                          className={`flex-1 rounded-xl p-4 border transition-all ${onClick ? 'bg-gray-50 hover:border-gray-300 cursor-pointer' : 'bg-white border-gray-100'}`}
+                          onClick={onClick}
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div>
-                              <p className="text-sm font-semibold text-gray-900">{p.title}</p>
+                              <p className="text-sm font-semibold text-gray-900">{title}</p>
                               {dateStr && (
                                 <p className="text-xs text-gray-400 mt-0.5">
                                   {dateStr}{endStr ? ` → ${endStr}` : ''}
@@ -201,18 +208,23 @@ export default function PropertyDetail() {
                               )}
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
-                              <span
-                                className="text-xs font-medium px-2 py-0.5 rounded-full text-white"
-                                style={{ backgroundColor: color }}
-                              >{p.status}</span>
-                              <ExternalLink className="w-3.5 h-3.5 text-gray-300" />
+                              {isProject && (
+                                <>
+                                  <span
+                                    className="text-xs font-medium px-2 py-0.5 rounded-full text-white"
+                                    style={{ backgroundColor: color }}
+                                  >{item.status}</span>
+                                  <ExternalLink className="w-3.5 h-3.5 text-gray-300" />
+                                </>
+                              )}
+                              {!isProject && <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">Completato</span>}
                             </div>
                           </div>
-                          {p.budget && (
-                            <p className="text-xs text-gray-500 mt-2">Budget: <span className="font-medium text-gray-700">€{p.budget.toLocaleString('it-IT')}</span></p>
+                          {item.contract_value && (
+                            <p className="text-xs text-gray-500 mt-2">Valore: <span className="font-medium text-gray-700">€{item.contract_value.toLocaleString('it-IT')}</span></p>
                           )}
-                          {p.notes && (
-                            <p className="text-xs text-gray-400 mt-1 line-clamp-1">{p.notes}</p>
+                          {item.notes && (
+                            <p className="text-xs text-gray-400 mt-1 line-clamp-2">{item.notes}</p>
                           )}
                         </div>
                       </div>

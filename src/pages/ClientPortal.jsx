@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Home, FileText, Ticket, Archive, AlertCircle, ChevronRight, Plus, X, Download } from 'lucide-react';
+import { Home, FileText, Ticket, Archive, AlertCircle, ChevronRight, Plus, X, Download, FolderKanban } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 
@@ -22,6 +22,7 @@ export default function ClientPortal() {
   const [client, setClient] = useState(null);
   const [properties, setProperties] = useState([]);
   const [estimates, setEstimates] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +42,7 @@ export default function ClientPortal() {
       setClient(data.client);
       setProperties(data.properties || []);
       setEstimates((data.estimates || []).sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
+      setProjects((data.projects || []).sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
       setTickets((data.tickets || []).sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
       setDocuments((data.documents || []).sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
       setLoading(false);
@@ -89,10 +91,11 @@ export default function ClientPortal() {
       </div>
 
       {/* KPI row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
           { label: 'Proprietà', value: properties.length, color: '#0B2341' },
           { label: 'Preventivi', value: estimates.length, color: '#1147FF' },
+          { label: 'Progetti', value: projects.length, color: '#F58220' },
           { label: 'Ticket', value: tickets.filter(t => t.status === 'Open' || t.status === 'In Progress').length, suffix: ' aperti', color: '#EF4444' },
           { label: 'Documenti', value: documents.length, color: '#10B981' },
         ].map(k => (
@@ -116,6 +119,28 @@ export default function ClientPortal() {
                   <p className="text-xs text-gray-400 mt-0.5">{p.address} {p.type ? `· ${p.type}` : ''}</p>
                 </div>
                 {p.square_meters && <span className="text-sm text-gray-500">{p.square_meters} m²</span>}
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+
+      {/* Projects */}
+      <Section icon={FolderKanban} title="I Miei Progetti" color="#F58220">
+        {projects.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-8">Nessun progetto</p>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {projects.map(p => (
+              <div key={p.id} className="px-5 py-4 flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-gray-900">{p.title}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {p.start_date ? new Date(p.start_date).toLocaleDateString('it-IT') : ''}
+                    {p.expected_end_date && ` → ${new Date(p.expected_end_date).toLocaleDateString('it-IT')}`}
+                  </p>
+                </div>
+                <StatusBadge status={p.status} />
               </div>
             ))}
           </div>
