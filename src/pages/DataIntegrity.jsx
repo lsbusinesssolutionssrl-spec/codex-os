@@ -156,7 +156,12 @@ export default function DataIntegrity() {
           {issues.projectsNoClient?.length > 0 && (
             <IssueSection title="Projects Without Client" icon={AlertTriangle} color="#F58220">
               {issues.projectsNoClient.map(p => (
-                <div key={p.id} className="text-sm text-gray-600">{p.title} (ID: {p.id})</div>
+                <ProjectLinkFix 
+                  key={p.id} 
+                  project={p} 
+                  issueType="link_project_client"
+                  onFix={checkIntegrity}
+                />
               ))}
             </IssueSection>
           )}
@@ -164,7 +169,12 @@ export default function DataIntegrity() {
           {issues.projectsNoProperty?.length > 0 && (
             <IssueSection title="Projects Without Property" icon={AlertTriangle} color="#F58220">
               {issues.projectsNoProperty.map(p => (
-                <div key={p.id} className="text-sm text-gray-600">{p.title} (ID: {p.id})</div>
+                <ProjectLinkFix 
+                  key={p.id} 
+                  project={p} 
+                  issueType="link_project_property"
+                  onFix={checkIntegrity}
+                />
               ))}
             </IssueSection>
           )}
@@ -172,16 +182,83 @@ export default function DataIntegrity() {
           {issues.acceptedNotConverted?.length > 0 && (
             <IssueSection title="Accepted Estimates Not Converted" icon={AlertTriangle} color="#F58220">
               {issues.acceptedNotConverted.map(e => (
-                <div key={e.id} className="text-sm text-gray-600">{e.title} - €{e.revenue} (ID: {e.id})</div>
+                <div key={e.id} className="flex items-center justify-between gap-3">
+                  <div className="text-sm text-gray-600">{e.title} - €{e.revenue} (ID: {e.id})</div>
+                  <button
+                    onClick={async () => {
+                      if (!confirm(`Convert "${e.title}" to project?`)) return;
+                      try {
+                        await base44.functions.invoke('fixDataIntegrityIssue', { 
+                          issue_type: 'convert_estimate_to_project',
+                          record_id: e.id 
+                        });
+                        toast.success('Estimate converted to project');
+                        checkIntegrity();
+                      } catch (err) {
+                        toast.error(err.message || 'Conversion failed');
+                      }
+                    }}
+                    className="px-3 py-1 text-xs text-white rounded-lg flex-shrink-0"
+                    style={{ backgroundColor: '#10B981' }}
+                  >
+                    Convert to Project
+                  </button>
+                </div>
               ))}
             </IssueSection>
           )}
 
           {issues.duplicateClients?.length > 0 && (
             <IssueSection title="Duplicate Clients" icon={AlertTriangle} color="#EF4444">
-              {issues.duplicateClients.map(c => (
-                <div key={c.id} className="text-sm text-gray-600">{c.name} - {c.email} (ID: {c.id})</div>
-              ))}
+              {(() => {
+                // Group duplicates by email
+                const emailGroups = {};
+                issues.duplicateClients.forEach(c => {
+                  if (!emailGroups[c.email]) emailGroups[c.email] = [];
+                  emailGroups[c.email].push(c);
+                });
+                
+                return Object.entries(emailGroups).map(([email, clients]) => (
+                  <div key={email} className="mb-4 last:mb-0">
+                    <div className="text-xs font-medium text-gray-500 mb-2">{email}</div>
+                    <div className="space-y-2">
+                      {clients.map((c, idx) => (
+                        <div key={c.id} className="flex items-center justify-between gap-3 p-2 bg-gray-50 rounded-lg">
+                          <div className="text-sm text-gray-600">{c.name} (ID: {c.id})</div>
+                          {clients.length > 1 && (
+                            <div className="flex gap-2">
+                              {idx === 0 ? (
+                                <span className="text-xs text-green-600 font-medium">Keep</span>
+                              ) : (
+                                <button
+                                  onClick={async () => {
+                                    if (!confirm(`Merge ${c.email} into ${clients[0].email}? All records will be transferred.`)) return;
+                                    try {
+                                      await base44.functions.invoke('fixDataIntegrityIssue', {
+                                        issue_type: 'merge_duplicate_clients',
+                                        keep_id: clients[0].id,
+                                        merge_id: c.id
+                                      });
+                                      toast.success('Clients merged successfully');
+                                      checkIntegrity();
+                                    } catch (err) {
+                                      toast.error(err.message || 'Merge failed');
+                                    }
+                                  }}
+                                  className="px-3 py-1 text-xs text-white rounded-lg"
+                                  style={{ backgroundColor: '#EF4444' }}
+                                >
+                                  Merge into First
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ));
+              })()}
             </IssueSection>
           )}
 
@@ -238,6 +315,166 @@ function IssueSection({ title, icon: Icon, color, children }) {
       <div className="p-5 space-y-2">
         {children}
       </div>
+    </div>
+  );
+}
+
+function ProjectLinkFix({ project, issueType, onFix }) {
+  const [linking, setLinking] = useState(false);
+  const [showSelect, setShowSelect] = useState(false);
+  const [selectedId, setSelectedId] = useState('');
+  const [entities, setEntities] = useState([]);
+
+  const loadEntities = async () => {
+    try {
+      const data = issueType === 'link_project_client' 
+        ? await base44.entities.Client.list()
+        : await base44.entities.Property.list();
+      setEntities(data);
+      setShowSelect(true);
+    } catch (err) {
+      toast.error('Failed to load entities');
+    }
+  };
+
+  const handleLink = async () => {
+    if (!selectedId) return;
+    setLinking(true);
+    try {
+      await base44.functions.invoke('fixDataIntegrityIssue', {
+        issue_type: issueType,
+        project_id: project.id,
+        [issueType === 'link_project_client' ? 'client_id' : 'property_id']: selectedId
+      });
+      toast.success('Project linked successfully');
+      setShowSelect(false);
+      onFix();
+    } catch (err) {
+      toast.error(err.message || 'Link failed');
+    } finally {
+      setLinking(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="text-sm text-gray-600">{project.title} (ID: {project.id})</div>
+      {!showSelect ? (
+        <button
+          onClick={loadEntities}
+          className="px-3 py-1 text-xs text-white rounded-lg flex-shrink-0"
+          style={{ backgroundColor: '#1147FF' }}
+        >
+          Link
+        </button>
+      ) : (
+        <div className="flex items-center gap-2">
+          <select
+            value={selectedId}
+            onChange={e => setSelectedId(e.target.value)}
+            className="px-2 py-1 text-xs border border-gray-200 rounded-lg bg-white"
+          >
+            <option value="">Select...</option>
+            {entities.map(e => (
+              <option key={e.id} value={e.id}>
+                {issueType === 'link_project_client' ? e.name : e.property_name}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={handleLink}
+            disabled={!selectedId || linking}
+            className="px-3 py-1 text-xs text-white rounded-lg disabled:opacity-40"
+            style={{ backgroundColor: '#10B981' }}
+          >
+            {linking ? '...' : 'Save'}
+          </button>
+          <button
+            onClick={() => setShowSelect(false)}
+            className="px-2 py-1 text-xs text-gray-600"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GuardianLinkFix({ guardian, onFix }) {
+  const [linking, setLinking] = useState(false);
+  const [showSelect, setShowSelect] = useState(false);
+  const [selectedId, setSelectedId] = useState('');
+  const [properties, setProperties] = useState([]);
+
+  const loadProperties = async () => {
+    try {
+      const data = await base44.entities.Property.list();
+      setProperties(data);
+      setShowSelect(true);
+    } catch (err) {
+      toast.error('Failed to load properties');
+    }
+  };
+
+  const handleLink = async () => {
+    if (!selectedId) return;
+    setLinking(true);
+    try {
+      await base44.functions.invoke('fixDataIntegrityIssue', {
+        issue_type: 'link_guardian_property',
+        guardian_id: guardian.id,
+        property_id: selectedId
+      });
+      toast.success('Guardian linked successfully');
+      setShowSelect(false);
+      onFix();
+    } catch (err) {
+      toast.error(err.message || 'Link failed');
+    } finally {
+      setLinking(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="text-sm text-gray-600">{guardian.title} (ID: {guardian.id})</div>
+      {!showSelect ? (
+        <button
+          onClick={loadProperties}
+          className="px-3 py-1 text-xs text-white rounded-lg flex-shrink-0"
+          style={{ backgroundColor: '#1147FF' }}
+        >
+          Link Property
+        </button>
+      ) : (
+        <div className="flex items-center gap-2">
+          <select
+            value={selectedId}
+            onChange={e => setSelectedId(e.target.value)}
+            className="px-2 py-1 text-xs border border-gray-200 rounded-lg bg-white"
+          >
+            <option value="">Select...</option>
+            {properties.map(p => (
+              <option key={p.id} value={p.id}>{p.property_name}</option>
+            ))}
+          </select>
+          <button
+            onClick={handleLink}
+            disabled={!selectedId || linking}
+            className="px-3 py-1 text-xs text-white rounded-lg disabled:opacity-40"
+            style={{ backgroundColor: '#10B981' }}
+          >
+            {linking ? '...' : 'Save'}
+          </button>
+          <button
+            onClick={() => setShowSelect(false)}
+            className="px-2 py-1 text-xs text-gray-600"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
     </div>
   );
 }
