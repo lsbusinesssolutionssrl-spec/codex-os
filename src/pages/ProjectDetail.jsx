@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit2, Save, X, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Upload, Camera } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 
@@ -22,6 +21,30 @@ export default function ProjectDetail() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [newMilestone, setNewMilestone] = useState({ title: '', due_date: '' });
   const [addingMilestone, setAddingMilestone] = useState(false);
+  const [photoTab, setPhotoTab] = useState('before');
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const photoKeys = { before: 'photos_before', during: 'photos_during', after: 'photos_after' };
+
+  const uploadPhoto = async (file) => {
+    if (!file) return;
+    setUploadingPhoto(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const key = photoKeys[photoTab];
+    const current = (project[key] || []);
+    const updated = await base44.entities.Project.update(id, { [key]: [...current, file_url] });
+    setProject(updated);
+    setForm(updated);
+    setUploadingPhoto(false);
+  };
+
+  const removePhoto = async (url) => {
+    const key = photoKeys[photoTab];
+    const updated = await base44.entities.Project.update(id, { [key]: (project[key] || []).filter(u => u !== url) });
+    setProject(updated);
+    setForm(updated);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -281,6 +304,58 @@ export default function ProjectDetail() {
             <button onClick={() => setAddingMilestone(false)} className="p-1.5 rounded-lg hover:bg-gray-100"><X className="w-3.5 h-3.5 text-gray-400" /></button>
           </div>
         )}
+      </div>
+
+      {/* Photos Before / During / After */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold text-gray-900">Fotografie Cantiere</h2>
+          <div className="flex gap-1">
+            {['before', 'during', 'after'].map(t => (
+              <button
+                key={t}
+                onClick={() => setPhotoTab(t)}
+                className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
+                  photoTab === t ? 'text-white' : 'text-gray-500 hover:bg-gray-100'
+                }`}
+                style={photoTab === t ? { backgroundColor: '#1147FF' } : {}}
+              >
+                {t === 'before' ? 'Prima' : t === 'during' ? 'Durante' : 'Dopo'}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 mb-3">
+          {(project[photoKeys[photoTab]] || []).map((url, i) => (
+            <div key={i} className="relative group aspect-square">
+              <img src={url} alt="" className="w-full h-full object-cover rounded-lg" />
+              <button
+                onClick={() => removePhoto(url)}
+                className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingPhoto}
+            className="aspect-square border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-blue-400 hover:text-blue-400 transition-colors"
+          >
+            {uploadingPhoto ? (
+              <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+            ) : (
+              <><Camera className="w-5 h-5" /><span className="text-xs mt-1">Aggiungi</span></>
+            )}
+          </button>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={e => { if (e.target.files[0]) uploadPhoto(e.target.files[0]); e.target.value = ''; }}
+        />
       </div>
 
       {project.notes && (
