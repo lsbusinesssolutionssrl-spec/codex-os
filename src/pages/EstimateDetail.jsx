@@ -66,8 +66,14 @@ export default function EstimateDetail() {
       client_id: form.client_id,
       property_id: form.property_id,
       status: 'Approved',
-      budget: form.revenue,
-      notes: `Creato da preventivo: ${form.title}`,
+      contract_value: form.revenue,
+      material_costs: form.material_cost,
+      labor_costs: form.labor_cost,
+      other_costs: form.other_costs,
+      estimated_duration: form.estimated_duration,
+      notes: `Creato da preventivo: ${form.title}\n\nLavori inclusi: ${form.included_works || ''}\n\nLavori esclusi: ${form.excluded_works || ''}`,
+      estimate_type: form.estimate_type,
+      quality_level: form.quality_level,
     });
     navigate(`/projects/${project.id}`);
   };
@@ -339,7 +345,7 @@ export default function EstimateDetail() {
         <button onClick={exportPDF} className="flex items-center gap-2 px-5 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">
           <FileDown className="w-4 h-4" /> Esporta PDF
         </button>
-        {(form.status === 'Accepted' || form.status === 'Sent') && (
+        {form.status === 'Accepted' && (
           <button onClick={convertToProject} className="flex items-center gap-2 px-5 py-2 text-sm text-white rounded-lg font-medium" style={{ backgroundColor: '#10B981' }}>
             <FolderPlus className="w-4 h-4" /> Converti in Progetto
           </button>

@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Upload, Camera } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Camera, BookOpen, Home, FileCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
+import FinancialSummary from '../components/FinancialSummary';
+import PhotoGallery from '../components/PhotoGallery';
 
 const STATUSES = ['Lead', 'Survey', 'Estimate', 'Approved', 'In Progress', 'Testing', 'Delivered', 'Guardian Active'];
+const SOP_CATEGORIES = ['Bathroom', 'Full Home', 'Electrical', 'Networking', 'Security', 'Roofing', 'Handover'];
 
 export default function ProjectDetail() {
   const { id } = useParams();
@@ -22,33 +25,11 @@ export default function ProjectDetail() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [newMilestone, setNewMilestone] = useState({ title: '', due_date: '' });
   const [addingMilestone, setAddingMilestone] = useState(false);
-  const [photoTab, setPhotoTab] = useState('before');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const fileInputRef = useRef(null);
   const [sopModal, setSopModal] = useState(false);
   const [sopTemplates, setSopTemplates] = useState([]);
   const [applyingTemplate, setApplyingTemplate] = useState(false);
-
-  const photoKeys = { before: 'photos_before', during: 'photos_during', after: 'photos_after' };
-
-  const uploadPhoto = async (file) => {
-    if (!file) return;
-    setUploadingPhoto(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    const key = photoKeys[photoTab];
-    const current = (project[key] || []);
-    const updated = await base44.entities.Project.update(id, { [key]: [...current, file_url] });
-    setProject(updated);
-    setForm(updated);
-    setUploadingPhoto(false);
-  };
-
-  const removePhoto = async (url) => {
-    const key = photoKeys[photoTab];
-    const updated = await base44.entities.Project.update(id, { [key]: (project[key] || []).filter(u => u !== url) });
-    setProject(updated);
-    setForm(updated);
-  };
+  const [activePhotoTab, setActivePhotoTab] = useState('before');
 
   useEffect(() => {
     const load = async () => {
@@ -143,6 +124,46 @@ export default function ProjectDetail() {
     setEditing(false);
   };
 
+  const handlePhotoUpload = async (file, category) => {
+    setUploadingPhoto(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const key = `photos_${category}`;
+    const current = project[key] || [];
+    const updated = await base44.entities.Project.update(id, { [key]: [...current, { url: file_url, title: file.name, date: new Date().toISOString() }] });
+    setProject(updated);
+    setForm(updated);
+    setUploadingPhoto(false);
+  };
+
+  const handlePhotoRemove = async (url, category) => {
+    const key = `photos_${category}`;
+    const updated = await base44.entities.Project.update(id, { [key]: (project[key] || []).filter(p => p.url !== url) });
+    setProject(updated);
+    setForm(updated);
+  };
+
+  const generateHomePassport = async () => {
+    if (!property) return;
+    const projectSummary = {
+      title: project.title,
+      start_date: project.start_date,
+      end_date: project.actual_end_date || project.expected_end_date,
+      status: project.status,
+      photos_before: project.photos_before || [],
+      photos_during: project.photos_during || [],
+      photos_after: project.photos_after || [],
+      notes: project.notes,
+    };
+    const interventions = (property.interventions || []);
+    interventions.push(projectSummary);
+    const updated = await base44.entities.Property.update(property.id, {
+      interventions,
+      notes: (property.notes || '') + `\n\n[${new Date().toLocaleDateString('it-IT')}] Progetto "${project.title}" completato. Aggiornato Home Passport.`,
+    });
+    setProperty(updated);
+    navigate(`/properties/${property.id}`);
+  };
+
   const field = (k, label, type = 'text', options = null) => (
     <div key={k}>
       <label className="block text-xs font-medium text-gray-500 mb-1">{label}</label>
@@ -175,99 +196,81 @@ export default function ProjectDetail() {
   const progress = checklists.length > 0 ? Math.round((doneCount / checklists.length) * 100) : 0;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-5">
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/projects')} className="p-2 rounded-lg hover:bg-gray-100">
-          <ArrowLeft className="w-4 h-4 text-gray-600" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold text-gray-900">{project.title}</h1>
-          <div className="flex items-center gap-2 mt-0.5">
-            <StatusBadge status={project.status} />
-            {client && <span className="text-xs text-gray-400">{client.name}</span>}
-            {property && <span className="text-xs text-gray-400">· {property.property_name}</span>}
+    <div className="p-6 max-w-6xl mx-auto space-y-5">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3 flex-1">
+          <button onClick={() => navigate('/projects')} className="p-2 rounded-lg hover:bg-gray-100">
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">{project.title}</h1>
+            <div className="flex items-center gap-2 mt-0.5">
+              <StatusBadge status={project.status} />
+              {client && <span className="text-xs text-gray-400">{client.name}</span>}
+              {property && <span className="text-xs text-gray-400">· {property.property_name}</span>}
+            </div>
           </div>
         </div>
-        {!editing ? (
-          <div className="flex gap-2">
-            <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
-              <Edit2 className="w-3.5 h-3.5" /> Modifica
-            </button>
-            <button onClick={() => setConfirmDelete(true)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600">
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex gap-2">
-            <button onClick={save} className="flex items-center gap-2 px-3 py-1.5 text-sm text-white rounded-lg" style={{ backgroundColor: '#1147FF' }}>
-              <Save className="w-3.5 h-3.5" /> Salva
-            </button>
-            <button onClick={() => setEditing(false)} className="p-1.5 rounded-lg hover:bg-gray-100"><X className="w-4 h-4" /></button>
-          </div>
-        )}
+        <div className="flex gap-2">
+          {!editing ? (
+            <>
+              <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+                <Edit2 className="w-3.5 h-3.5" /> Modifica
+              </button>
+              {project.status === 'Delivered' && property && (
+                <button onClick={generateHomePassport} className="flex items-center gap-2 px-3 py-1.5 text-sm text-white rounded-lg" style={{ backgroundColor: '#0B2341' }}>
+                  <Home className="w-3.5 h-3.5" /> Home Passport
+                </button>
+              )}
+              <button onClick={() => setConfirmDelete(true)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={save} className="flex items-center gap-2 px-3 py-1.5 text-sm text-white rounded-lg" style={{ backgroundColor: '#1147FF' }}>
+                <Save className="w-3.5 h-3.5" /> Salva
+              </button>
+              <button onClick={() => setEditing(false)} className="p-1.5 rounded-lg hover:bg-gray-100"><X className="w-4 h-4" /></button>
+            </>
+          )}
+        </div>
       </div>
 
-      {editing ? (
+      {/* Financial Summary */}
+      {!editing && <FinancialSummary project={project} />}
+
+      {/* Edit Form */}
+      {editing && (
         <div className="bg-white rounded-xl border border-gray-200 p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {field('title', 'Titolo')}
           {field('status', 'Stato', 'text', STATUSES)}
+          {field('contract_value', 'Valore Contratto (€)', 'number')}
+          {field('material_costs', 'Costo Materiali (€)', 'number')}
+          {field('labor_costs', 'Costo Manodopera (€)', 'number')}
+          {field('other_costs', 'Altri Costi (€)', 'number')}
+          {field('payment_collected', 'Pagamenti Ricevuti (€)', 'number')}
           {field('project_manager', 'Project Manager')}
-          <div key="team_members">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Membri del Team</label>
-            <div className="flex flex-wrap gap-1.5 p-2 border border-gray-200 rounded-lg min-h-[40px]">
-              {users.map(u => {
-                const selected = (form.team_members || []).includes(u.id);
-                return (
-                  <button
-                    key={u.id}
-                    type="button"
-                    onClick={() => {
-                      const members = form.team_members || [];
-                      setForm(f => ({ ...f, team_members: selected ? members.filter(m => m !== u.id) : [...members, u.id] }));
-                    }}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                      selected ? 'text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                    style={selected ? { backgroundColor: '#1147FF' } : {}}
-                  >{u.full_name || u.email}</button>
-                );
-              })}
-              {users.length === 0 && <span className="text-xs text-gray-400">Nessun utente disponibile</span>}
-            </div>
-          </div>
           {field('start_date', 'Data Inizio', 'date')}
           {field('expected_end_date', 'Data Fine Prevista', 'date')}
-          {field('budget', 'Budget (€)', 'number')}
-          {field('actual_costs', 'Costi Effettivi (€)', 'number')}
           <div className="sm:col-span-2">
             <label className="block text-xs font-medium text-gray-500 mb-1">Note</label>
             <textarea value={form.notes || ''} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none resize-none" />
           </div>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: 'Budget', value: project.budget ? `€${project.budget.toLocaleString('it-IT')}` : '—' },
-            { label: 'Costi Effettivi', value: project.actual_costs ? `€${project.actual_costs.toLocaleString('it-IT')}` : '—' },
-            { label: 'Inizio', value: project.start_date ? new Date(project.start_date).toLocaleDateString('it-IT') : '—' },
-            { label: 'Fine Prevista', value: project.expected_end_date ? new Date(project.expected_end_date).toLocaleDateString('it-IT') : '—' },
-          ].map(kpi => (
-            <div key={kpi.label} className="bg-white rounded-xl border border-gray-200 p-4">
-              <p className="text-xs text-gray-500">{kpi.label}</p>
-              <p className="text-lg font-bold text-gray-900 mt-1">{kpi.value}</p>
-            </div>
-          ))}
-        </div>
       )}
 
-      {/* Checklist Progress */}
+      {/* Checklist */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-gray-900">Avanzamento Checklist</h2>
+          <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+            <FileCheck className="w-4 h-4 text-blue-600" /> Checklist
+          </h2>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-500">{doneCount}/{checklists.length} completate</span>
             <button onClick={openSOPModal} className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">
-              <Plus className="w-3 h-3" /> Da Template
+              <BookOpen className="w-3 h-3" /> Template
             </button>
             <button onClick={() => setAddingTask(true)} className="flex items-center gap-1 px-2 py-1 text-xs text-white rounded-lg" style={{ backgroundColor: '#1147FF' }}>
               <Plus className="w-3 h-3" /> Aggiungi
@@ -285,22 +288,29 @@ export default function ProjectDetail() {
               <StatusBadge status={c.status} />
             </div>
           ))}
-          {checklists.length === 0 && !addingTask && <p className="text-sm text-gray-400 text-center py-4">Nessuna attività associata</p>}
+          {checklists.length === 0 && !addingTask && <p className="text-sm text-gray-400 text-center py-4">Nessuna attività</p>}
           {addingTask && (
             <div className="flex items-center gap-2 py-2 px-3">
-              <input
-                autoFocus
-                value={newTask}
-                onChange={e => setNewTask(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') addChecklist(); if (e.key === 'Escape') setAddingTask(false); }}
-                placeholder="Titolo attività..."
-                className="flex-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <input autoFocus value={newTask} onChange={e => setNewTask(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addChecklist(); if (e.key === 'Escape') setAddingTask(false); }} placeholder="Titolo..." className="flex-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none" />
               <button onClick={addChecklist} className="px-3 py-1.5 text-xs text-white rounded-lg" style={{ backgroundColor: '#1147FF' }}>Aggiungi</button>
-              <button onClick={() => setAddingTask(false)} className="p-1.5 rounded-lg hover:bg-gray-100"><X className="w-3.5 h-3.5 text-gray-400" /></button>
+              <button onClick={() => setAddingTask(false)} className="p-1.5 rounded-lg hover:bg-gray-100"><X className="w-3.5 h-3.5" /></button>
             </div>
           )}
         </div>
+      </div>
+
+      {/* Photo Galleries */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {['before', 'during', 'after'].map(cat => (
+          <PhotoGallery
+            key={cat}
+            category={cat}
+            photos={project[`photos_${cat}`] || []}
+            onUpload={handlePhotoUpload}
+            onRemove={handlePhotoRemove}
+            uploading={uploadingPhoto}
+          />
+        ))}
       </div>
 
       {/* Milestones */}
@@ -317,22 +327,15 @@ export default function ProjectDetail() {
           <div className="space-y-0">
             {(form.milestones || []).map((m, idx) => (
               <div key={m.id} className="flex items-start gap-3 py-3">
-                {/* vertical line */}
                 <div className="flex flex-col items-center">
-                  <button onClick={() => toggleMilestone(m.id)} className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                    m.done ? 'bg-green-500 border-green-500' : 'border-gray-300 hover:border-blue-400'
-                  }`}>
+                  <button onClick={() => toggleMilestone(m.id)} className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${m.done ? 'bg-green-500 border-green-500' : 'border-gray-300 hover:border-blue-400'}`}>
                     {m.done && <div className="w-2 h-2 rounded-full bg-white" />}
                   </button>
                   {idx < (form.milestones.length - 1) && <div className="w-0.5 h-8 bg-gray-100 mt-1" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm font-medium ${m.done ? 'line-through text-gray-400' : 'text-gray-800'}`}>{m.title}</p>
-                  {m.due_date && (
-                    <p className={`text-xs mt-0.5 ${
-                      !m.done && new Date(m.due_date) < new Date() ? 'text-red-500 font-medium' : 'text-gray-400'
-                    }`}>{new Date(m.due_date).toLocaleDateString('it-IT')}</p>
-                  )}
+                  {m.due_date && <p className={`text-xs mt-0.5 ${!m.done && new Date(m.due_date) < new Date() ? 'text-red-500 font-medium' : 'text-gray-400'}`}>{new Date(m.due_date).toLocaleDateString('it-IT')}</p>}
                 </div>
                 <button onClick={() => deleteMilestone(m.id)} className="p-1 rounded hover:bg-red-50 text-gray-300 hover:text-red-400 flex-shrink-0">
                   <Trash2 className="w-3.5 h-3.5" />
@@ -343,79 +346,15 @@ export default function ProjectDetail() {
         )}
         {addingMilestone && (
           <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
-            <input
-              autoFocus
-              value={newMilestone.title}
-              onChange={e => setNewMilestone(m => ({ ...m, title: e.target.value }))}
-              onKeyDown={e => { if (e.key === 'Enter') addMilestone(); if (e.key === 'Escape') setAddingMilestone(false); }}
-              placeholder="Titolo milestone..."
-              className="flex-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none"
-            />
-            <input
-              type="date"
-              value={newMilestone.due_date}
-              onChange={e => setNewMilestone(m => ({ ...m, due_date: e.target.value }))}
-              className="px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none"
-            />
+            <input autoFocus value={newMilestone.title} onChange={e => setNewMilestone(m => ({ ...m, title: e.target.value }))} onKeyDown={e => { if (e.key === 'Enter') addMilestone(); if (e.key === 'Escape') setAddingMilestone(false); }} placeholder="Titolo..." className="flex-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none" />
+            <input type="date" value={newMilestone.due_date} onChange={e => setNewMilestone(m => ({ ...m, due_date: e.target.value }))} className="px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none" />
             <button onClick={addMilestone} className="px-3 py-1.5 text-xs text-white rounded-lg" style={{ backgroundColor: '#1147FF' }}>Aggiungi</button>
-            <button onClick={() => setAddingMilestone(false)} className="p-1.5 rounded-lg hover:bg-gray-100"><X className="w-3.5 h-3.5 text-gray-400" /></button>
+            <button onClick={() => setAddingMilestone(false)} className="p-1.5 rounded-lg hover:bg-gray-100"><X className="w-3.5 h-3.5" /></button>
           </div>
         )}
       </div>
 
-      {/* Photos Before / During / After */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-gray-900">Fotografie Cantiere</h2>
-          <div className="flex gap-1">
-            {['before', 'during', 'after'].map(t => (
-              <button
-                key={t}
-                onClick={() => setPhotoTab(t)}
-                className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
-                  photoTab === t ? 'text-white' : 'text-gray-500 hover:bg-gray-100'
-                }`}
-                style={photoTab === t ? { backgroundColor: '#1147FF' } : {}}
-              >
-                {t === 'before' ? 'Prima' : t === 'during' ? 'Durante' : 'Dopo'}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 mb-3">
-          {(project[photoKeys[photoTab]] || []).map((url, i) => (
-            <div key={i} className="relative group aspect-square">
-              <img src={url} alt="" className="w-full h-full object-cover rounded-lg" />
-              <button
-                onClick={() => removePhoto(url)}
-                className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-          ))}
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploadingPhoto}
-            className="aspect-square border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-blue-400 hover:text-blue-400 transition-colors"
-          >
-            {uploadingPhoto ? (
-              <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
-            ) : (
-              <><Camera className="w-5 h-5" /><span className="text-xs mt-1">Aggiungi</span></>
-            )}
-          </button>
-        </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={e => { if (e.target.files[0]) uploadPhoto(e.target.files[0]); e.target.value = ''; }}
-        />
-      </div>
-
-      {/* SOP Template Modal */}
+      {/* SOP Modal */}
       {sopModal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl">
@@ -424,7 +363,7 @@ export default function ProjectDetail() {
               <button onClick={() => setSopModal(false)}><X className="w-5 h-5 text-gray-400" /></button>
             </div>
             {sopTemplates.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">Nessun template disponibile</p>
+              <p className="text-sm text-gray-400 text-center py-8">Nessun template</p>
             ) : (
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 {sopTemplates.map(t => (
@@ -433,12 +372,7 @@ export default function ProjectDetail() {
                       <p className="text-sm font-semibold text-gray-800">{t.title}</p>
                       <p className="text-xs text-gray-400 mt-0.5">{t.category} · {(t.items || []).length} voci</p>
                     </div>
-                    <button
-                      onClick={() => applySOPTemplate(t)}
-                      disabled={applyingTemplate}
-                      className="px-3 py-1.5 text-xs text-white rounded-lg font-medium disabled:opacity-40"
-                      style={{ backgroundColor: '#1147FF' }}
-                    >
+                    <button onClick={() => applySOPTemplate(t)} disabled={applyingTemplate} className="px-3 py-1.5 text-xs text-white rounded-lg font-medium disabled:opacity-40" style={{ backgroundColor: '#1147FF' }}>
                       {applyingTemplate ? '...' : 'Applica'}
                     </button>
                   </div>
@@ -453,7 +387,7 @@ export default function ProjectDetail() {
       {project.notes && (
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h2 className="font-semibold text-gray-900 mb-2">Note</h2>
-          <p className="text-sm text-gray-600">{project.notes}</p>
+          <p className="text-sm text-gray-600 whitespace-pre-wrap">{project.notes}</p>
         </div>
       )}
     </div>

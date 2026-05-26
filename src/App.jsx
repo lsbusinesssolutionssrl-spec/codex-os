@@ -31,6 +31,7 @@ import PortalLayout from './components/PortalLayout';
 import SOPTemplates from './pages/SOPTemplates';
 import SOPTemplateDetail from './pages/SOPTemplateDetail';
 import ChecklistDetail from './pages/ChecklistDetail';
+import GenerateSampleData from './pages/GenerateSampleData';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -83,6 +84,7 @@ const AuthenticatedApp = () => {
         <Route path="/report" element={<Report />} />
         <Route path="/sop" element={<SOPTemplates />} />
         <Route path="/sop/:id" element={<SOPTemplateDetail />} />
+        <Route path="/generate-data" element={<GenerateSampleData />} />
       </Route>
       <Route element={<PortalLayout />}>
         <Route path="/portal" element={<ClientPortal />} />

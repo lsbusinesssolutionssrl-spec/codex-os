@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FolderKanban, FileText, Shield, TrendingUp, Home, Users, AlertCircle, Activity } from 'lucide-react';
+import { FolderKanban, FileText, Shield, TrendingUp, Home, Users, AlertCircle, Activity, FileCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend } from 'recharts';
 
@@ -42,6 +42,7 @@ export default function Dashboard() {
 
       const activeProjects = projects.filter(p => ['In Progress', 'Approved', 'Testing'].includes(p.status));
       const openEstimates = estimates.filter(e => ['Draft', 'To Review', 'Sent'].includes(e.status));
+      const acceptedNotConverted = estimates.filter(e => e.status === 'Accepted');
       const openTickets = tickets.filter(t => ['Open', 'In Progress', 'Waiting Client'].includes(t.status));
       const activeGuardian = guardian.filter(g => g.status === 'Active');
       const monthlyRevenue = activeGuardian.reduce((sum, g) => sum + (g.monthly_price || 0), 0);
@@ -49,6 +50,18 @@ export default function Dashboard() {
       const totalRevenue = acceptedEstimates.reduce((s, e) => s + (e.revenue || 0), 0);
       const totalMargin = acceptedEstimates.reduce((s, e) => s + (e.gross_margin || 0), 0);
       const marginPct = totalRevenue > 0 ? ((totalMargin / totalRevenue) * 100).toFixed(1) : 0;
+      
+      // New Phase 2 widgets
+      const nearDeadline = projects.filter(p => {
+        if (!p.expected_end_date || !['In Progress', 'Testing'].includes(p.status)) return false;
+        const daysLeft = (new Date(p.expected_end_date) - new Date()) / (1000 * 60 * 60 * 24);
+        return daysLeft >= 0 && daysLeft <= 14;
+      });
+      const lowMargin = projects.filter(p => {
+        const margin = p.contract_value && p.contract_value > 0 ? ((p.contract_value - (p.material_costs || 0) - (p.labor_costs || 0) - (p.other_costs || 0)) / p.contract_value) * 100 : 0;
+        return margin < 25;
+      });
+      const deliveredWithoutPassport = projects.filter(p => p.status === 'Delivered');
 
       // Ticket distribution
       const ticketDist = Object.entries(
@@ -65,12 +78,16 @@ export default function Dashboard() {
       setStats({
         activeProjects: activeProjects.length,
         openEstimates: openEstimates.length,
+        acceptedNotConverted: acceptedNotConverted.length,
         openTickets: openTickets.length,
         monthlyRevenue,
         marginPct,
         activePassports: properties.length,
         activeGuardian: activeGuardian.length,
         clients: clients.length,
+        nearDeadline: nearDeadline.length,
+        lowMargin: lowMargin.length,
+        deliveredWithoutPassport: deliveredWithoutPassport.length,
         ticketDist,
         pendingEstimates,
       });
@@ -97,12 +114,16 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard icon={FolderKanban} label="Progetti Attivi" value={stats.activeProjects} color="#1147FF" to="/projects" />
         <KpiCard icon={FileText} label="Preventivi Aperti" value={stats.openEstimates} color="#F58220" to="/estimates" />
+        <KpiCard icon={FileCheck} label="Da Convertire" value={stats.acceptedNotConverted} color="#10B981" to="/estimates" />
         <KpiCard icon={AlertCircle} label="Ticket Aperti" value={stats.openTickets} color="#ef4444" to="/tickets" />
         <KpiCard icon={TrendingUp} label="Ricavi Guardian/mese" value={stats.monthlyRevenue ? `€${stats.monthlyRevenue.toLocaleString()}` : '€0'} color="#10b981" />
         <KpiCard icon={TrendingUp} label="Margine Lordo %" value={stats.marginPct ? `${stats.marginPct}%` : '0%'} color="#8b5cf6" />
         <KpiCard icon={Home} label="Home Passport" value={stats.activePassports} color="#0B2341" to="/properties" />
         <KpiCard icon={Shield} label="Clienti Guardian" value={stats.activeGuardian} color="#059669" to="/guardian" />
         <KpiCard icon={Users} label="Clienti Totali" value={stats.clients} color="#6366f1" to="/clients" />
+        <KpiCard icon={Activity} label="Scadenza 14gg" value={stats.nearDeadline} color="#F59E0B" to="/projects" />
+        <KpiCard icon={TrendingUp} label="Margine <25%" value={stats.lowMargin} color="#EF4444" to="/projects" />
+        <KpiCard icon={Home} label="Da Passport" value={stats.deliveredWithoutPassport} color="#6B7280" to="/projects" />
       </div>
 
       {/* Charts Row */}

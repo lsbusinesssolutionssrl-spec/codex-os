@@ -52,6 +52,38 @@
       "type": "string",
       "title": "Actual End Date"
     },
+    "contract_value": {
+      "type": "number",
+      "title": "Contract Value (\u20ac)"
+    },
+    "material_costs": {
+      "type": "number",
+      "title": "Material Costs (\u20ac)"
+    },
+    "labor_costs": {
+      "type": "number",
+      "title": "Labor Costs (\u20ac)"
+    },
+    "other_costs": {
+      "type": "number",
+      "title": "Other Costs (\u20ac)"
+    },
+    "payment_collected": {
+      "type": "number",
+      "title": "Payment Collected (\u20ac)"
+    },
+    "estimated_duration": {
+      "type": "string",
+      "title": "Estimated Duration"
+    },
+    "estimate_type": {
+      "type": "string",
+      "title": "Estimate Type"
+    },
+    "quality_level": {
+      "type": "string",
+      "title": "Quality Level"
+    },
     "budget": {
       "type": "number",
       "title": "Budget (\u20ac)"
@@ -64,24 +96,28 @@
       "type": "number",
       "title": "Gross Margin (\u20ac)"
     },
+    "gross_margin_pct": {
+      "type": "number",
+      "title": "Gross Margin %"
+    },
     "photos_before": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "object"
       },
       "title": "Photos Before"
     },
     "photos_during": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "object"
       },
       "title": "Photos During"
     },
     "photos_after": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "object"
       },
       "title": "Photos After"
     },

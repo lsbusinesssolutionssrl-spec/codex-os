@@ -77,6 +77,13 @@
         "type": "string"
       },
       "title": "Documents"
+    },
+    "interventions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "title": "Interventions Timeline"
     }
   },
   "required": [
