@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Home, FileText, FolderKanban,
-  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2, BookOpen, TrendingUp, Crown, Clock, Package, DollarSign, Brain, Database, Building2, CreditCard, ListTodo, Wrench, Activity, Bell, Zap, Command, Plus
+  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2, BookOpen, TrendingUp, Crown, Clock, Package, DollarSign, Brain, Database, Building2, CreditCard, ListTodo, Wrench, Activity, Bell, Zap, Command, Plus, Globe, Palette
 } from 'lucide-react';
 
 import { base44 } from '@/api/base44Client';
@@ -16,7 +16,7 @@ import WorkspaceSwitcher from './workspace/WorkspaceSwitcher';
 import { useOfflineSync } from '../hooks/useOfflineSync';
 
 const navItems = [
-  { path: '/', icon: LayoutDashboard, label: 'Command Center', icon: LayoutDashboard },
+  { path: '/', icon: LayoutDashboard, label: 'Command Center' },
   { path: '/clients', label: 'Clienti', icon: Users },
   { path: '/projects', label: 'Progetti', icon: FolderKanban },
   { path: '/properties', label: 'Home Passport', icon: Home },
@@ -24,8 +24,16 @@ const navItems = [
   { path: '/guardian', label: 'Guardian', icon: Shield },
   { path: '/documents', label: 'Documenti', icon: Archive },
   { path: '/ai', label: 'AI Copilot', icon: Bot },
-  { path: '/financial-control', label: 'Financial', icon: TrendingUp, roles: ['admin'] },
-  { path: '/company-settings', label: 'Settings', icon: Building2, roles: ['company_admin', 'admin'] },
+  { path: '/financial-control', label: 'Financial', icon: TrendingUp },
+  { path: '/company-settings', label: 'Settings', icon: Building2 },
+  // Platform tools - visible only to admin
+  { path: '/super-admin', label: 'Platform', icon: Shield, adminOnly: true },
+  { path: '/platform-settings', label: 'Platform Settings', icon: Shield, adminOnly: true },
+  { path: '/subscription-plans', label: 'SaaS Plans', icon: CreditCard, adminOnly: true },
+  { path: '/developer', label: 'Developer', icon: Database, adminOnly: true },
+  { path: '/integrations', label: 'Integrations', icon: Globe, adminOnly: true },
+  { path: '/brand-approval', label: 'White Label', icon: Palette, adminOnly: true },
+  { path: '/system-status', label: 'System Health', icon: Activity, adminOnly: true },
 ];
 
 export default function Layout() {
@@ -79,6 +87,12 @@ export default function Layout() {
   };
   const allowedPaths = userRole ? NAV_BY_ROLE[userRole] : null;
   const visibleNav = navItems.filter(i => {
+    // Admin sees everything
+    if (userRole === 'admin') {
+      // Hide adminOnly items from main nav (they're accessible via Platform workspace)
+      if (i.adminOnly) return false;
+      return true;
+    }
     // If item has role restriction, only show for those roles
     if (i.roles && !i.roles.includes(userRole)) return false;
     // If user role has path restrictions, filter by allowed paths

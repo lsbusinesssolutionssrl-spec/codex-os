@@ -1,17 +1,18 @@
 import { useNavigate } from 'react-router-dom';
-import { Shield, Building2, Users, Activity, Brain, Zap, BarChart2, Globe, Database, Key, Webhook, Cpu } from 'lucide-react';
+import { Shield, Building2, Users, Activity, Brain, Zap, BarChart2, Globe, Database, Key, Webhook, Cpu, CreditCard, Palette } from 'lucide-react';
 import { useWorkspace } from './WorkspaceContext';
 
 const quickActions = [
   { label: 'Tenant Management', icon: Building2, path: '/super-admin' },
+  { label: 'Platform Settings', icon: Shield, path: '/platform-settings' },
   { label: 'Platform Analytics', icon: BarChart2, path: '/product-analytics' },
+  { label: 'SaaS Plans', icon: CreditCard, path: '/subscription-plans' },
   { label: 'AI Systems', icon: Brain, path: '/ai-foundation' },
   { label: 'Workflow Engine', icon: Zap, path: '/workflows' },
   { label: 'Integrations', icon: Globe, path: '/integrations' },
-  { label: 'Event Bus', icon: Activity, path: '/platform-health' },
+  { label: 'White Label', icon: Palette, path: '/brand-approval' },
   { label: 'Developer Settings', icon: Database, path: '/developer' },
   { label: 'API Keys', icon: Key, path: '/api-keys' },
-  { label: 'Webhooks', icon: Webhook, path: '/developer' },
   { label: 'System Health', icon: Cpu, path: '/system-status' },
 ];
 

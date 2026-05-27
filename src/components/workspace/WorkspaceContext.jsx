@@ -56,7 +56,7 @@ const WORKSPACE_CONFIG = {
 };
 
 export function WorkspaceProvider({ children }) {
-  const [currentWorkspace, setCurrentWorkspace] = useState('executive');
+  const [currentWorkspace, setCurrentWorkspace] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [availableWorkspaces, setAvailableWorkspaces] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -91,7 +91,8 @@ export function WorkspaceProvider({ children }) {
         if (workspaces.length > 0) {
           const defaultWs = workspaces[0];
           const saved = localStorage.getItem(`workspace_${user?.email}`);
-          setCurrentWorkspace(saved && workspaces.includes(saved) ? saved : defaultWs);
+          const initialWs = saved && workspaces.includes(saved) ? saved : defaultWs;
+          setCurrentWorkspace(initialWs);
         }
       } catch (error) {
         console.error('Workspace init error:', error);
