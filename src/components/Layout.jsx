@@ -20,6 +20,7 @@ import LayoutInspector from './LayoutInspector';
 import ModuleEntitlementDebug from './ModuleEntitlementDebug';
 import RBACDebugPanel from './RBACDebugPanel';
 import ContextVerification from './ContextVerification';
+import HydrationDebugPanel from './HydrationDebugPanel';
 
 // Tenant navigation - modules enabled dynamically based on plan
 const TENANT_NAV_ITEMS = [
@@ -268,6 +269,7 @@ export default function Layout() {
           <Outlet />
         </main>
         <ContextVerification />
+        <HydrationDebugPanel />
         <SessionDebugPanel />
         <LayoutInspector />
         <RBACDebugPanel />

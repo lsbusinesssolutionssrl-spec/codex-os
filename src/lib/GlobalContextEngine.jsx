@@ -264,97 +264,130 @@ export function GlobalContextProvider({ children }) {
 
   const resolveTenantContext = async (membership, tenant = null) => {
     const failedChecksList = [];
-    
-    // Load tenant if not provided
-    const loadedTenant = tenant || await base44.entities.Company.get(membership.tenant_id);
-    if (!loadedTenant) {
+    const hydrationSteps = {
+      user_loaded: false,
+      membership_loaded: false,
+      tenant_loaded: false,
+      plan_loaded: false,
+      plan_modules_loaded: false,
+      feature_flags_loaded: false,
+      enabled_modules_built: false,
+      module_permissions_built: false,
+      context_finalized: false,
+    };
+
+    try {
+      // STEP 1: Load tenant if not provided
+      hydrationSteps.user_loaded = true;
+      const loadedTenant = tenant || await base44.entities.Company.get(membership.tenant_id);
+      if (!loadedTenant) {
+        failedChecksList.push({
+          check: 'tenant_load',
+          message: 'Failed to load tenant company',
+          critical: true,
+        });
+        setFailedChecks(failedChecksList);
+        setContextType(CONTEXT_TYPE.UNRESOLVED);
+        return;
+      }
+      hydrationSteps.tenant_loaded = true;
+      setActiveTenant(loadedTenant);
+
+      // STEP 2: Load subscription/plan
+      hydrationSteps.membership_loaded = true;
+      const subscription = await base44.entities.CompanySubscription.filter(
+        { company_id: loadedTenant.id, status: 'active' },
+        '-created_date',
+        1
+      ).then(subs => subs[0] || null);
+
+      let tenantState = TENANT_STATE.ACTIVE;
+      if (!subscription) {
+        tenantState = TENANT_STATE.INCOMPLETE;
+        failedChecksList.push({
+          check: 'subscription',
+          message: 'No active subscription found',
+          critical: false,
+          repairable: true,
+        });
+      } else {
+        hydrationSteps.plan_loaded = true;
+      }
+
+      // STEP 3: Compute enabled modules (MUST happen BEFORE permissions)
+      console.log('[Hydration] Loading enabled modules for subscription:', subscription?.plan_id);
+      const modules = await computeEnabledModules(subscription, membership.tenant_role, loadedTenant.id);
+      console.log('[Hydration] Final enabled modules:', modules);
+      hydrationSteps.plan_modules_loaded = true;
+      hydrationSteps.feature_flags_loaded = true;
+      hydrationSteps.enabled_modules_built = true;
+      setEnabledModules(modules);
+
+      // STEP 4: Resolve permissions using centralized RBAC resolver (AFTER modules loaded)
+      const resolved = RBACResolver.resolvePermissions(
+        membership.tenant_role,
+        modules,
+        {}
+      );
+      console.log('[Hydration] Resolved permissions:', resolved.permissions.length);
+      hydrationSteps.module_permissions_built = true;
+      setPermissions(resolved.permissions);
+
+      // STEP 5: Check onboarding state
+      const onboardingComplete = checkOnboardingComplete(loadedTenant);
+      if (!onboardingComplete) {
+        tenantState = TENANT_STATE.ONBOARDING;
+        failedChecksList.push({
+          check: 'onboarding',
+          message: 'Tenant onboarding incomplete',
+          critical: false,
+          repairable: true,
+        });
+      }
+
+      setOnboardingState({
+        complete: onboardingComplete,
+        tenantState,
+        missingSteps: getMissingOnboardingSteps(loadedTenant),
+      });
+
+      // STEP 6: Load company settings state
+      const settingsComplete = checkCompanySettingsComplete(loadedTenant);
+      setCompanySettingsState({
+        complete: settingsComplete,
+        missingFields: getMissingCompanyFields(loadedTenant),
+      });
+
+      // STEP 7: Set context type
+      hydrationSteps.context_finalized = true;
+      if (membership.tenant_role === 'technician') {
+        setContextType(CONTEXT_TYPE.TECHNICIAN);
+        setWorkspaceType('technician');
+      } else {
+        setContextType(CONTEXT_TYPE.TENANT);
+        // Set default workspace based on role
+        if (membership.tenant_role === 'tenant_admin' || membership.tenant_role === 'project_manager') {
+          setWorkspaceType('executive');
+        } else if (membership.tenant_role === 'sales') {
+          setWorkspaceType('sales');
+        } else {
+          setWorkspaceType('operations');
+        }
+      }
+
+      console.log('[Hydration] Complete:', hydrationSteps);
+      setFailedChecks(failedChecksList);
+      setSessionValid(true);
+    } catch (error) {
+      console.error('[Hydration] Error:', error);
       failedChecksList.push({
-        check: 'tenant_load',
-        message: 'Failed to load tenant company',
+        check: 'hydration_failed',
+        message: error.message,
         critical: true,
+        hydrationSteps,
       });
       setFailedChecks(failedChecksList);
-      setContextType(CONTEXT_TYPE.UNRESOLVED);
-      return;
     }
-
-    setActiveTenant(loadedTenant);
-
-    // Check tenant state
-    const subscription = await base44.entities.CompanySubscription.filter(
-      { company_id: loadedTenant.id, status: 'active' },
-      '-created_date',
-      1
-    ).then(subs => subs[0] || null);
-
-    let tenantState = TENANT_STATE.ACTIVE;
-    if (!subscription) {
-      tenantState = TENANT_STATE.INCOMPLETE;
-      failedChecksList.push({
-        check: 'subscription',
-        message: 'No active subscription found',
-        critical: false,
-        repairable: true,
-      });
-    }
-
-    // Check onboarding state
-    const onboardingComplete = checkOnboardingComplete(loadedTenant);
-    if (!onboardingComplete) {
-      tenantState = TENANT_STATE.ONBOARDING;
-      failedChecksList.push({
-        check: 'onboarding',
-        message: 'Tenant onboarding incomplete',
-        critical: false,
-        repairable: true,
-      });
-    }
-
-    setOnboardingState({
-      complete: onboardingComplete,
-      tenantState,
-      missingSteps: getMissingOnboardingSteps(loadedTenant),
-    });
-
-    // Load company settings state
-    const settingsComplete = checkCompanySettingsComplete(loadedTenant);
-    setCompanySettingsState({
-      complete: settingsComplete,
-      missingFields: getMissingCompanyFields(loadedTenant),
-    });
-
-    // STEP 5: Resolve permissions using centralized RBAC resolver
-    const resolved = RBACResolver.resolvePermissions(
-      membership.tenant_role,
-      modules, // enabled modules
-      {} // feature flags (can be loaded separately)
-    );
-    setPermissions(resolved.permissions);
-
-    // STEP 6: Load enabled modules
-    console.log('Loading enabled modules for subscription:', subscription?.plan_id);
-    const modules = await computeEnabledModules(subscription, membership.tenant_role);
-    console.log('Final enabled modules:', modules);
-    setEnabledModules(modules);
-
-    // Set context type
-    if (membership.tenant_role === 'technician') {
-      setContextType(CONTEXT_TYPE.TECHNICIAN);
-      setWorkspaceType('technician');
-    } else {
-      setContextType(CONTEXT_TYPE.TENANT);
-      // Set default workspace based on role
-      if (membership.tenant_role === 'tenant_admin' || membership.tenant_role === 'project_manager') {
-        setWorkspaceType('executive');
-      } else if (membership.tenant_role === 'sales') {
-        setWorkspaceType('sales');
-      } else {
-        setWorkspaceType('operations');
-      }
-    }
-
-    setFailedChecks(failedChecksList);
-    setSessionValid(true);
   };
 
   const checkOnboardingComplete = (tenant) => {
@@ -391,110 +424,107 @@ export function GlobalContextProvider({ children }) {
     return resolved.permissions;
   };
 
-  const computeEnabledModules = async (subscription, tenantRole) => {
-    // Core modules always available
-    const modules = ['projects', 'estimates', 'clients', 'documents', 'properties', 'checklists', 'tickets', 'calendar', 'report', 'documents', 'sop', 'maintenance', 'guardian'];
+  const computeEnabledModules = async (subscription, tenantRole, companyId) => {
+    console.log('[computeEnabledModules] Starting with:', { subscription, tenantRole, companyId });
     
-    // Role-based restrictions
+    // Role-based restrictions - ALWAYS return empty for unsupported roles
     if (tenantRole === 'technician') {
+      console.log('[computeEnabledModules] Technician role - returning limited modules');
       return ['projects', 'checklists', 'tickets', 'documents', 'maintenance'];
     }
     
     if (tenantRole === 'sales') {
+      console.log('[computeEnabledModules] Sales role - returning limited modules');
       return ['clients', 'properties', 'estimates', 'documents', 'report'];
     }
+
+    // STEP 1: Core modules ALWAYS available for tenant_admin and project_manager
+    const modules = new Set([
+      'projects', 'estimates', 'clients', 'documents', 'properties',
+      'checklists', 'tickets', 'calendar', 'report', 'sop',
+      'maintenance', 'guardian', 'core'
+    ]);
+    console.log('[computeEnabledModules] Core modules:', Array.from(modules));
     
-    // Subscription-based modules - Enterprise/Professional get all premium features
-    if (subscription) {
-      // Load plan details to check quotas
-      let quotas = {};
-      if (subscription.plan_id) {
-        try {
-          const plans = await base44.entities.SubscriptionPlan.filter({ id: subscription.plan_id });
-          if (plans.length > 0) {
-            quotas = plans[0].quotas || {};
-            console.log('Loaded plan quotas:', quotas);
+    // STEP 2: Enterprise plan - explicit module mapping (fallback if quotas missing)
+    const ENTERPRISE_MODULES = [
+      'financial_control', 'ai_copilot', 'intelligence', 'workflows',
+      'executive_insights', 'business_intelligence', 'team_performance', 'risk_monitoring'
+    ];
+    
+    if (subscription?.plan_id) {
+      console.log('[computeEnabledModules] Loading plan:', subscription.plan_id);
+      try {
+        const plans = await base44.entities.SubscriptionPlan.filter({ id: subscription.plan_id });
+        if (plans.length > 0) {
+          const plan = plans[0];
+          const quotas = { ...plan.quotas, ...subscription.quotas };
+          console.log('[computeEnabledModules] Plan quotas:', quotas);
+          
+          // Check quotas for premium modules
+          if (quotas?.custom_reports || quotas?.financial_control) {
+            modules.add('financial_control');
+            console.log('[computeEnabledModules] Added financial_control via quota');
           }
-        } catch (error) {
-          console.error('Error loading subscription plan:', error);
+          if (quotas?.ai_requests_per_month > 0) {
+            modules.add('ai_copilot');
+            console.log('[computeEnabledModules] Added ai_copilot via quota');
+          }
+          if (quotas?.advanced_analytics || quotas?.intelligence) {
+            modules.add('intelligence');
+            console.log('[computeEnabledModules] Added intelligence via quota');
+          }
+          if (quotas?.workflow_automation) {
+            modules.add('workflows');
+            console.log('[computeEnabledModules] Added workflows via quota');
+          }
+          if (quotas?.advanced_analytics || quotas?.custom_reports) {
+            modules.add('executive_insights');
+            modules.add('business_intelligence');
+            console.log('[computeEnabledModules] Added executive_insights & business_intelligence via quota');
+          }
+          if (quotas?.max_users > 5 || quotas?.advanced_analytics) {
+            modules.add('team_performance');
+            console.log('[computeEnabledModules] Added team_performance via quota');
+          }
+          if (quotas?.advanced_analytics || quotas?.guardian_subscriptions > 0) {
+            modules.add('risk_monitoring');
+            console.log('[computeEnabledModules] Added risk_monitoring via quota');
+          }
         }
+      } catch (error) {
+        console.error('[computeEnabledModules] Error loading plan:', error);
       }
-      
-      // Also check subscription-level quotas
-      if (subscription.quotas) {
-        quotas = { ...quotas, ...subscription.quotas };
-      }
-      
-      console.log('Computing modules - Quotas:', quotas);
-      
-      // Financial Control - enabled by custom_reports OR financial_control quota
-      if (quotas?.custom_reports || quotas?.financial_control) {
-        modules.push('financial_control');
-        console.log('Financial Control enabled');
-      }
-      
-      // AI Copilot - enabled by AI requests quota
-      if (quotas?.ai_requests_per_month > 0) {
-        modules.push('ai_copilot');
-        console.log('AI Copilot enabled');
-      }
-      
-      // Intelligence - enabled by advanced_analytics OR intelligence quota
-      if (quotas?.advanced_analytics || quotas?.intelligence) {
-        modules.push('intelligence');
-        console.log('Intelligence enabled');
-      }
-      
-      // Workflows - enabled by workflow_automation quota
-      if (quotas?.workflow_automation) {
-        modules.push('workflows');
-        console.log('Workflows enabled');
-      }
-      
-      // Executive Insights / Business Intelligence
-      if (quotas?.advanced_analytics || quotas?.custom_reports) {
-        modules.push('executive_insights');
-        modules.push('business_intelligence');
-        console.log('Executive Insights & Business Intelligence enabled');
-      }
-      
-      // Team Performance
-      if (quotas?.max_users > 5 || quotas?.advanced_analytics) {
-        modules.push('team_performance');
-        console.log('Team Performance enabled');
-      }
-      
-      // Risk Monitoring
-      if (quotas?.advanced_analytics || quotas?.guardian_subscriptions > 0) {
-        modules.push('risk_monitoring');
-        console.log('Risk Monitoring enabled');
-      }
+    } else if (subscription?.status === 'active' && !subscription?.plan_id) {
+      // Fallback: active subscription without plan_id = enterprise entitlement
+      console.log('[computeEnabledModules] Active subscription without plan_id - adding enterprise modules');
+      ENTERPRISE_MODULES.forEach(m => modules.add(m));
     }
     
-    // Load feature flags for this company
-    if (activeTenant?.id) {
+    // STEP 3: Merge feature flags (CRITICAL - always load from companyId parameter)
+    if (companyId) {
+      console.log('[computeEnabledModules] Loading feature flags for company:', companyId);
       try {
         const featureFlags = await base44.entities.TenantFeatureFlag.filter({
-          company_id: activeTenant.id,
+          company_id: companyId,
           enabled: true
         });
+        console.log('[computeEnabledModules] Found feature flags:', featureFlags);
         
-        console.log('Feature flags:', featureFlags);
-        
-        // Add modules from feature flags
         featureFlags.forEach(flag => {
-          if (flag.enabled && !modules.includes(flag.feature_name)) {
-            modules.push(flag.feature_name);
-            console.log(`Module ${flag.feature_name} enabled via feature flag`);
+          if (flag.enabled && flag.feature_name) {
+            modules.add(flag.feature_name);
+            console.log(`[computeEnabledModules] Added ${flag.feature_name} via feature flag`);
           }
         });
       } catch (error) {
-        console.error('Error loading feature flags:', error);
+        console.error('[computeEnabledModules] Error loading feature flags:', error);
       }
     }
     
-    console.log('Final enabled modules:', modules);
-    return modules;
+    const result = Array.from(modules);
+    console.log('[computeEnabledModules] Final modules:', result);
+    return result;
   };
 
   const switchTenant = (membershipId) => {
