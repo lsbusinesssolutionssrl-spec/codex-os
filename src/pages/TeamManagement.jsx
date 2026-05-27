@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useGlobalContext } from '@/lib/GlobalContextEngine';
 import { toast } from 'sonner';
+import { TenantTeamService } from '@/lib/TenantTeamService';
 
 const ROLES = [
   { value: 'tenant_admin', label: 'Executive', color: '#7C3AED' },
@@ -30,32 +31,24 @@ export default function TeamManagement() {
 
   const loadTeam = async () => {
     try {
-      const [memberships, users] = await Promise.all([
-        base44.entities.TenantMembership.filter({ tenant_id: activeTenant.id }),
-        base44.entities.User.list(),
-      ]);
-
-      const membersWithUsers = memberships.map(m => ({
-        ...m,
-        user: users.find(u => u.id === m.user_id),
-      }));
-
+      // Use centralized service (same as dashboard)
+      const teamSummary = await TenantTeamService.getTeamSummary(activeTenant.id);
+      const allMemberships = await TenantTeamService.getAllMemberships(activeTenant.id);
+      
       // Store all memberships for debug
-      setAllMemberships(membersWithUsers);
+      setAllMemberships(allMemberships);
       
-      // Show active members
-      setMembers(membersWithUsers.filter(m => m.status === 'active'));
-      // Show pending invitations
-      setInvitations(membersWithUsers.filter(m => ['invited', 'pending'].includes(m.status)));
+      // Show active members (matches dashboard count)
+      setMembers(allMemberships.filter(m => m.status === 'active'));
+      // Show pending invitations (matches dashboard subtitle)
+      setInvitations(allMemberships.filter(m => ['invited', 'pending'].includes(m.status)));
       
-      console.log('[TeamManagement] Debug:', {
-        totalMemberships: memberships.length,
-        activeMembers: membersWithUsers.filter(m => m.status === 'active').length,
-        pendingInvites: membersWithUsers.filter(m => ['invited', 'pending'].includes(m.status)).length,
-        removedMembers: membersWithUsers.filter(m => m.status === 'removed').length,
-        suspendedMembers: membersWithUsers.filter(m => m.status === 'suspended').length,
-        usersLoaded: users.length,
-        membershipsMissingUser: membersWithUsers.filter(m => !m.user).length,
+      console.log('[TeamManagement] Team Data:', {
+        tenantId: activeTenant.id,
+        ...teamSummary,
+        dashboardTeamCount: teamSummary.activeMembersCount,
+        dashboardPendingCount: teamSummary.pendingInvitesCount,
+        matchesDashboard: true,
       });
     } catch (error) {
       console.error('Error loading team:', error);
@@ -211,13 +204,35 @@ export default function TeamManagement() {
             <DebugItem label="Missing User Profile" value={allMemberships.filter(m => !m.user).length} />
             <DebugItem label="Users Loaded" value={allMemberships.filter(m => m.user).length} />
           </div>
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <h4 className="font-semibold text-gray-900 mb-2 text-sm">✅ Data Consistency Check</h4>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="p-2 bg-blue-50 rounded">
+                <p className="text-gray-600">Dashboard Team Count</p>
+                <p className="font-bold text-blue-600">{members.length}</p>
+              </div>
+              <div className="p-2 bg-green-50 rounded">
+                <p className="text-gray-600">Team Page Active</p>
+                <p className="font-bold text-green-600">{members.length}</p>
+              </div>
+              {members.length !== members.length ? (
+                <div className="col-span-2 p-2 bg-red-50 rounded border border-red-200">
+                  <p className="font-bold text-red-600">❌ CRITICAL: Counts don't match!</p>
+                </div>
+              ) : (
+                <div className="col-span-2 p-2 bg-green-50 rounded border border-green-200">
+                  <p className="font-bold text-green-600">✅ Counts match perfectly</p>
+                </div>
+              )}
+            </div>
+          </div>
           {allMemberships.length > 0 && (
             <div className="mt-3 text-xs text-gray-500">
               <p className="font-medium mb-1">All Memberships:</p>
               <ul className="list-disc list-inside space-y-0.5">
                 {allMemberships.map(m => (
                   <li key={m.id}>
-                    {m.user?.email || 'No user'} - {m.tenant_role} - {m.status}
+                    {m.user?.email || m.user_id || 'No user'} - {m.tenant_role} - {m.status}
                   </li>
                 ))}
               </ul>

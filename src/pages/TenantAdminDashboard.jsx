@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useGlobalContext } from '@/lib/GlobalContextEngine';
 import { toast } from 'sonner';
+import { TenantTeamService } from '@/lib/TenantTeamService';
 
 export default function TenantAdminDashboard() {
   const navigate = useNavigate();
@@ -18,21 +19,19 @@ export default function TenantAdminDashboard() {
 
   const loadDashboard = async () => {
     try {
-      const [clients, projects, estimates, documents, memberships, company] = await Promise.all([
+      // Use centralized service for team data (single source of truth)
+      const teamSummary = await TenantTeamService.getTeamSummary(activeTenant.id);
+      
+      const [clients, projects, estimates, documents, company] = await Promise.all([
         base44.entities.Client.filter({ company_id: activeTenant.id }),
         base44.entities.Project.filter({ company_id: activeTenant.id }),
         base44.entities.Estimate.filter({ company_id: activeTenant.id }),
         base44.entities.Document.filter({ company_id: activeTenant.id }),
-        base44.entities.TenantMembership.filter({ tenant_id: activeTenant.id }),
         base44.entities.Company.get(activeTenant.id),
       ]);
 
       const activeProjects = projects.filter(p => ['Approved', 'In Progress', 'Testing'].includes(p.status));
       const openEstimates = estimates.filter(e => ['Draft', 'To Review', 'Sent'].includes(e.status));
-      
-      // Count only active/pending/invited memberships (same as Team page)
-      const activeMembers = memberships.filter(m => m.status === 'active');
-      const pendingInvites = memberships.filter(m => ['invited', 'pending'].includes(m.status));
 
       setStats({
         clients: clients.length,
@@ -40,17 +39,18 @@ export default function TenantAdminDashboard() {
         estimates: estimates.length,
         activeProjects: activeProjects.length,
         documents: documents.length,
-        team: activeMembers.length,
+        team: teamSummary.activeMembersCount,
         openEstimates: openEstimates.length,
-        pendingInvites: pendingInvites.length,
-        totalMemberships: memberships.length,
+        pendingInvites: teamSummary.pendingInvitesCount,
+        totalMemberships: teamSummary.allMemberships,
+        teamSummary,
       });
 
       // Calculate onboarding steps
       const steps = [
         { id: 'company', label: 'Dati Aziendali', completed: !!(company?.name && company?.tax_id), icon: Building2 },
         { id: 'logo', label: 'Logo & Branding', completed: !!company?.logo_url, icon: Shield },
-        { id: 'team', label: 'Team (min 2)', completed: activeMembers.length >= 2, icon: Users },
+        { id: 'team', label: 'Team (min 2)', completed: teamSummary.totalCount >= 2, icon: Users },
         { id: 'client', label: 'Primo Cliente', completed: clients.length >= 1, icon: Users },
         { id: 'project', label: 'Primo Progetto', completed: projects.length >= 1, icon: FolderKanban },
         { id: 'estimate', label: 'Primo Preventivo', completed: estimates.length >= 1, icon: FileText },
