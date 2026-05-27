@@ -2,17 +2,26 @@ import { useState, useEffect } from 'react';
 import { Shield, Building2, Users, CreditCard, Zap, Brain, Globe, Database, Key, Activity, Webhook, Cpu, Lock, FileText, Palette } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 
 export default function PlatformSettings() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [platformStats, setPlatformStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
+      
+      // SECURITY FIX: Platform settings require platform role
+      if (!['admin', 'developer'].includes(currentUser?.role)) {
+        toast.error('Accesso riservato ai Super Admin');
+        setAccessDenied(true);
+        return;
+      }
       
       // Load platform stats
       try {
@@ -39,6 +48,26 @@ export default function PlatformSettings() {
   }, []);
 
   if (loading) return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
+  if (accessDenied) {
+    return (
+      <div className="p-6 max-w-2xl mx-auto">
+        <div className="bg-white rounded-2xl border-2 border-red-200 p-12 text-center">
+          <Lock className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Accesso Negato</h2>
+          <p className="text-gray-500 mb-6">
+            Le impostazioni Platform sono riservate ai Super Admin.
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            className="px-6 py-2.5 text-sm font-semibold text-white rounded-xl"
+            style={{ backgroundColor: '#1147FF' }}
+          >
+            Torna alla Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const isSuperAdmin = user?.role === 'admin';
 
