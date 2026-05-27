@@ -111,7 +111,7 @@ const AuthenticatedApp = () => {
         <Route path="/tickets" element={<Tickets />} />
         <Route path="/tickets/:id" element={<TicketDetail />} />
         <Route path="/team" element={<Team />} />
-        <Route path="/ai" element={<AI />} />
+        <Route path="/ai" element={<CodexAI />} />
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/report" element={<Report />} />
         <Route path="/sop" element={<SOPTemplates />} />
@@ -144,7 +144,7 @@ const AuthenticatedApp = () => {
         <Route path="/maintenance" element={<MaintenancePlanning />} />
         <Route path="/operations" element={<OperationsDashboard />} />
         <Route path="/schedule" element={<ProjectSchedule />} />
-        <Route path="/codex-ai" element={<CodexAI />} />
+
       </Route>
       <Route element={<PortalLayout />}>
         <Route path="/portal" element={<ClientPortal />} />

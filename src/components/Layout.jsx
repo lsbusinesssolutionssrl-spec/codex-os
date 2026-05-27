@@ -23,6 +23,7 @@ const navItems = [
   { path: '/documents', icon: Archive, label: 'Documenti' },
   { path: '/team', icon: Users2, label: 'Team' },
   { path: '/ai', icon: Bot, label: 'Codex AI' },
+  // codex-ai is now served at /ai
   { path: '/calendar', icon: CalendarDays, label: 'Calendario' },
   { path: '/report', icon: BarChart2, label: 'Report' },
   { path: '/sop', icon: BookOpen, label: 'SOP Templates' },
@@ -51,7 +52,6 @@ const navItems = [
   { path: '/maintenance', icon: Wrench, label: 'Manutenzioni Programmate' },
   { path: '/operations', icon: Zap, label: 'Operations Dashboard', roles: ['admin', 'company_admin', 'project_manager'] },
   { path: '/schedule', icon: CalendarDays, label: 'Scheduling' },
-  { path: '/codex-ai', icon: Bot, label: 'Codex AI Core' },
 ];
 
 export default function Layout() {

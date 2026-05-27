@@ -11,7 +11,9 @@ Deno.serve(async (req) => {
   const user = await base44.auth.me();
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { project_id } = await req.json();
+  const body = await req.json();
+  // Support both direct call { project_id } and entity automation payload { event: { entity_id } }
+  const project_id = body.project_id || body.event?.entity_id || body.data?.id;
   if (!project_id) return Response.json({ error: 'project_id required' }, { status: 400 });
 
   // Fetch project + related data

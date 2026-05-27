@@ -46,9 +46,9 @@ Deno.serve(async (req) => {
   ]);
 
   const [tasks, maintenance, knowledge] = await Promise.all([
-    base44.entities.Task ? base44.entities.Task.filter({ status: 'In Progress' }, '-updated_date', 5) : Promise.resolve([]),
-    base44.entities.MaintenanceSchedule ? base44.entities.MaintenanceSchedule.list('-next_due_date', 5) : Promise.resolve([]),
-    base44.entities.KnowledgeBase ? base44.entities.KnowledgeBase.list('-created_date', 5) : Promise.resolve([]),
+    base44.entities.Task.filter({ status: 'In Progress' }, '-updated_date', 5).catch(() => []),
+    base44.entities.MaintenanceSchedule.list('-next_due_date', 5).catch(() => []),
+    base44.entities.KnowledgeBase.list('-created_date', 5).catch(() => []),
   ]);
 
   const sanitizedProjects = projects.map(p => sanitizeForRole(p, role));
