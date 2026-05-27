@@ -1,0 +1,87 @@
+{
+  "name": "APIKey",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "name": {
+      "type": "string",
+      "title": "Nome Chiave"
+    },
+    "key_prefix": {
+      "type": "string",
+      "title": "Prefisso Chiave (public)"
+    },
+    "key_hash": {
+      "type": "string",
+      "title": "Hash Chiave (non mostrare mai)"
+    },
+    "type": {
+      "type": "string",
+      "title": "Tipo",
+      "enum": [
+        "Read-Only",
+        "Read-Write",
+        "Admin",
+        "Webhook"
+      ],
+      "default": "Read-Only"
+    },
+    "status": {
+      "type": "string",
+      "title": "Stato",
+      "enum": [
+        "Active",
+        "Revoked",
+        "Expired"
+      ],
+      "default": "Active"
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Permessi"
+    },
+    "rate_limit": {
+      "type": "number",
+      "title": "Rate Limit (requests/min)",
+      "default": 100
+    },
+    "expires_at": {
+      "type": "string",
+      "title": "Scade il"
+    },
+    "last_used": {
+      "type": "string",
+      "title": "Ultimo Utilizzo"
+    },
+    "usage_count": {
+      "type": "number",
+      "title": "Utilizzi",
+      "default": 0
+    },
+    "ip_whitelist": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "IP Whitelist"
+    },
+    "created_by": {
+      "type": "string",
+      "title": "Creato da"
+    },
+    "description": {
+      "type": "string",
+      "title": "Descrizione"
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "name": "PlatformIntegration",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "name": {
+      "type": "string",
+      "title": "Nome Integrazione"
+    },
+    "category": {
+      "type": "string",
+      "title": "Categoria",
+      "enum": [
+        "Calendar",
+        "Communication",
+        "Accounting",
+        "Storage",
+        "Payment",
+        "CRM",
+        "Analytics",
+        "IoT",
+        "Automation",
+        "Other"
+      ]
+    },
+    "provider": {
+      "type": "string",
+      "title": "Provider",
+      "enum": [
+        "Google",
+        "Microsoft",
+        "Slack",
+        "WhatsApp",
+        "Stripe",
+        "QuickBooks",
+        "Xero",
+        "Zapier",
+        "Custom"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "title": "Stato",
+      "enum": [
+        "Active",
+        "Inactive",
+        "Configuring",
+        "Error",
+        "Suspended"
+      ],
+      "default": "Inactive"
+    },
+    "config": {
+      "type": "object",
+      "title": "Configurazione",
+      "properties": {
+        "api_key": {
+          "type": "string"
+        },
+        "webhook_url": {
+          "type": "string"
+        },
+        "oauth_token": {
+          "type": "string"
+        },
+        "settings": {
+          "type": "object"
+        }
+      }
+    },
+    "enabled_features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Funzionalit\u00e0 Abilitate"
+    },
+    "last_sync": {
+      "type": "string",
+      "title": "Ultima Sincronizzazione"
+    },
+    "sync_frequency": {
+      "type": "string",
+      "title": "Frequenza Sincronizzazione",
+      "enum": [
+        "Real-time",
+        "Every 5 minutes",
+        "Every 15 minutes",
+        "Hourly",
+        "Daily",
+        "Manual"
+      ],
+      "default": "Manual"
+    },
+    "error_message": {
+      "type": "string",
+      "title": "Errore"
+    },
+    "usage_count": {
+      "type": "number",
+      "title": "Utilizzi",
+      "default": 0
+    },
+    "created_by": {
+      "type": "string",
+      "title": "Configurato da"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Note"
+    }
+  },
+  "required": [
+    "name",
+    "category",
+    "provider"
+  ]
+}

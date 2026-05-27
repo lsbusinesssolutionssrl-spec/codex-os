@@ -1,0 +1,94 @@
+{
+  "name": "PlatformEvent",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "event_type": {
+      "type": "string",
+      "title": "Tipo Evento",
+      "enum": [
+        "estimate.accepted",
+        "estimate.rejected",
+        "project.created",
+        "project.updated",
+        "project.delivered",
+        "project.delayed",
+        "ticket.created",
+        "ticket.updated",
+        "ticket.closed",
+        "ticket.urgent",
+        "workflow.executed",
+        "workflow.failed",
+        "maintenance.due",
+        "guardian.created",
+        "guardian.renewed",
+        "guardian.expiring",
+        "guardian.cancelled",
+        "document.expiring",
+        "financial.alert",
+        "payment.received",
+        "payment.overdue",
+        "iot.device_online",
+        "iot.device_offline",
+        "iot.alert",
+        "integration.synced",
+        "integration.failed",
+        "extension.installed",
+        "extension.updated",
+        "user.login",
+        "user.logout",
+        "api.key_used",
+        "webhook.triggered",
+        "custom"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "title": "Sorgente"
+    },
+    "source_id": {
+      "type": "string",
+      "title": "ID Sorgente"
+    },
+    "payload": {
+      "type": "object",
+      "title": "Payload Evento"
+    },
+    "severity": {
+      "type": "string",
+      "title": "Severit\u00e0",
+      "enum": [
+        "Info",
+        "Warning",
+        "Error",
+        "Critical"
+      ],
+      "default": "Info"
+    },
+    "processed": {
+      "type": "boolean",
+      "title": "Processato",
+      "default": false
+    },
+    "processed_at": {
+      "type": "string",
+      "title": "Processato il"
+    },
+    "subscribers_notified": {
+      "type": "number",
+      "title": "Sottoscrittori Notificati",
+      "default": 0
+    },
+    "created_date": {
+      "type": "string",
+      "title": "Creato il"
+    }
+  },
+  "required": [
+    "event_type",
+    "source"
+  ]
+}

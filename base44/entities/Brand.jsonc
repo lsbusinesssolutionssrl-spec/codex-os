@@ -1,0 +1,106 @@
+{
+  "name": "Brand",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company (Tenant)"
+    },
+    "name": {
+      "type": "string",
+      "title": "Nome Brand"
+    },
+    "slug": {
+      "type": "string",
+      "title": "Slug"
+    },
+    "logo_url": {
+      "type": "string",
+      "title": "Logo URL"
+    },
+    "favicon_url": {
+      "type": "string",
+      "title": "Favicon URL"
+    },
+    "primary_color": {
+      "type": "string",
+      "title": "Colore Primario",
+      "default": "#1147FF"
+    },
+    "secondary_color": {
+      "type": "string",
+      "title": "Colore Secondario",
+      "default": "#0B2341"
+    },
+    "accent_color": {
+      "type": "string",
+      "title": "Colore Accento",
+      "default": "#F58020"
+    },
+    "custom_domain": {
+      "type": "string",
+      "title": "Dominio Custom"
+    },
+    "is_default": {
+      "type": "boolean",
+      "title": "Brand Predefinito",
+      "default": false
+    },
+    "email_template": {
+      "type": "string",
+      "title": "Template Email"
+    },
+    "pdf_template": {
+      "type": "string",
+      "title": "Template PDF"
+    },
+    "login_page_config": {
+      "type": "object",
+      "title": "Config Login Page",
+      "properties": {
+        "background_image": {
+          "type": "string"
+        },
+        "welcome_message": {
+          "type": "string"
+        },
+        "show_logo": {
+          "type": "boolean"
+        }
+      }
+    },
+    "portal_config": {
+      "type": "object",
+      "title": "Config Portale Cliente",
+      "properties": {
+        "custom_welcome": {
+          "type": "string"
+        },
+        "show_branding": {
+          "type": "boolean"
+        },
+        "custom_css": {
+          "type": "string"
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "title": "Stato",
+      "enum": [
+        "Active",
+        "Inactive",
+        "Archived"
+      ],
+      "default": "Active"
+    },
+    "created_by": {
+      "type": "string",
+      "title": "Creato da"
+    }
+  },
+  "required": [
+    "name",
+    "slug"
+  ]
+}

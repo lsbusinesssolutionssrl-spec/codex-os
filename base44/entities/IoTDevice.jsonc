@@ -1,0 +1,122 @@
+{
+  "name": "IoTDevice",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "property_id": {
+      "type": "string",
+      "title": "Propriet\u00e0"
+    },
+    "name": {
+      "type": "string",
+      "title": "Nome Dispositivo"
+    },
+    "device_type": {
+      "type": "string",
+      "title": "Tipo Dispositivo",
+      "enum": [
+        "Smart Thermostat",
+        "Leak Sensor",
+        "Energy Monitor",
+        "Security Camera",
+        "Smart Lock",
+        "Smoke Detector",
+        "HVAC Controller",
+        "Water Meter",
+        "Electric Meter",
+        "Motion Sensor",
+        "Door/Window Sensor",
+        "Smart Plug",
+        "Light Controller",
+        "Custom Sensor"
+      ]
+    },
+    "manufacturer": {
+      "type": "string",
+      "title": "Produttore"
+    },
+    "model": {
+      "type": "string",
+      "title": "Modello"
+    },
+    "serial_number": {
+      "type": "string",
+      "title": "Numero Seriale"
+    },
+    "firmware_version": {
+      "type": "string",
+      "title": "Versione Firmware"
+    },
+    "connection_type": {
+      "type": "string",
+      "title": "Tipo Connessione",
+      "enum": [
+        "WiFi",
+        "Zigbee",
+        "Z-Wave",
+        "Bluetooth",
+        "LoRaWAN",
+        "Cellular",
+        "Ethernet"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "title": "Stato",
+      "enum": [
+        "Online",
+        "Offline",
+        "Error",
+        "Maintenance",
+        "Disconnected"
+      ],
+      "default": "Offline"
+    },
+    "last_seen": {
+      "type": "string",
+      "title": "Ultima Vista"
+    },
+    "install_date": {
+      "type": "string",
+      "title": "Data Installazione"
+    },
+    "warranty_expiry": {
+      "type": "string",
+      "title": "Scadenza Garanzia"
+    },
+    "location": {
+      "type": "string",
+      "title": "Posizione"
+    },
+    "config": {
+      "type": "object",
+      "title": "Configurazione"
+    },
+    "metadata": {
+      "type": "object",
+      "title": "Metadati",
+      "properties": {
+        "ip_address": {
+          "type": "string"
+        },
+        "mac_address": {
+          "type": "string"
+        },
+        "battery_level": {
+          "type": "number"
+        },
+        "signal_strength": {
+          "type": "number"
+        }
+      }
+    }
+  },
+  "required": [
+    "name",
+    "device_type",
+    "property_id"
+  ]
+}

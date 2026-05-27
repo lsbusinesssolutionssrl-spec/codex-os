@@ -1,0 +1,117 @@
+{
+  "name": "Extension",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "name": {
+      "type": "string",
+      "title": "Nome Estensione"
+    },
+    "slug": {
+      "type": "string",
+      "title": "Slug"
+    },
+    "version": {
+      "type": "string",
+      "title": "Versione"
+    },
+    "description": {
+      "type": "string",
+      "title": "Descrizione"
+    },
+    "category": {
+      "type": "string",
+      "title": "Categoria",
+      "enum": [
+        "AI",
+        "Accounting",
+        "Smart Home",
+        "Maintenance",
+        "Real Estate",
+        "Construction",
+        "Energy",
+        "IoT",
+        "Analytics",
+        "CRM",
+        "Custom"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "title": "Stato",
+      "enum": [
+        "Installed",
+        "Not Installed",
+        "Updating",
+        "Disabled",
+        "Error"
+      ],
+      "default": "Not Installed"
+    },
+    "installed_at": {
+      "type": "string",
+      "title": "Installato il"
+    },
+    "updated_at": {
+      "type": "string",
+      "title": "Aggiornato il"
+    },
+    "config": {
+      "type": "object",
+      "title": "Configurazione"
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Permessi Richiesti"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Dipendenze"
+    },
+    "author": {
+      "type": "string",
+      "title": "Autore"
+    },
+    "website": {
+      "type": "string",
+      "title": "Sito Web"
+    },
+    "support_email": {
+      "type": "string",
+      "title": "Email Supporto"
+    },
+    "is_official": {
+      "type": "boolean",
+      "title": "Ufficiale",
+      "default": false
+    },
+    "is_beta": {
+      "type": "boolean",
+      "title": "Beta",
+      "default": false
+    },
+    "usage_count": {
+      "type": "number",
+      "title": "Utilizzi",
+      "default": 0
+    },
+    "last_used": {
+      "type": "string",
+      "title": "Ultimo Utilizzo"
+    }
+  },
+  "required": [
+    "name",
+    "slug",
+    "category"
+  ]
+}

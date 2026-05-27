@@ -1,0 +1,89 @@
+{
+  "name": "WebhookSubscription",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "name": {
+      "type": "string",
+      "title": "Nome Webhook"
+    },
+    "endpoint_url": {
+      "type": "string",
+      "title": "Endpoint URL"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Eventi Sottoscritti"
+    },
+    "status": {
+      "type": "string",
+      "title": "Stato",
+      "enum": [
+        "Active",
+        "Inactive",
+        "Error",
+        "Suspended"
+      ],
+      "default": "Active"
+    },
+    "secret_key": {
+      "type": "string",
+      "title": "Secret Key (per firma)"
+    },
+    "headers": {
+      "type": "object",
+      "title": "Headers Custom"
+    },
+    "retry_policy": {
+      "type": "object",
+      "title": "Politica di Retry",
+      "properties": {
+        "max_retries": {
+          "type": "number",
+          "default": 3
+        },
+        "retry_delay_seconds": {
+          "type": "number",
+          "default": 60
+        },
+        "exponential_backoff": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "last_triggered": {
+      "type": "string",
+      "title": "Ultimo Trigger"
+    },
+    "success_count": {
+      "type": "number",
+      "title": "Successi",
+      "default": 0
+    },
+    "failure_count": {
+      "type": "number",
+      "title": "Fallimenti",
+      "default": 0
+    },
+    "last_error": {
+      "type": "string",
+      "title": "Ultimo Errore"
+    },
+    "created_by": {
+      "type": "string",
+      "title": "Creato da"
+    }
+  },
+  "required": [
+    "name",
+    "endpoint_url",
+    "events"
+  ]
+}

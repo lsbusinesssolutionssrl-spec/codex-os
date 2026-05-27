@@ -75,6 +75,7 @@ import ApprovalsManager from './pages/ApprovalsManager';
 import IntegrationHub from './pages/IntegrationHub';
 import NotificationSettings from './pages/NotificationSettings';
 import SystemStatus from './pages/SystemStatus';
+import DeveloperSettings from './pages/DeveloperSettings';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -171,6 +172,7 @@ const AuthenticatedApp = () => {
       <Route path="/integrations" element={<IntegrationHub />} />
       <Route path="/notification-settings" element={<NotificationSettings />} />
       <Route path="/system-status" element={<SystemStatus />} />
+      <Route path="/developer" element={<DeveloperSettings />} />
 
       </Route>
       <Route element={<PortalLayout />}>
