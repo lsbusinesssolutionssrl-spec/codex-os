@@ -44,71 +44,71 @@ export default function PlatformSettings() {
 
   const platformModules = [
     { 
-      title: 'Tenant Management', 
-      description: 'Create and manage tenant companies',
+      title: 'Gestione Tenant', 
+      description: 'Crea e gestisci le company tenant',
       icon: Building2, 
       path: '/super-admin',
       color: '#7C3AED'
     },
     { 
-      title: 'SaaS Plans', 
-      description: 'Configure subscription plans and features',
+      title: 'Piani SaaS', 
+      description: 'Configura piani e funzionalità',
       icon: CreditCard, 
       path: '/subscription-plans',
       color: '#F59E0B'
     },
     { 
       title: 'Feature Flags', 
-      description: 'Control feature access by plan',
+      description: 'Controlla accesso funzionalità per piano',
       icon: Zap, 
       path: '/developer',
       color: '#1147FF'
     },
     { 
       title: 'AI Providers', 
-      description: 'Configure AI models and providers',
+      description: 'Configura modelli e provider AI',
       icon: Brain, 
       path: '/ai-foundation',
       color: '#10B981'
     },
     { 
-      title: 'Integrations', 
-      description: 'Platform-wide integrations',
+      title: 'Integrazioni', 
+      description: 'Integrazioni platform-wide',
       icon: Globe, 
       path: '/integrations',
       color: '#06B6D4'
     },
     { 
       title: 'API Keys', 
-      description: 'Manage API access',
+      description: 'Gestisci accesso API',
       icon: Key, 
       path: '/api-keys',
       color: '#8B5CF6'
     },
     { 
       title: 'Webhooks', 
-      description: 'Configure webhook endpoints',
+      description: 'Configura endpoint webhook',
       icon: Webhook, 
       path: '/developer',
       color: '#EC4899'
     },
     { 
       title: 'System Health', 
-      description: 'Monitor platform performance',
+      description: 'Monitora performance platform',
       icon: Cpu, 
       path: '/system-status',
       color: '#EF4444'
     },
     { 
       title: 'Audit Logs', 
-      description: 'Platform activity logs',
+      description: 'Log attività platform',
       icon: FileText, 
       path: '/platform-health',
       color: '#6B7280'
     },
     { 
       title: 'White Label', 
-      description: 'Brand approval queue',
+      description: 'Coda approvazione brand',
       icon: Palette, 
       path: '/brand-approval',
       color: '#F58020'
@@ -125,8 +125,8 @@ export default function PlatformSettings() {
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Platform Settings</h1>
-              <p className="text-sm text-gray-500">Enterprise-wide configuration</p>
+              <h1 className="text-2xl font-bold text-gray-900">Impostazioni Platform</h1>
+              <p className="text-sm text-gray-500">Configurazione enterprise-wide</p>
             </div>
           </div>
         </div>
@@ -140,16 +140,16 @@ export default function PlatformSettings() {
       {/* Platform Stats */}
       {platformStats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard label="Total Tenants" value={platformStats.totalTenants} icon={Building2} color="#7C3AED" />
-          <StatCard label="Total Users" value={platformStats.totalUsers} icon={Users} color="#1147FF" />
+          <StatCard label="Tenant Totali" value={platformStats.totalTenants} icon={Building2} color="#7C3AED" />
+          <StatCard label="Utenti Totali" value={platformStats.totalUsers} icon={Users} color="#1147FF" />
           <StatCard label="MRR" value={`€${platformStats.mrr.toLocaleString('it-IT')}`} icon={CreditCard} color="#F59E0B" />
-          <StatCard label="Active Subs" value={platformStats.activeSubscriptions} icon={Activity} color="#10B981" />
+          <StatCard label="Subscription Attive" value={platformStats.activeSubscriptions} icon={Activity} color="#10B981" />
         </div>
       )}
 
       {/* Platform Modules */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-900 mb-4">Platform Modules</h2>
+        <h2 className="text-sm font-semibold text-gray-900 mb-4">Moduli Platform</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {platformModules.map((module, i) => (
             <button
@@ -174,10 +174,10 @@ export default function PlatformSettings() {
         <div className="flex items-start gap-3">
           <Lock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="text-sm font-semibold text-amber-800">Platform Access</h3>
+            <h3 className="text-sm font-semibold text-amber-800">Accesso Platform</h3>
             <p className="text-xs text-amber-700 mt-1">
-              You have platform-level access as {user?.role}. You can configure all platform settings without needing a tenant company.
-              Use the tenant selector in the header to switch to tenant context when needed.
+              Hai accesso platform-level come {user?.role}. Puoi configurare tutte le impostazioni platform senza bisogno di una company tenant.
+              Usa il selettore tenant nell'header per passare al contesto tenant quando necessario.
             </p>
           </div>
         </div>
