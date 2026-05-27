@@ -19,8 +19,13 @@ export default function TenantAdminDashboard() {
 
   const loadDashboard = async () => {
     try {
-      // Use centralized service for team data (single source of truth)
-      const teamSummary = await TenantTeamService.getTeamSummary(activeTenant.id);
+      // Use backend function for team data (bypasses RLS issues)
+      const teamResponse = await base44.functions.invoke('getTenantTeamMembers', {
+        tenant_id: activeTenant.id,
+      });
+      
+      const teamData = teamResponse.data;
+      console.log('[Dashboard] Team data:', teamData);
       
       const [clients, projects, estimates, documents, company] = await Promise.all([
         base44.entities.Client.filter({ company_id: activeTenant.id }),
@@ -39,18 +44,18 @@ export default function TenantAdminDashboard() {
         estimates: estimates.length,
         activeProjects: activeProjects.length,
         documents: documents.length,
-        team: teamSummary.activeMembersCount,
+        team: teamData.active_count,
         openEstimates: openEstimates.length,
-        pendingInvites: teamSummary.pendingInvitesCount,
-        totalMemberships: teamSummary.allMemberships,
-        teamSummary,
+        pendingInvites: teamData.pending_count,
+        totalMemberships: teamData.total_count,
+        teamSummary: teamData,
       });
 
       // Calculate onboarding steps
       const steps = [
         { id: 'company', label: 'Dati Aziendali', completed: !!(company?.name && company?.tax_id), icon: Building2 },
         { id: 'logo', label: 'Logo & Branding', completed: !!company?.logo_url, icon: Shield },
-        { id: 'team', label: 'Team (min 2)', completed: teamSummary.totalCount >= 2 && teamSummary.totalCount > 0, icon: Users },
+        { id: 'team', label: 'Team (min 2)', completed: teamData.total_count >= 2, icon: Users },
         { id: 'client', label: 'Primo Cliente', completed: clients.length >= 1, icon: Users },
         { id: 'project', label: 'Primo Progetto', completed: projects.length >= 1, icon: FolderKanban },
         { id: 'estimate', label: 'Primo Preventivo', completed: estimates.length >= 1, icon: FileText },

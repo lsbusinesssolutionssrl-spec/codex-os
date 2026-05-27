@@ -11,25 +11,27 @@ import { base44 } from '@/api/base44Client';
 export const TenantTeamService = {
   /**
    * Get all team memberships for a tenant
-   * Returns raw TenantMembership records with User data joined
+   * Uses backend function to bypass RLS issues
    */
   getAllMemberships: async (tenantId) => {
     try {
-      const [memberships, users] = await Promise.all([
-        base44.entities.TenantMembership.filter({ tenant_id: tenantId }),
-        base44.entities.User.list(),
-      ]);
-
+      const response = await base44.functions.invoke('getTenantTeamMembers', {
+        tenant_id: tenantId,
+      });
+      
+      const data = response.data;
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to load memberships');
+      }
+      
       console.log('[TenantTeamService] Loaded:', {
-        membershipsCount: memberships.length,
-        usersCount: users.length,
+        membershipsCount: data.total_count,
+        activeCount: data.active_count,
         tenantId,
       });
 
-      return memberships.map(m => ({
-        ...m,
-        user: users.find(u => u.id === m.user_id),
-      }));
+      return data.members;
     } catch (error) {
       console.error('[TenantTeamService] Error loading memberships:', error);
       throw error;

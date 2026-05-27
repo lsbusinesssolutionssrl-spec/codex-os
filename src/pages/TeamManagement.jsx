@@ -34,31 +34,35 @@ export default function TeamManagement() {
     try {
       console.log('[TeamManagement] Loading team for tenant:', activeTenant?.id);
       
-      // Use centralized service (same as dashboard)
-      const teamSummary = await TenantTeamService.getTeamSummary(activeTenant.id);
-      const allMemberships = await TenantTeamService.getAllMemberships(activeTenant.id);
-      
-      console.log('[TeamManagement] Loaded:', {
-        allMembershipsCount: allMemberships.length,
-        membersCount: allMemberships.filter(m => m.status === 'active').length,
-        teamSummary,
+      // Use backend function (bypasses RLS issues)
+      const response = await base44.functions.invoke('getTenantTeamMembers', {
+        tenant_id: activeTenant.id,
       });
       
-      // Store all memberships for debug
-      setAllMemberships(allMemberships);
+      const data = response.data;
+      console.log('[TeamManagement] Backend response:', data);
       
-      // Show active members (matches dashboard count)
-      const activeMembers = allMemberships.filter(m => m.status === 'active');
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to load team');
+      }
+      
+      // Store all memberships for debug
+      setAllMemberships(data.members);
+      
+      // Show active members
+      const activeMembers = data.members.filter(m => m.status === 'active');
       setMembers(activeMembers);
-      // Show pending invitations (matches dashboard subtitle)
-      setInvitations(allMemberships.filter(m => ['invited', 'pending'].includes(m.status)));
+      
+      // Show pending invitations
+      const pendingMembers = data.members.filter(m => ['invited', 'pending'].includes(m.status.toLowerCase()));
+      setInvitations(pendingMembers);
       
       console.log('[TeamManagement] Team Data:', {
         tenantId: activeTenant.id,
-        ...teamSummary,
-        dashboardTeamCount: activeMembers.length,
-        dashboardPendingCount: teamSummary.pendingInvitesCount,
-        matchesDashboard: true,
+        totalMemberships: data.total_count,
+        activeMembers: data.active_count,
+        pendingInvites: data.pending_count,
+        debug: data.debug,
       });
     } catch (error) {
       console.error('Error loading team:', error);
@@ -260,8 +264,8 @@ export default function TeamManagement() {
             <DebugItem label="Pending Invites" value={invitations.length} />
             <DebugItem label="Removed" value={allMemberships.filter(m => m.status === 'removed').length} />
             <DebugItem label="Suspended" value={allMemberships.filter(m => m.status === 'suspended').length} />
-            <DebugItem label="Missing User Profile" value={allMemberships.filter(m => !m.user).length} />
-            <DebugItem label="Users Loaded" value={allMemberships.filter(m => m.user).length} />
+            <DebugItem label="With Email" value={allMemberships.filter(m => m.user_email).length} />
+            <DebugItem label="Missing Email" value={allMemberships.filter(m => !m.user_email || m.user_email === 'Unknown').length} />
           </div>
           <div className="mt-4 pt-4 border-t border-gray-200">
             <h4 className="font-semibold text-gray-900 mb-2 text-sm">✅ Data Consistency Check</h4>
@@ -287,11 +291,11 @@ export default function TeamManagement() {
           </div>
           {allMemberships.length > 0 && (
             <div className="mt-3 text-xs text-gray-500">
-              <p className="font-medium mb-1">All Memberships:</p>
+              <p className="font-medium mb-1">All Memberships (Raw Data):</p>
               <ul className="list-disc list-inside space-y-0.5">
                 {allMemberships.map(m => (
                   <li key={m.id}>
-                    {m.user?.email || m.user_id || 'No user'} - {m.tenant_role} - {m.status}
+                    {m.user_email || m.user_id || 'No user'} - {m.tenant_role} - {m.status} - Primary: {m.is_primary ? 'Yes' : 'No'}
                   </li>
                 ))}
               </ul>
