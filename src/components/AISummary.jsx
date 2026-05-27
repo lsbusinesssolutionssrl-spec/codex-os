@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Brain, TrendingUp, AlertTriangle, CheckCircle, Clock, DollarSign } from 'lucide-react';
+import { Brain, TrendingUp, AlertTriangle, CheckCircle, Clock, DollarSign, Activity } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-export default function AISummary({ entityType, entityId }) {
+export default function AISummary({ entityType, entityId, compact = false }) {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(!compact);
 
   useEffect(() => {
     if (entityId) {
@@ -16,10 +16,20 @@ export default function AISummary({ entityType, entityId }) {
   const generateSummary = async () => {
     setLoading(true);
     try {
-      const response = await base44.functions.invoke('generateProjectReport', {
-        project_id: entityId,
-        summary_only: true
-      });
+      let response;
+      
+      if (entityType === 'project') {
+        response = await base44.functions.invoke('generateProjectReport', {
+          project_id: entityId,
+          summary_only: true
+        });
+      } else {
+        // Generic summary for other entity types
+        response = await base44.functions.invoke('generateContextualSuggestions', {
+          context: { entityType, entityId }
+        });
+      }
+      
       setSummary(response.data?.summary || response.data);
     } catch (error) {
       console.error('Summary generation error:', error);
@@ -48,17 +58,19 @@ export default function AISummary({ entityType, entityId }) {
           <Brain className="w-4 h-4 text-purple-600" />
           <span className="text-xs font-semibold text-purple-700">AI Summary</span>
         </div>
-        <button 
-          onClick={() => setExpanded(!expanded)}
-          className="text-xs text-purple-600 hover:text-purple-800 font-medium"
-        >
-          {expanded ? 'Mostra meno' : 'Mostra tutto'}
-        </button>
+        {!compact && (
+          <button 
+            onClick={() => setExpanded(!expanded)}
+            className="text-xs text-purple-600 hover:text-purple-800 font-medium"
+          >
+            {expanded ? 'Mostra meno' : 'Mostra tutto'}
+          </button>
+        )}
       </div>
 
-      <div className={`space-y-3 ${expanded ? '' : 'max-h-32 overflow-hidden'}`}>
+      <div className={`space-y-3 ${expanded || compact ? '' : 'max-h-32 overflow-hidden'}`}>
         {/* Key Metrics */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {summary.health_score && (
             <div className="bg-white rounded-lg p-2 border border-purple-100">
               <div className="flex items-center gap-1 mb-1">
