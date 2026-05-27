@@ -38,36 +38,40 @@ export default function FinancialControl() {
     if (!isAuthorized) return;
     
     const load = async () => {
-      const [projs, projectCosts, financialAlerts] = await Promise.all([
-        base44.entities.Project.list(),
-        base44.entities.ProjectCost.list(),
-        base44.entities.FinancialAlert.filter({ resolved: false }),
-      ]);
+      try {
+        const [projs, projectCosts, financialAlerts] = await Promise.all([
+          base44.entities.Project.list(),
+          base44.entities.ProjectCost.list(),
+          base44.entities.FinancialAlert.filter({ resolved: false }).catch(() => []),
+        ]);
 
-      setProjects(projs);
-      setCosts(projectCosts);
-      setAlerts(financialAlerts);
+        setProjects(projs);
+        setCosts(projectCosts);
+        setAlerts(financialAlerts);
 
-      // Calculate stats
-      const totalRevenue = projs.reduce((sum, p) => sum + (p.contract_value || 0), 0);
-      const totalCosts = projectCosts.reduce((sum, c) => sum + (c.total_cost || 0), 0);
-      const totalMargin = totalRevenue - totalCosts;
-      const avgMarginPct = totalRevenue > 0 ? ((totalMargin / totalRevenue) * 100) : 0;
-      const projectsInProfit = projs.filter(p => {
-        const pCosts = projectCosts.filter(c => c.project_id === p.id).reduce((sum, c) => sum + (c.total_cost || 0), 0);
-        return (p.contract_value || 0) > pCosts;
-      }).length;
+        // Calculate stats
+        const totalRevenue = projs.reduce((sum, p) => sum + (p.contract_value || 0), 0);
+        const totalCosts = projectCosts.reduce((sum, c) => sum + (c.total_cost || 0), 0);
+        const totalMargin = totalRevenue - totalCosts;
+        const avgMarginPct = totalRevenue > 0 ? ((totalMargin / totalRevenue) * 100) : 0;
+        const projectsInProfit = projs.filter(p => {
+          const pCosts = projectCosts.filter(c => c.project_id === p.id).reduce((sum, c) => sum + (c.total_cost || 0), 0);
+          return (p.contract_value || 0) > pCosts;
+        }).length;
 
-      setStats({
-        totalRevenue,
-        totalCosts,
-        totalMargin,
-        avgMarginPct: avgMarginPct.toFixed(1),
-        projectsInProfit,
-        projectsInLoss: projs.length - projectsInProfit,
-      });
-
-      setLoading(false);
+        setStats({
+          totalRevenue,
+          totalCosts,
+          totalMargin,
+          avgMarginPct: avgMarginPct.toFixed(1),
+          projectsInProfit,
+          projectsInLoss: projs.length - projectsInProfit,
+        });
+      } catch (error) {
+        console.error('Error loading financial data:', error);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
