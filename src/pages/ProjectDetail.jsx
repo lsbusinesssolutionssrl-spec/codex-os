@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Camera, BookOpen, Home, FileCheck, FileText, Download, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Camera, BookOpen, Home, FileCheck, FileText, Download, TrendingUp, Brain } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 import FinancialSummary from '../components/FinancialSummary';
@@ -8,6 +8,7 @@ import PhotoGallery from '../components/PhotoGallery';
 import Breadcrumb from '../components/Breadcrumb';
 import { hasRole, canEditFinancialFields } from '../lib/roleUtils';
 import InternalComments from '../components/InternalComments';
+import ContextualAIPanel from '../components/ai/ContextualAIPanel';
 
 const STATUSES = ['Lead', 'Survey', 'Estimate', 'Approved', 'In Progress', 'Testing', 'Delivered', 'Guardian Active', 'Archived'];
 const SOP_CATEGORIES = ['Bathroom', 'Full Home', 'Electrical', 'Networking', 'Security', 'Roofing', 'Handover'];
@@ -38,6 +39,7 @@ export default function ProjectDetail() {
   const [generatingReport, setGeneratingReport] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [canEditFinancial, setCanEditFinancial] = useState(false);
+  const [showAIPanel, setShowAIPanel] = useState(false);
 
   useEffect(() => {
     Promise.all([hasRole(['admin', 'project_manager']), canEditFinancialFields()]).then(([hasRoleRes, canEdit]) => {
@@ -290,6 +292,9 @@ export default function ProjectDetail() {
               <button onClick={() => setReportModal(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
                 <FileText className="w-3.5 h-3.5" /> Report
               </button>
+              <button onClick={() => setShowAIPanel(!showAIPanel)} className={`flex items-center gap-2 px-3 py-1.5 text-sm border rounded-lg transition-all ${showAIPanel ? 'bg-blue-50 border-blue-300 text-blue-700' : 'border-gray-200 hover:bg-gray-50'}`}>
+                <Brain className="w-3.5 h-3.5" /> AI Copilot
+              </button>
               <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
                 <Edit2 className="w-3.5 h-3.5" /> Modifica
               </button>
@@ -480,6 +485,9 @@ export default function ProjectDetail() {
 
       {/* Internal Comments */}
       <InternalComments entityType="project" entityId={id} />
+
+      {/* AI Copilot Panel */}
+      {showAIPanel && <ContextualAIPanel entityType="project" entityId={id} onClose={() => setShowAIPanel(false)} />}
 
       {/* Report Modal */}
       {reportModal && (

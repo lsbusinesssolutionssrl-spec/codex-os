@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, FileDown, FolderPlus, Trash2, PenLine, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Save, FileDown, FolderPlus, Trash2, PenLine, CheckCircle2, Brain } from 'lucide-react';
 import SignaturePad from '../components/SignaturePad';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
+import ContextualAIPanel from '../components/ai/ContextualAIPanel';
 
 const STATUSES = ['Draft', 'To Review', 'Sent', 'Accepted', 'Rejected', 'Expired', 'Converted to Project'];
 const TYPES = ['Bathroom', 'Full Home', 'Electrical System', 'Networking', 'Security', 'Maintenance', 'Other'];
@@ -19,6 +20,7 @@ export default function EstimateDetail() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showSignature, setShowSignature] = useState(false);
   const [uploadingSignature, setUploadingSignature] = useState(false);
+  const [showAIPanel, setShowAIPanel] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -140,6 +142,9 @@ export default function EstimateDetail() {
           <button onClick={() => setConfirmDelete(true)} className="p-2 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600">
             <Trash2 className="w-4 h-4" />
           </button>
+          <button onClick={() => setShowAIPanel(!showAIPanel)} className={`flex items-center gap-2 px-3 py-1.5 text-sm border rounded-lg transition-all ${showAIPanel ? 'bg-blue-50 border-blue-300 text-blue-700' : 'border-gray-200 hover:bg-gray-50'}`}>
+            <Brain className="w-3.5 h-3.5" /> AI
+          </button>
         </div>
       </div>
 
@@ -259,6 +264,9 @@ export default function EstimateDetail() {
           )}
         </div>
       ) : null}
+
+      {/* AI Copilot Panel */}
+      {showAIPanel && <ContextualAIPanel entityType="estimate" entityId={id} onClose={() => setShowAIPanel(false)} />}
     </div>
   );
 }
