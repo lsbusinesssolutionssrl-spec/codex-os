@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, Clock, CheckCircle, TrendingUp, AlertCircle, Activity, Users, FileText, Calendar, Zap } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { useWorkspace } from '@/components/workspace/WorkspaceContext';
 
 export default function LiveCommandCenter() {
   const navigate = useNavigate();
+  const { currentWorkspace } = useWorkspace();
   const [loading, setLoading] = useState(true);
   const [ops, setOps] = useState({
     delayedProjects: [],
@@ -95,9 +97,21 @@ export default function LiveCommandCenter() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Activity className="w-6 h-6 text-blue-600" />
-            Live Command Center
+            {currentWorkspace === 'technician' ? 'Field Operations' :
+             currentWorkspace === 'sales' ? 'Sales Command' :
+             currentWorkspace === 'financial' ? 'Financial Operations' :
+             currentWorkspace === 'guardian' ? 'Guardian Intelligence' :
+             currentWorkspace === 'super_admin' ? 'Platform Command' :
+             'Live Command Center'}
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">Panoramica operativa in tempo reale</p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {currentWorkspace === 'technician' ? 'Your assigned tasks and projects' :
+             currentWorkspace === 'sales' ? 'Pipeline and estimates overview' :
+             currentWorkspace === 'financial' ? 'Profitability and cashflow' :
+             currentWorkspace === 'guardian' ? 'Predictive maintenance intelligence' :
+             currentWorkspace === 'super_admin' ? 'Enterprise system controls' :
+             'Panoramica operativa in tempo reale'}
+          </p>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg">
           <AlertCircle className="w-4 h-4 text-red-600" />

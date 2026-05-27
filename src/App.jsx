@@ -4,6 +4,7 @@ import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { WorkspaceProvider } from '@/components/workspace/WorkspaceContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
@@ -45,6 +46,7 @@ import CodexIntelligence from './pages/CodexIntelligence';
 import KnowledgeBase from './pages/KnowledgeBase';
 import AIAdvisor from './pages/AIAdvisor';
 import ExecutiveInsights from './pages/ExecutiveInsights';
+import WorkspaceRouter from './pages/WorkspaceRouter';
 import ArchitectureReview from './pages/ArchitectureReview';
 import CompanySettings from './pages/CompanySettings';
 import SubscriptionPlans from './pages/SubscriptionPlans';
@@ -133,7 +135,8 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<LiveCommandCenter />} />
+        <Route path="/" element={<WorkspaceRouter />} />
+      <Route path="/dashboard" element={<WorkspaceRouter />} />
       <Route path="/request-demo" element={<RequestDemo />} />
       <Route path="/product-analytics" element={<ProductAnalytics />} />
       <Route path="/platform-health" element={<PlatformHealth />} />
@@ -152,10 +155,11 @@ const AuthenticatedApp = () => {
       <Route path="/reality-gap" element={<RealityGapAnalytics />} />
       <Route path="/ai-data-quality" element={<AITrainingDataQuality />} />
       <Route path="/enterprise-ux" element={<EnterpriseOperationalUX />} />
-      <Route path="/dashboard" element={<LiveCommandCenter />} />
+      <Route path="/dashboard" element={<WorkspaceRouter />} />
       <Route path="/executive-focus" element={<ExecutiveFocusDashboard />} />
       <Route path="/evolution" element={<EvolutionDashboard />} />
       <Route path="/execution-intelligence" element={<ExecutionIntelligenceDashboard />} />
+      <Route path="/workspace" element={<WorkspaceRouter />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/clients/:id" element={<ClientDetail />} />
         <Route path="/properties" element={<Properties />} />

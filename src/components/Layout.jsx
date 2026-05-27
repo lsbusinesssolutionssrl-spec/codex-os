@@ -12,6 +12,7 @@ import GlobalSearch from './GlobalSearch';
 import BrandSelector from './BrandSelector';
 import CommandPalette from './CommandPalette';
 import QuickCreate from './QuickCreate';
+import WorkspaceSwitcher from './workspace/WorkspaceSwitcher';
 import { useOfflineSync } from '../hooks/useOfflineSync';
 
 const navItems = [
@@ -174,6 +175,7 @@ export default function Layout() {
           </button>
           <div className="flex-1" />
           <BrandSelector />
+          <WorkspaceSwitcher />
           <NotificationBell />
         </header>
         <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
