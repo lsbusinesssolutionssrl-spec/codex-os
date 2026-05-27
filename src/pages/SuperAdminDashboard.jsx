@@ -3,77 +3,64 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Building2, Users, Shield, Activity, CreditCard, Zap, 
   AlertTriangle, CheckCircle, Clock, TrendingUp, Search,
-  Play, Eye, LogOut, Pause, Ban, RefreshCw, Crown
+  Play, Eye, Pause, Ban, Crown, Loader2
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
-  const [tenants, setTenants] = useState([]);
+  const [platformData, setPlatformData] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    base44.auth.me().then(u => {
-      if (u?.role !== 'admin') { 
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const user = await (await import('@/api/base44Client')).base44.auth.me();
+      if (user?.role !== 'admin') { 
         toast.error('Accesso riservato ai Super Admin');
         navigate('/'); 
         return; 
       }
-      setIsSuperAdmin(true);
       setAuthChecked(true);
-    });
-  }, []);
+    } catch (error) {
+      toast.error('Errore autenticazione');
+      navigate('/');
+    }
+  };
 
   useEffect(() => {
     if (!authChecked) return;
-    loadTenants();
+    loadPlatformData();
   }, [authChecked]);
 
-  const loadTenants = async () => {
+  const loadPlatformData = async () => {
     setLoading(true);
     try {
-      const [companies, subscriptions, plans, users] = await Promise.all([
-        base44.entities.Company.list(),
-        base44.entities.CompanySubscription.list(),
-        base44.entities.SubscriptionPlan.list(),
-        base44.entities.User.list(),
-      ]);
-
-      const enriched = companies.map(c => {
-        const sub = subscriptions.find(s => s.company_id === c.id);
-        const plan = sub ? plans.find(p => p.id === sub.plan_id) : null;
-        const companyUsers = users.filter(u => u.company_id === c.id);
-        
-        return {
-          ...c,
-          subscription: sub,
-          plan,
-          userCount: companyUsers.length,
-          tenantAdmin: companyUsers.find(u => u.role === 'company_admin')?.email || '—',
-        };
-      });
-
-      setTenants(enriched);
+      // Call backend function that uses service role (no tenant filters)
+      const result = await base44.functions.invoke('getPlatformData', {});
+      setPlatformData(result.data);
     } catch (error) {
-      console.error('Error loading tenants:', error);
-      toast.error('Errore nel caricamento tenant');
+      console.error('Error loading platform data:', error);
+      toast.error('Errore nel caricamento dati platform: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredTenants = tenants.filter(t => {
+  const filteredTenants = platformData?.tenants.filter(t => {
     const matchSearch = !searchTerm || 
       t.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       t.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchStatus = !statusFilter || t.subscription?.status === statusFilter;
     return matchSearch && matchStatus;
-  });
+  }) || [];
 
   const healthScore = (t) => {
     let score = 0;
@@ -98,15 +85,13 @@ export default function SuperAdminDashboard() {
     cancelled: 'text-red-600 bg-red-50',
   };
 
-  const mrr = tenants.reduce((sum, t) => sum + (t.subscription?.mrr || 0), 0);
-  const activeCount = tenants.filter(t => t.subscription?.status === 'active').length;
-  const trialCount = tenants.filter(t => t.subscription?.status === 'trial').length;
-  const atRiskCount = tenants.filter(t => t.subscription?.status === 'past_due' || t.subscription?.cancel_at_period_end).length;
-
   if (!authChecked || loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
+          <p className="text-sm text-gray-500">Caricamento dati platform...</p>
+        </div>
       </div>
     );
   }
@@ -144,19 +129,23 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* Platform KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard label="Tenant Totali" value={tenants.length} icon={Building2} color="#1147FF" />
-        <KpiCard label="Attivi" value={activeCount} icon={CheckCircle} color="#10B981" />
-        <KpiCard label="MRR" value={`€${mrr.toLocaleString('it-IT')}`} icon={TrendingUp} color="#F59E0B" />
-        <KpiCard label="A Rischio" value={atRiskCount} icon={AlertTriangle} color="#EF4444" />
-      </div>
+      {platformData?.metrics && (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <KpiCard label="Tenant Totali" value={platformData.metrics.totalTenants} icon={Building2} color="#1147FF" />
+            <KpiCard label="Attivi" value={platformData.metrics.activeTenants} icon={CheckCircle} color="#10B981" />
+            <KpiCard label="MRR" value={`€${platformData.metrics.mrr.toLocaleString('it-IT')}`} icon={TrendingUp} color="#F59E0B" />
+            <KpiCard label="A Rischio" value={platformData.metrics.atRisk} icon={AlertTriangle} color="#EF4444" />
+          </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard label="Trial" value={trialCount} icon={Clock} color="#3B82F6" />
-        <KpiCard label="Utenti Totali" value={tenants.reduce((sum, t) => sum + t.userCount, 0)} icon={Users} color="#0B2341" />
-        <KpiCard label="Sospesi" value={tenants.filter(t => t.subscription?.status === 'suspended').length} icon={Ban} color="#6B7280" />
-        <KpiCard label="Enterprise" value={tenants.filter(t => t.plan?.name === 'Enterprise').length} icon={Crown} color="#8B5CF6" />
-      </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <KpiCard label="Trial" value={platformData.metrics.trial} icon={Clock} color="#3B82F6" />
+            <KpiCard label="Utenti Totali" value={platformData.metrics.totalUsers} icon={Users} color="#0B2341" />
+            <KpiCard label="Sospesi" value={platformData.metrics.suspended} icon={Ban} color="#6B7280" />
+            <KpiCard label="Enterprise" value={platformData.metrics.enterprise} icon={Crown} color="#8B5CF6" />
+          </div>
+        </>
+      )}
 
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
@@ -245,14 +234,14 @@ export default function SuperAdminDashboard() {
                     <td className="text-center py-3 px-4">
                       <div className="flex items-center justify-center gap-1">
                         <button
-                          onClick={() => navigate(`/tenant/${t.id}`)}
+                          onClick={() => navigate(`/platform/tenants/${t.id}`)}
                           className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
-                          title="Gestione Tenant"
+                          title="Dettagli Tenant"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => navigate(`/tenant-onboarding`)}
+                          onClick={() => navigate('/tenant-onboarding')}
                           className="p-1.5 text-gray-400 hover:text-green-600 rounded-lg hover:bg-green-50 transition-colors"
                           title="Nuovo Tenant"
                         >
@@ -313,19 +302,17 @@ export default function SuperAdminDashboard() {
           </div>
           <p className="text-sm text-gray-500">Visualizza metriche utilizzo e salute tenant</p>
         </button>
+      </div>
 
-        <button
-          onClick={() => navigate('/tenant-isolation-audit')}
-          className="p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-all text-left"
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10B981' }}>
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            <h3 className="font-semibold text-gray-900">Tenant Isolation Audit</h3>
-          </div>
-          <p className="text-sm text-gray-500">Verifica integrità dati e isolamento tenant</p>
-        </button>
+      {/* Debug Info */}
+      <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+        <h3 className="text-sm font-semibold text-blue-900 mb-2">Platform Mode Debug</h3>
+        <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
+          <div>Context Type: <strong>platform</strong></div>
+          <div>Query Mode: <strong>service role (no tenant filters)</strong></div>
+          <div>Tenants Loaded: <strong>{platformData?.tenants.length || 0}</strong></div>
+          <div>Total Users: <strong>{platformData?.metrics.totalUsers || 0}</strong></div>
+        </div>
       </div>
     </div>
   );
