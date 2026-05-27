@@ -28,11 +28,52 @@ const PERMISSIONS = {
   client: [], // no AI actions for portal clients
 };
 
+// ── Safety Classification ──────────────────────────────────────────
+// Actions that modify financials — admin/company_admin only
+const FINANCIAL_ACTIONS = new Set([
+  'update_contract_value', 'update_homepassport',
+  'create_estimate_draft', 'suggest_pricing',
+]);
+
+// Actions that modify assignments — requires project_manager+
+const ASSIGNMENT_ACTIONS = new Set(['assign_technician']);
+
+// Actions that delete or irreversibly close records
+const DESTRUCTIVE_ACTIONS = new Set([
+  'delete_task', 'delete_ticket', 'archive_project',
+  'cancel_guardian', 'delete_estimate',
+]);
+
+// Sensitive fields to never return in action results
+const SENSITIVE_FIELDS = [
+  'gross_margin', 'gross_margin_pct', 'contract_value', 'total_invoiced',
+  'total_collected', 'material_costs', 'labor_costs', 'hourly_rate',
+  'total_labor_cost', 'annual_spend', 'monthly_price',
+];
+
 function isAllowed(role, actionType) {
   const allowed = PERMISSIONS[role];
   if (allowed === null) return true;
   if (!allowed) return false;
   return allowed.includes(actionType);
+}
+
+// Guard: verify an entity belongs to the requesting user's company
+async function assertSameTenant(base44, entityName, entityId, companyId) {
+  if (!entityId || !companyId) return; // skip if no IDs to check
+  const entity = await base44.asServiceRole.entities[entityName].get(entityId).catch(() => null);
+  if (!entity) throw new Error(`Entità ${entityName} non trovata.`);
+  if (entity.company_id && entity.company_id !== companyId) {
+    throw new Error(`Accesso negato: entità non appartiene al tuo tenant.`);
+  }
+}
+
+// Strip sensitive fields from any returned data
+function scrubSensitive(obj) {
+  if (!obj || typeof obj !== 'object') return obj;
+  const clean = { ...obj };
+  SENSITIVE_FIELDS.forEach(f => delete clean[f]);
+  return clean;
 }
 
 // ── Action Executors ──────────────────────────────────────────────
@@ -220,16 +261,27 @@ Deno.serve(async (req) => {
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
-  const { action_type, params = {}, session_id = 'unknown', confirmed = false } = body;
+  const {
+    action_type, params = {}, session_id = 'unknown',
+    confirmed = false, destructive_confirmed = false,
+  } = body;
 
   if (!action_type) return Response.json({ error: 'action_type richiesto' }, { status: 400 });
   if (!confirmed) return Response.json({ error: 'Conferma obbligatoria (confirmed: true)' }, { status: 400 });
 
-  const role = user.role || 'user';
+  // ── Safety Gate 1: Destructive actions require extra confirmation ──
+  if (DESTRUCTIVE_ACTIONS.has(action_type) && !destructive_confirmed) {
+    return Response.json({
+      error: 'Azione distruttiva: richiede conferma esplicita (destructive_confirmed: true)',
+      requires_destructive_confirm: true,
+    }, { status: 400 });
+  }
 
-  // ── Permission check ────────────────────────────────────────────
+  const role = user.role || 'user';
+  const companyId = user.company_id;
+
+  // ── Safety Gate 2: Permission check ────────────────────────────────
   if (!isAllowed(role, action_type)) {
-    // Audit the denied attempt
     await base44.asServiceRole.entities.AIAuditLog.create({
       user_email: user.email,
       user_role: role,
@@ -243,6 +295,29 @@ Deno.serve(async (req) => {
     }).catch(() => {});
     return Response.json({ error: `Permesso negato: il ruolo "${role}" non può eseguire "${action_type}"` }, { status: 403 });
   }
+
+  // ── Safety Gate 3: Financial actions — admin/company_admin only ───
+  if (FINANCIAL_ACTIONS.has(action_type) && role !== 'admin' && role !== 'company_admin') {
+    await base44.asServiceRole.entities.AIAuditLog.create({
+      user_email: user.email, user_role: role, session_id,
+      prompt: `FINANCIAL_ACTION_BLOCKED: ${action_type}`,
+      context_used: [], response_summary: `Azione finanziaria bloccata per ruolo ${role}`,
+      actions_suggested: [], actions_executed: [], latency_ms: 0,
+    }).catch(() => {});
+    return Response.json({ error: `Azione finanziaria: riservata ad admin e company_admin.` }, { status: 403 });
+  }
+
+  // ── Safety Gate 4: Assignment actions — project_manager+ only ────
+  if (ASSIGNMENT_ACTIONS.has(action_type) && !['admin','company_admin','project_manager'].includes(role)) {
+    return Response.json({ error: `Assegnazione utenti: riservata a project_manager e admin.` }, { status: 403 });
+  }
+
+  // ── Safety Gate 5: Cross-tenant ownership check ───────────────────
+  // Prevent any action that touches a project/ticket/property from another tenant
+  if (params.project_id) await assertSameTenant(base44, 'Project', params.project_id, companyId);
+  if (params.ticket_id) await assertSameTenant(base44, 'SupportTicket', params.ticket_id, companyId);
+  if (params.property_id) await assertSameTenant(base44, 'Property', params.property_id, companyId);
+  if (params.client_id) await assertSameTenant(base44, 'Client', params.client_id, companyId);
 
   // ── Execute action ──────────────────────────────────────────────
   const startMs = Date.now();
@@ -276,10 +351,16 @@ Deno.serve(async (req) => {
     return Response.json({ error: errorMsg }, { status: 500 });
   }
 
+  // Scrub sensitive fields from any entity returned in result
+  const safeResult = result ? {
+    ...result,
+    data: result.data ? scrubSensitive(result.data) : undefined,
+  } : null;
+
   return Response.json({
     success: true,
     action_type,
-    result,
+    result: safeResult,
     latency_ms: latencyMs,
   });
 });

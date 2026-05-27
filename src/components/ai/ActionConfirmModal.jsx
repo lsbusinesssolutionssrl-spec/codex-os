@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { Shield, ChevronDown } from 'lucide-react';
+import { Shield, AlertTriangle } from 'lucide-react';
+
+// ── Safety Classification ───────────────────────────────────────────
+// CRITICAL: assigns people or modifies contracts → requires typing "CONFERMA"
+const CRITICAL_DANGER_ACTIONS = new Set(['assign_technician']);
+// HIGH: touches financials or property data → shows orange warning
+const HIGH_DANGER_ACTIONS = new Set(['create_estimate_draft', 'suggest_pricing', 'update_homepassport']);
 
 const ACTION_ICONS = {
   create_task: '✅', create_ticket: '🎫', create_estimate_draft: '📋',
@@ -67,16 +73,23 @@ const ACTION_FIELDS = {
 
 export default function ActionConfirmModal({ action, onConfirm, onCancel }) {
   const [params, setParams] = useState({ ...(action.params || {}) });
+  const [confirmText, setConfirmText] = useState('');
   const fields = ACTION_FIELDS[action.type] || [];
   const setField = (key, val) => setParams(p => ({ ...p, [key]: val }));
+
+  const isCritical = CRITICAL_DANGER_ACTIONS.has(action.type);
+  const isHighDanger = HIGH_DANGER_ACTIONS.has(action.type);
   const isReady = fields.filter(f => f.required).every(f => params[f.key]?.toString().trim());
+  const canSubmit = isReady && (!isCritical || confirmText.toUpperCase() === 'CONFERMA');
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto border border-gray-100">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 bg-blue-50 border border-blue-100">
+          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 border ${
+            isCritical ? 'bg-red-50 border-red-200' : isHighDanger ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-100'
+          }`}>
             {ACTION_ICONS[action.type] || '⚡'}
           </div>
           <div>
@@ -114,17 +127,45 @@ export default function ActionConfirmModal({ action, onConfirm, onCancel }) {
           </div>
         )}
 
-        {/* Safety notice */}
+        {/* Critical danger: must type CONFERMA */}
+        {isCritical && (
+          <div className="space-y-2">
+            <div className="flex items-start gap-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold mb-0.5">Azione critica — modifica assegnazioni o contratti</p>
+                <p>Scrivi <strong>CONFERMA</strong> per sbloccare il pulsante.</p>
+              </div>
+            </div>
+            <input
+              type="text"
+              value={confirmText}
+              onChange={e => setConfirmText(e.target.value)}
+              placeholder='Scrivi "CONFERMA" per sbloccare'
+              className="w-full px-3 py-2 text-sm border border-red-200 rounded-xl focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
+            />
+          </div>
+        )}
+
+        {/* High danger: orange warning only */}
+        {isHighDanger && !isCritical && (
+          <div className="flex items-start gap-2 text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2.5">
+            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+            <span>Azione con impatto finanziario — verifica i dati prima di confermare.</span>
+          </div>
+        )}
+
+        {/* Standard safety notice */}
         <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
           <Shield className="w-3.5 h-3.5 flex-shrink-0" />
-          Azione tracciata nell'Audit Log · Permessi verificati · RBAC applicato
+          Azione tracciata nell'Audit Log · Permessi verificati · RBAC applicato · Cross-tenant protetto
         </div>
 
         {/* Buttons */}
         <div className="flex gap-2 pt-1">
-          <button onClick={() => onConfirm(params)} disabled={!isReady}
-            className="flex-1 py-2.5 text-sm text-white rounded-xl font-semibold disabled:opacity-40 transition-opacity shadow-sm"
-            style={{ background: 'linear-gradient(135deg, #1147FF 0%, #0B2341 100%)' }}>
+          <button onClick={() => onConfirm(params)} disabled={!canSubmit}
+            className="flex-1 py-2.5 text-sm text-white rounded-xl font-semibold disabled:opacity-40 transition-all shadow-sm"
+            style={{ background: isCritical ? '#DC2626' : 'linear-gradient(135deg, #1147FF 0%, #0B2341 100%)' }}>
             Conferma ed Esegui
           </button>
           <button onClick={onCancel}

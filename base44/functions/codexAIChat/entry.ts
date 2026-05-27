@@ -418,6 +418,32 @@ Quando suggerisci un'azione, includi alla fine della risposta un blocco JSON cos
     textResponse = llmResponse.replace(/<actions>[\s\S]*?<\/actions>/, '').trim();
   }
 
+  // ── Safety: scrub sensitive patterns that should never appear for restricted roles ──
+  const RESTRICTED_ROLES = ['client', 'technician', 'sales'];
+  if (RESTRICTED_ROLES.includes(role)) {
+    // Remove any markdown table or line that contains known financial keywords
+    const FINANCIAL_PATTERNS = [
+      /margine[:\s]+[€\d]/gi,
+      /contract[_ ]value[:\s]+[€\d]/gi,
+      /total[_ ]invoiced[:\s]+[€\d]/gi,
+      /labor[_ ]cost[:\s]+[€\d]/gi,
+      /hourly[_ ]rate[:\s]+[€\d]/gi,
+    ];
+    FINANCIAL_PATTERNS.forEach(pat => {
+      textResponse = textResponse.replace(pat, '[dati riservati]');
+    });
+    // Filter out any suggested actions that are financial/destructive
+    const BLOCKED_SUGGESTION_TYPES = ['create_estimate_draft', 'suggest_pricing', 'update_homepassport'];
+    if (role === 'client' || role === 'technician') {
+      suggestedActions = suggestedActions.filter(a => !BLOCKED_SUGGESTION_TYPES.includes(a.type));
+    }
+  }
+
+  // ── Safety: strip destructive action suggestions — always require backend confirmation ──
+  // Destructive actions should never be auto-suggested; they must be user-initiated
+  const NEVER_SUGGEST = ['delete_task', 'delete_ticket', 'archive_project', 'cancel_guardian', 'delete_estimate'];
+  suggestedActions = suggestedActions.filter(a => !NEVER_SUGGEST.includes(a.type));
+
   const latencyMs = Date.now() - startMs;
 
   // ── Auto-extract and save new memories (fire-and-forget) ────────
