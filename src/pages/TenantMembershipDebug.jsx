@@ -5,6 +5,7 @@ import {
   Cpu, Layers, Wifi, Clock
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 
 export default function TenantMembershipDebug() {
   const [debug, setDebug] = useState(null);
@@ -272,6 +273,9 @@ export default function TenantMembershipDebug() {
           Quick Actions
         </h2>
         <div className="flex gap-2 flex-wrap">
+          {!debug.has_membership && debug.user?.role === 'admin' && (
+            <AutoRepairButton user={debug.user} onSuccess={loadDebug} />
+          )}
           <button
             onClick={() => window.location.href = '/tenant-membership-repair'}
             className="px-4 py-2 text-sm text-white rounded-lg hover:opacity-90"
@@ -340,6 +344,66 @@ function IssueBadge({ severity, text }) {
     <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm ${colors[severity]}`}>
       <Icon className="w-4 h-4" />
       <span>{text}</span>
+    </div>
+  );
+}
+
+function AutoRepairButton({ user, onSuccess }) {
+  const [repairing, setRepairing] = useState(false);
+  const [tenants, setTenants] = useState([]);
+  const [selectedTenant, setSelectedTenant] = useState('');
+
+  useEffect(() => {
+    // Load tenants for dropdown
+    base44.entities.Company.list().then(setTenants);
+  }, []);
+
+  const handleRepair = async () => {
+    if (!selectedTenant) return;
+    
+    setRepairing(true);
+    try {
+      const result = await base44.functions.invoke('repairTenantMembership', {
+        action: 'create_membership',
+        user_id: user.id,
+        tenant_id: selectedTenant,
+        tenant_role: 'tenant_admin',
+      });
+
+      if (result.success) {
+        toast.success('Membership creata! Ricaricamento...');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+    } catch (error) {
+      toast.error('Errore: ' + error.message);
+    } finally {
+      setRepairing(false);
+    }
+  };
+
+  return (
+    <div className="flex gap-2 items-center">
+      <select
+        value={selectedTenant}
+        onChange={(e) => setSelectedTenant(e.target.value)}
+        className="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white"
+        disabled={repairing}
+      >
+        <option value="">Seleziona Tenant</option>
+        {tenants.map(t => (
+          <option key={t.id} value={t.id}>{t.name}</option>
+        ))}
+      </select>
+      <button
+        onClick={handleRepair}
+        disabled={!selectedTenant || repairing}
+        className="px-4 py-2 text-sm text-white rounded-lg disabled:opacity-40"
+        style={{ backgroundColor: '#10B981' }}
+      >
+        {repairing ? 'Creazione...' : 'Ripara Membership'}
+      </button>
     </div>
   );
 }
