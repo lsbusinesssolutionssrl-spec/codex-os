@@ -1,0 +1,167 @@
+{
+  "name": "Workflow",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "name": {
+      "type": "string",
+      "title": "Nome Workflow"
+    },
+    "description": {
+      "type": "string",
+      "title": "Descrizione"
+    },
+    "category": {
+      "type": "string",
+      "title": "Categoria",
+      "enum": [
+        "Project Management",
+        "Estimate",
+        "Ticket",
+        "Guardian",
+        "Financial",
+        "Maintenance",
+        "Client Communication",
+        "Quality Control",
+        "Custom"
+      ]
+    },
+    "trigger_type": {
+      "type": "string",
+      "title": "Tipo Trigger",
+      "enum": [
+        "entity_event",
+        "scheduled",
+        "manual",
+        "webhook",
+        "ai_suggested"
+      ]
+    },
+    "trigger_config": {
+      "type": "object",
+      "title": "Configurazione Trigger",
+      "properties": {
+        "entity_name": {
+          "type": "string"
+        },
+        "event_type": {
+          "type": "string"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "schedule": {
+          "type": "string"
+        },
+        "cron": {
+          "type": "string"
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "title": "Step del Workflow",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "action",
+              "approval",
+              "delay",
+              "notification",
+              "escalation",
+              "condition"
+            ]
+          },
+          "action_type": {
+            "type": "string"
+          },
+          "config": {
+            "type": "object"
+          },
+          "order": {
+            "type": "number"
+          },
+          "approval_required": {
+            "type": "boolean"
+          },
+          "required_role": {
+            "type": "string"
+          },
+          "delay_minutes": {
+            "type": "number"
+          },
+          "escalation_after_hours": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Attivo",
+      "default": true
+    },
+    "execution_count": {
+      "type": "number",
+      "title": "Esecuzioni",
+      "default": 0
+    },
+    "success_rate": {
+      "type": "number",
+      "title": "Success Rate %",
+      "default": 100
+    },
+    "last_executed": {
+      "type": "string",
+      "title": "Ultima Esecuzione"
+    },
+    "created_by": {
+      "type": "string",
+      "title": "Creato da"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Tags"
+    },
+    "risk_level": {
+      "type": "string",
+      "title": "Livello Rischio",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "default": "Medium"
+    },
+    "requires_approval": {
+      "type": "boolean",
+      "title": "Richiede Approvazione",
+      "default": false
+    },
+    "approval_role": {
+      "type": "string",
+      "title": "Ruolo per Approvazione"
+    }
+  },
+  "required": [
+    "name",
+    "trigger_type",
+    "steps"
+  ]
+}

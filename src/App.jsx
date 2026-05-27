@@ -68,6 +68,8 @@ import AITestConsole from './pages/AITestConsole';
 import AIFoundationDashboard from './pages/AIFoundationDashboard';
 import AIArchitectureReview from './pages/AIArchitectureReview';
 import AICopilotFeatures from './pages/AICopilotFeatures';
+import WorkflowBuilder from './pages/WorkflowBuilder';
+import WorkflowAnalytics from './pages/WorkflowAnalytics';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -156,6 +158,8 @@ const AuthenticatedApp = () => {
         <Route path="/ai-foundation" element={<AIFoundationDashboard />} />
         <Route path="/ai-architecture" element={<AIArchitectureReview />} />
       <Route path="/ai-copilot" element={<AICopilotFeatures />} />
+      <Route path="/workflows" element={<WorkflowBuilder />} />
+      <Route path="/workflow-analytics" element={<WorkflowAnalytics />} />
 
       </Route>
       <Route element={<PortalLayout />}>

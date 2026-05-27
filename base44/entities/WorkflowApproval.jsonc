@@ -1,0 +1,133 @@
+{
+  "name": "WorkflowApproval",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "workflow_execution_id": {
+      "type": "string",
+      "title": "Esecuzione Workflow"
+    },
+    "workflow_id": {
+      "type": "string",
+      "title": "Workflow"
+    },
+    "step_id": {
+      "type": "string",
+      "title": "Step"
+    },
+    "approval_type": {
+      "type": "string",
+      "title": "Tipo Approvazione",
+      "enum": [
+        "financial",
+        "estimate",
+        "project",
+        "pricing",
+        "supplier",
+        "client_communication",
+        "task_assignment",
+        "custom"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "title": "Titolo"
+    },
+    "description": {
+      "type": "string",
+      "title": "Descrizione"
+    },
+    "requested_data": {
+      "type": "object",
+      "title": "Dati Richiesti"
+    },
+    "required_role": {
+      "type": "string",
+      "title": "Ruolo Richiesto",
+      "enum": [
+        "admin",
+        "project_manager",
+        "sales",
+        "finance"
+      ]
+    },
+    "requested_by": {
+      "type": "string",
+      "title": "Richiesto da"
+    },
+    "requested_at": {
+      "type": "string",
+      "title": "Richiesto alle"
+    },
+    "status": {
+      "type": "string",
+      "title": "Stato",
+      "enum": [
+        "Pending",
+        "Approved",
+        "Rejected",
+        "Escalated",
+        "Expired"
+      ],
+      "default": "Pending"
+    },
+    "approved_by": {
+      "type": "string",
+      "title": "Approvato da"
+    },
+    "approved_at": {
+      "type": "string",
+      "title": "Approvato alle"
+    },
+    "rejected_by": {
+      "type": "string",
+      "title": "Rifiutato da"
+    },
+    "rejected_at": {
+      "type": "string",
+      "title": "Rifiutato alle"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "title": "Motivo Rifiuto"
+    },
+    "escalated_to": {
+      "type": "string",
+      "title": "Escalato a"
+    },
+    "escalated_at": {
+      "type": "string",
+      "title": "Escalato alle"
+    },
+    "expires_at": {
+      "type": "string",
+      "title": "Scade alle"
+    },
+    "auto_approve_after_hours": {
+      "type": "number",
+      "title": "Auto-approva dopo (ore)"
+    },
+    "notification_sent": {
+      "type": "boolean",
+      "title": "Notifica Inviata",
+      "default": false
+    },
+    "context_entity_type": {
+      "type": "string",
+      "title": "Tipo Entit\u00e0"
+    },
+    "context_entity_id": {
+      "type": "string",
+      "title": "ID Entit\u00e0"
+    }
+  },
+  "required": [
+    "workflow_execution_id",
+    "approval_type",
+    "title",
+    "required_role"
+  ]
+}

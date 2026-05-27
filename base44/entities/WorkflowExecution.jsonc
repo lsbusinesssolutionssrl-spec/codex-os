@@ -1,0 +1,159 @@
+{
+  "name": "WorkflowExecution",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "workflow_id": {
+      "type": "string",
+      "title": "Workflow"
+    },
+    "workflow_name": {
+      "type": "string",
+      "title": "Nome Workflow"
+    },
+    "trigger_type": {
+      "type": "string",
+      "title": "Tipo Trigger",
+      "enum": [
+        "entity_event",
+        "scheduled",
+        "manual",
+        "webhook",
+        "ai_suggested"
+      ]
+    },
+    "trigger_data": {
+      "type": "object",
+      "title": "Dati Trigger"
+    },
+    "status": {
+      "type": "string",
+      "title": "Stato",
+      "enum": [
+        "Running",
+        "Completed",
+        "Failed",
+        "Pending Approval",
+        "Escalated"
+      ],
+      "default": "Running"
+    },
+    "started_at": {
+      "type": "string",
+      "title": "Iniziato alle"
+    },
+    "completed_at": {
+      "type": "string",
+      "title": "Completato alle"
+    },
+    "steps_executed": {
+      "type": "number",
+      "title": "Step Eseguiti",
+      "default": 0
+    },
+    "steps_total": {
+      "type": "number",
+      "title": "Step Totali"
+    },
+    "current_step": {
+      "type": "number",
+      "title": "Step Corrente"
+    },
+    "error_message": {
+      "type": "string",
+      "title": "Errore"
+    },
+    "execution_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "step_id": {
+            "type": "string"
+          },
+          "step_type": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "executed_by": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Log Esecuzione"
+    },
+    "created_entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "entity_type": {
+            "type": "string"
+          },
+          "entity_id": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Entit\u00e0 Create"
+    },
+    "notifications_sent": {
+      "type": "number",
+      "title": "Notifiche Inviate",
+      "default": 0
+    },
+    "approvals_requested": {
+      "type": "number",
+      "title": "Approvazioni Richieste",
+      "default": 0
+    },
+    "approvals_granted": {
+      "type": "number",
+      "title": "Approvazioni Concesse",
+      "default": 0
+    },
+    "escalations": {
+      "type": "number",
+      "title": "Escalation",
+      "default": 0
+    },
+    "duration_seconds": {
+      "type": "number",
+      "title": "Durata (secondi)"
+    },
+    "initiated_by_user": {
+      "type": "string",
+      "title": "Iniziato da"
+    },
+    "ai_suggested": {
+      "type": "boolean",
+      "title": "Suggerito da AI",
+      "default": false
+    }
+  },
+  "required": [
+    "workflow_id",
+    "workflow_name",
+    "trigger_type"
+  ]
+}

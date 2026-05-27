@@ -1,0 +1,102 @@
+{
+  "name": "WorkflowTemplate",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "name": {
+      "type": "string",
+      "title": "Nome Template"
+    },
+    "description": {
+      "type": "string",
+      "title": "Descrizione"
+    },
+    "category": {
+      "type": "string",
+      "title": "Categoria",
+      "enum": [
+        "Project Onboarding",
+        "Estimate Follow-up",
+        "Ticket Escalation",
+        "Guardian Renewal",
+        "Project Completion",
+        "Maintenance Reminder",
+        "Financial Alert",
+        "Client Communication",
+        "Quality Check",
+        "Custom"
+      ]
+    },
+    "trigger_type": {
+      "type": "string",
+      "title": "Tipo Trigger",
+      "enum": [
+        "entity_event",
+        "scheduled",
+        "manual"
+      ]
+    },
+    "trigger_config": {
+      "type": "object",
+      "title": "Configurazione Trigger"
+    },
+    "steps": {
+      "type": "array",
+      "title": "Step Predefiniti",
+      "items": {
+        "type": "object"
+      }
+    },
+    "is_system": {
+      "type": "boolean",
+      "title": "Template di Sistema",
+      "default": false
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Attivo",
+      "default": true
+    },
+    "usage_count": {
+      "type": "number",
+      "title": "Utilizzi",
+      "default": 0
+    },
+    "success_rate": {
+      "type": "number",
+      "title": "Success Rate %",
+      "default": 100
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Tags"
+    },
+    "estimated_duration_minutes": {
+      "type": "number",
+      "title": "Durata Stimata (min)"
+    },
+    "risk_level": {
+      "type": "string",
+      "title": "Livello Rischio",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "default": "Medium"
+    }
+  },
+  "required": [
+    "name",
+    "category",
+    "trigger_type",
+    "steps"
+  ]
+}
