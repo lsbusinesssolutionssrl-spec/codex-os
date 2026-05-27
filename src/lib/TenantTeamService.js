@@ -14,15 +14,26 @@ export const TenantTeamService = {
    * Returns raw TenantMembership records with User data joined
    */
   getAllMemberships: async (tenantId) => {
-    const [memberships, users] = await Promise.all([
-      base44.entities.TenantMembership.filter({ tenant_id: tenantId }),
-      base44.entities.User.list(),
-    ]);
+    try {
+      const [memberships, users] = await Promise.all([
+        base44.entities.TenantMembership.filter({ tenant_id: tenantId }),
+        base44.entities.User.list(),
+      ]);
 
-    return memberships.map(m => ({
-      ...m,
-      user: users.find(u => u.id === m.user_id),
-    }));
+      console.log('[TenantTeamService] Loaded:', {
+        membershipsCount: memberships.length,
+        usersCount: users.length,
+        tenantId,
+      });
+
+      return memberships.map(m => ({
+        ...m,
+        user: users.find(u => u.id === m.user_id),
+      }));
+    } catch (error) {
+      console.error('[TenantTeamService] Error loading memberships:', error);
+      throw error;
+    }
   },
 
   /**

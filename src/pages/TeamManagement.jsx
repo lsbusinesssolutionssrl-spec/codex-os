@@ -32,28 +32,37 @@ export default function TeamManagement() {
 
   const loadTeam = async () => {
     try {
+      console.log('[TeamManagement] Loading team for tenant:', activeTenant?.id);
+      
       // Use centralized service (same as dashboard)
       const teamSummary = await TenantTeamService.getTeamSummary(activeTenant.id);
       const allMemberships = await TenantTeamService.getAllMemberships(activeTenant.id);
+      
+      console.log('[TeamManagement] Loaded:', {
+        allMembershipsCount: allMemberships.length,
+        membersCount: allMemberships.filter(m => m.status === 'active').length,
+        teamSummary,
+      });
       
       // Store all memberships for debug
       setAllMemberships(allMemberships);
       
       // Show active members (matches dashboard count)
-      setMembers(allMemberships.filter(m => m.status === 'active'));
+      const activeMembers = allMemberships.filter(m => m.status === 'active');
+      setMembers(activeMembers);
       // Show pending invitations (matches dashboard subtitle)
       setInvitations(allMemberships.filter(m => ['invited', 'pending'].includes(m.status)));
       
       console.log('[TeamManagement] Team Data:', {
         tenantId: activeTenant.id,
         ...teamSummary,
-        dashboardTeamCount: teamSummary.activeMembersCount,
+        dashboardTeamCount: activeMembers.length,
         dashboardPendingCount: teamSummary.pendingInvitesCount,
         matchesDashboard: true,
       });
     } catch (error) {
       console.error('Error loading team:', error);
-      toast.error('Errore nel caricamento team');
+      toast.error('Errore nel caricamento team: ' + error.message);
     } finally {
       setLoading(false);
     }
