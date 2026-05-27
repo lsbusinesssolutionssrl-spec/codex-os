@@ -51,6 +51,9 @@ import SubscriptionPlans from './pages/SubscriptionPlans';
 import PermissionsTest from './pages/PermissionsTest';
 import DataIntegrity from './pages/DataIntegrity';
 import GoLiveChecklist from './pages/GoLiveChecklist';
+import SuperAdminDashboard from './pages/SuperAdminDashboard';
+import TenantOnboarding from './pages/TenantOnboarding';
+import ApiKeys from './pages/ApiKeys';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -123,6 +126,9 @@ const AuthenticatedApp = () => {
         <Route path="/permissions-test" element={<PermissionsTest />} />
         <Route path="/data-integrity" element={<DataIntegrity />} />
         <Route path="/go-live-checklist" element={<GoLiveChecklist />} />
+        <Route path="/super-admin" element={<SuperAdminDashboard />} />
+        <Route path="/tenant-onboarding" element={<TenantOnboarding />} />
+        <Route path="/api-keys" element={<ApiKeys />} />
       </Route>
       <Route element={<PortalLayout />}>
         <Route path="/portal" element={<ClientPortal />} />

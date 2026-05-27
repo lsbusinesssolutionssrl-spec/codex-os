@@ -1,0 +1,60 @@
+{
+  "name": "ApiKey",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "name": {
+      "type": "string",
+      "title": "Key Name"
+    },
+    "key_prefix": {
+      "type": "string",
+      "title": "Key Prefix (last 8 chars)"
+    },
+    "key_hash": {
+      "type": "string",
+      "title": "Key Hash (SHA-256)"
+    },
+    "scopes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Scopes",
+      "description": "e.g. read:projects, write:estimates"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "active",
+        "revoked",
+        "expired"
+      ],
+      "default": "active"
+    },
+    "last_used_at": {
+      "type": "string",
+      "title": "Last Used At"
+    },
+    "expires_at": {
+      "type": "string",
+      "title": "Expires At"
+    },
+    "created_by": {
+      "type": "string",
+      "title": "Created By"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "name",
+    "company_id"
+  ]
+}

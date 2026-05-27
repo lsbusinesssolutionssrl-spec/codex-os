@@ -42,6 +42,8 @@ const navItems = [
   { path: '/permissions-test', icon: Shield, label: 'Permissions Test', roles: ['admin'] },
   { path: '/data-integrity', icon: Database, label: 'Data Integrity', roles: ['admin'] },
   { path: '/go-live-checklist', icon: CheckSquare, label: 'Go Live Checklist', roles: ['admin'] },
+  { path: '/super-admin', icon: Shield, label: 'Super Admin', roles: ['admin'] },
+  { path: '/api-keys', icon: Database, label: 'API Keys', roles: ['admin'] },
 ];
 
 export default function Layout() {

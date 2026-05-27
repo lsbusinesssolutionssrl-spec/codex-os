@@ -1,0 +1,71 @@
+{
+  "name": "AuditLog",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "user_email": {
+      "type": "string",
+      "title": "User Email"
+    },
+    "user_role": {
+      "type": "string",
+      "title": "User Role"
+    },
+    "action": {
+      "type": "string",
+      "title": "Action",
+      "enum": [
+        "create",
+        "update",
+        "delete",
+        "login",
+        "logout",
+        "login_failed",
+        "invite",
+        "impersonate",
+        "export",
+        "view_sensitive"
+      ]
+    },
+    "entity_type": {
+      "type": "string",
+      "title": "Entity Type"
+    },
+    "entity_id": {
+      "type": "string",
+      "title": "Entity ID"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "ip_address": {
+      "type": "string",
+      "title": "IP Address"
+    },
+    "user_agent": {
+      "type": "string",
+      "title": "User Agent"
+    },
+    "metadata": {
+      "type": "object",
+      "title": "Metadata"
+    },
+    "severity": {
+      "type": "string",
+      "title": "Severity",
+      "enum": [
+        "info",
+        "warning",
+        "critical"
+      ],
+      "default": "info"
+    }
+  },
+  "required": [
+    "action"
+  ]
+}
