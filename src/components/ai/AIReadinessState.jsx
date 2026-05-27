@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
 import { Brain, Database, TrendingUp, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { TenantMetricsService } from '@/lib/TenantMetricsService';
 
 /**
  * AIReadinessState
@@ -20,30 +20,18 @@ export default function AIReadinessState() {
   useEffect(() => {
     const checkReadiness = async () => {
       try {
-        const user = await base44.auth.me().catch(() => null);
-        const companyId = user?.company_id;
+        // Use centralized service
+        const data = await TenantMetricsService.getOperationalData();
         
-        // Query all relevant entities with tenant filter
-        const [projects, clients, estimates, tickets, knowledge, memories, learnings, documents] = await Promise.all([
-          companyId ? base44.entities.Project.filter({ company_id: companyId }, '-created_date', 1).catch(() => []) : [],
-          companyId ? base44.entities.Client.filter({ company_id: companyId }, '-created_date', 1).catch(() => []) : [],
-          companyId ? base44.entities.Estimate.filter({ company_id: companyId }, '-created_date', 1).catch(() => []) : [],
-          companyId ? base44.entities.SupportTicket?.filter({ company_id: companyId }, '-created_date', 1).catch(() => []) || [] : [],
-          companyId ? base44.entities.KnowledgeBase.filter({ company_id: companyId }, '-created_date', 1).catch(() => []) : [],
-          companyId ? base44.entities.AIMemory.filter({ company_id: companyId }, '-created_date', 1).catch(() => []) : [],
-          companyId ? base44.entities.ProjectLearning.filter({ company_id: companyId }, '-created_date', 1).catch(() => []) : [],
-          companyId ? base44.entities.RAGDocument?.filter({ company_id: companyId }, '-created_date', 1).catch(() => []) || [] : [],
-        ]);
-
         const counts = {
-          projects: projects.length,
-          clients: clients.length,
-          estimates: estimates.length,
-          tickets: tickets.length,
-          knowledge: knowledge.length,
-          memories: memories.length,
-          learnings: learnings.length,
-          documents: documents.length,
+          projects: data.projects.length,
+          clients: data.clients.length,
+          estimates: data.estimates.length,
+          tickets: data.tickets.length,
+          knowledge: data.knowledge.length,
+          memories: data.memories.length,
+          learnings: data.learnings.length,
+          documents: data.documents.length,
         };
 
         const total = Object.values(counts).reduce((sum, count) => sum + count, 0);

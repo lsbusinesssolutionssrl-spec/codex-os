@@ -7,19 +7,19 @@
  */
 import { useState, useEffect } from 'react';
 import { Brain, TrendingUp, Database, BookOpen, Loader2, Users, FolderKanban, Home, DollarSign, FileText, Ticket, Sparkles } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { TenantMetricsService } from '@/lib/TenantMetricsService';
 
 const DATA_SOURCES = [
-  { key: 'projects',   icon: FolderKanban, label: 'Progetti',       weight: 3, entity: 'Project' },
-  { key: 'clients',    icon: Users,        label: 'Clienti',        weight: 2, entity: 'Client' },
-  { key: 'properties', icon: Home,         label: 'Immobili',       weight: 2, entity: 'Property' },
-  { key: 'tickets',    icon: Ticket,       label: 'Ticket',         weight: 2, entity: 'SupportTicket' },
-  { key: 'costs',      icon: DollarSign,   label: 'Voci di costo',  weight: 2, entity: 'ProjectCost' },
-  { key: 'estimates',  icon: FileText,     label: 'Preventivi',     weight: 2, entity: 'Estimate' },
-  { key: 'knowledge',  icon: BookOpen,     label: 'KB Articles',    weight: 4, entity: 'KnowledgeBase' },
-  { key: 'memories',   icon: Brain,        label: 'Memorie AI',     weight: 5, entity: 'AIMemory' },
-  { key: 'learnings',  icon: TrendingUp,   label: 'Lessons Learned',weight: 5, entity: 'ProjectLearning' },
-  { key: 'documents',  icon: Database,     label: 'Documenti RAG',  weight: 3, entity: 'RAGDocument' },
+  { key: 'projects',   icon: FolderKanban, label: 'Progetti',       weight: 3 },
+  { key: 'clients',    icon: Users,        label: 'Clienti',        weight: 2 },
+  { key: 'properties', icon: Home,         label: 'Immobili',       weight: 2 },
+  { key: 'tickets',    icon: Ticket,       label: 'Ticket',         weight: 2 },
+  { key: 'costs',      icon: DollarSign,   label: 'Voci di costo',  weight: 2 },
+  { key: 'estimates',  icon: FileText,     label: 'Preventivi',     weight: 2 },
+  { key: 'knowledge',  icon: BookOpen,     label: 'KB Articles',    weight: 4 },
+  { key: 'memories',   icon: Brain,        label: 'Memorie AI',     weight: 5 },
+  { key: 'learnings',  icon: TrendingUp,   label: 'Lessons Learned',weight: 5 },
+  { key: 'documents',  icon: Database,     label: 'Documenti RAG',  weight: 3 },
 ];
 
 const SCORE_LEVELS = [
@@ -37,21 +37,26 @@ export default function PlatformIntelligenceScore() {
   useEffect(() => {
     const loadCounts = async () => {
       try {
-        const user = await base44.auth.me().catch(() => null);
-        const companyId = user?.company_id;
+        // Use centralized service
+        const data = await TenantMetricsService.getOperationalData();
         
-        const results = await Promise.allSettled(
-          DATA_SOURCES.map(async (src) => {
-            if (!companyId) return { key: src.key, count: 0 };
-            const items = await base44.entities[src.entity]?.filter({ company_id: companyId }, '-created_date', 200).catch(() => []);
-            return { key: src.key, count: (items || []).length };
-          })
-        );
-        const c = {};
-        results.forEach(r => { if (r.status === 'fulfilled') c[r.value.key] = r.value.count; });
+        const c = {
+          projects: data.projects.length,
+          clients: data.clients.length,
+          properties: data.properties.length,
+          tickets: data.tickets.length,
+          costs: data.costs.length,
+          estimates: data.estimates.length,
+          knowledge: data.knowledge.length,
+          memories: data.memories.length,
+          learnings: data.learnings.length,
+          documents: data.documents.length,
+        };
+        
         setCounts(c);
       } catch (error) {
         console.error('Error loading intelligence counts:', error);
+        setCounts({});
       } finally {
         setLoading(false);
       }

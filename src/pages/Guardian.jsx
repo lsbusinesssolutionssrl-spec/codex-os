@@ -16,25 +16,36 @@ export default function Guardian() {
 
   useEffect(() => {
     const load = async () => {
-      const [filtersRes, subs, cls] = await Promise.all([
-        base44.functions.invoke('getUserFilters', {}),
-        base44.entities.GuardianSubscription.list('-created_date'),
-        base44.entities.Client.list(),
-      ]);
-      // Apply RLS filters
-      const filters = filtersRes.data.filters;
-      const filteredSubs = subs.filter(s => {
-        if (!filters.GuardianSubscription || Object.keys(filters.GuardianSubscription).length === 0) return true;
-        if (filters.GuardianSubscription.client_id?.$in) {
-          return filters.GuardianSubscription.client_id.$in.includes(s.client_id);
+      try {
+        const [filtersRes, subs, cls] = await Promise.all([
+          base44.functions.invoke('getUserFilters', {}),
+          base44.entities.GuardianSubscription.filter({}, '-created_date', 100),
+          base44.entities.Client.filter({}, '-created_date', 100),
+        ]);
+        
+        // Get company_id from filters
+        const filters = filtersRes.data.filters;
+        const companyId = filters.GuardianSubscription?.company_id || filters.Client?.company_id || filters.company_id;
+        
+        // If no company_id, show empty state
+        if (!companyId) {
+          setSubscriptions([]);
+          setClientList([]);
+          setClients({});
+          return;
         }
-        return true;
-      });
-      setSubscriptions(filteredSubs);
-      setClientList(cls);
-      const map = {};
-      cls.forEach(c => { map[c.id] = c.name + (c.company_name ? ` ${c.company_name}` : ''); });
-      setClients(map);
+        
+        setSubscriptions(subs);
+        setClientList(cls);
+        const map = {};
+        cls.forEach(c => { map[c.id] = c.name + (c.company_name ? ` ${c.company_name}` : ''); });
+        setClients(map);
+      } catch (error) {
+        console.error('Error loading Guardian:', error);
+        setSubscriptions([]);
+        setClientList([]);
+        setClients({});
+      }
     };
     load();
   }, []);

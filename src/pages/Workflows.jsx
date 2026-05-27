@@ -15,29 +15,50 @@ export default function Workflows() {
   }, []);
 
   const loadData = async () => {
-    const [wfList, executions, approvals] = await Promise.all([
-      base44.entities.Workflow.list(),
-      base44.entities.WorkflowExecution.list(),
-      base44.entities.WorkflowApproval.filter({ status: 'Pending' }),
-    ]);
+    try {
+      // Get tenant filter
+      const filtersRes = await base44.functions.invoke('getUserFilters', {}).catch(() => ({ data: { filters: {} } }));
+      const companyId = filtersRes.data.filters?.Workflow?.company_id || filtersRes.data.filters?.company_id;
 
-    setWorkflows(wfList);
-    setPendingApprovals(approvals);
+      // If no company_id, show empty state
+      if (!companyId) {
+        setWorkflows([]);
+        setPendingApprovals([]);
+        setStats({ total: 0, active: 0, totalExec: 0, successRate: 0 });
+        setLoading(false);
+        return;
+      }
 
-    // Stats
-    const active = wfList.filter(w => w.is_active).length;
-    const totalExec = executions.length;
-    const completed = executions.filter(e => e.status === 'Completed').length;
-    const successRate = totalExec > 0 ? ((completed / totalExec) * 100).toFixed(1) : 0;
+      // Load with tenant filter
+      const [wfList, executions, approvals] = await Promise.all([
+        base44.entities.Workflow.filter({ company_id: companyId }, '-created_date', 50),
+        base44.entities.WorkflowExecution.filter({ company_id: companyId }, '-created_date', 100),
+        base44.entities.WorkflowApproval.filter({ status: 'Pending', company_id: companyId }),
+      ]);
 
-    setStats({
-      total: wfList.length,
-      active,
-      totalExec,
-      successRate,
-    });
+      setWorkflows(wfList);
+      setPendingApprovals(approvals);
 
-    setLoading(false);
+      // Stats
+      const active = wfList.filter(w => w.is_active).length;
+      const totalExec = executions.length;
+      const completed = executions.filter(e => e.status === 'Completed').length;
+      const successRate = totalExec > 0 ? ((completed / totalExec) * 100).toFixed(1) : 0;
+
+      setStats({
+        total: wfList.length,
+        active,
+        totalExec,
+        successRate,
+      });
+    } catch (error) {
+      console.error('Error loading workflows:', error);
+      setWorkflows([]);
+      setPendingApprovals([]);
+      setStats({ total: 0, active: 0, totalExec: 0, successRate: 0 });
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
