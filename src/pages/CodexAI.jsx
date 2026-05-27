@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import ActionConfirmModal from '../components/ai/ActionConfirmModal';
 import ContextFocusPicker from '../components/ai/ContextFocusPicker';
 import PlatformIntelligenceScore from '../components/ai/PlatformIntelligenceScore';
+import AIReadinessState from '../components/ai/AIReadinessState';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const SESSION_KEY = 'codex_ai_v2_conversations';
@@ -558,7 +559,7 @@ export default function CodexAI() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
           {isEmpty ? (
-            // ── Welcome ──────────────────────────────────────────────────────
+            // ── Welcome / Empty State ──────────────────────────────────────────
             <div className="flex flex-col items-center justify-center h-full min-h-64 text-center max-w-2xl mx-auto">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5 shadow-lg"
                 style={{ background: 'linear-gradient(135deg, #1147FF 0%, #0B2341 100%)' }}>
@@ -568,7 +569,7 @@ export default function CodexAI() {
                 {user ? `Ciao, ${user.full_name?.split(' ')[0]}` : 'Codex AI'}
               </h2>
               <p className="text-sm text-slate-500 mb-6 leading-relaxed max-w-sm">
-                Ho accesso a progetti, ticket, preventivi, finanze e knowledge base. Più dati accumuli, più sono preciso.
+                Il tuo assistente AI per operazioni, finanza e gestione progetti.
               </p>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 w-full mb-6">
@@ -585,7 +586,8 @@ export default function CodexAI() {
                   </button>
                 ))}
               </div>
-              <div className="w-full max-w-2xl">
+              <div className="w-full max-w-2xl space-y-3">
+                <AIReadinessState />
                 <PlatformIntelligenceScore />
               </div>
             </div>

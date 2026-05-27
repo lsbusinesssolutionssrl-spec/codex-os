@@ -109,6 +109,13 @@ export default function ModuleEntitlementDebug() {
           tenantRole: activeTenantRole,
           enabledModules,
           entitlements,
+          dataReadiness: {
+            projects: 0, // Will be populated
+            clients: 0,
+            estimates: 0,
+            tickets: 0,
+            knowledgeBase: 0,
+          },
         });
       } catch (error) {
         console.error('Error loading debug data:', error);
