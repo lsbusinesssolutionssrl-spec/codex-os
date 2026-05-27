@@ -3,9 +3,11 @@ import { Shield, Building2, Users, CreditCard, Zap, Brain, Globe, Database, Key,
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
 
 export default function PlatformSettings() {
   const navigate = useNavigate();
+  const { platformRole, contextType } = useGlobalContext();
   const [user, setUser] = useState(null);
   const [platformStats, setPlatformStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -17,7 +19,8 @@ export default function PlatformSettings() {
       setUser(currentUser);
       
       // SECURITY FIX: Platform settings require platform role
-      if (!['admin', 'developer'].includes(currentUser?.role)) {
+      const PLATFORM_ROLES = ['admin', 'developer'];
+      if (!PLATFORM_ROLES.includes(currentUser?.role) || contextType === 'tenant') {
         toast.error('Accesso riservato ai Super Admin');
         setAccessDenied(true);
         return;

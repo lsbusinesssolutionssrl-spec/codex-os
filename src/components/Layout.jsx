@@ -47,6 +47,9 @@ const PLATFORM_NAV_ITEMS = [
   { path: '/product-analytics', icon: TrendingUp, label: 'Analytics' },
 ];
 
+// SECURITY: Platform routes are ONLY shown to platform users
+const PLATFORM_ROLES = ['admin', 'developer'];
+
 const NAV_BY_ROLE = {
   admin: null, // all
   project_manager: ['/', '/projects', '/checklists', '/documents', '/calendar', '/report', '/team'],
@@ -63,7 +66,7 @@ export default function Layout() {
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const { isOnline, queueCount } = useOfflineSync();
   const globalContext = useGlobalContext();
-  const { activeTenant, isPlatformMode, loading: contextLoading, enabledModules } = globalContext;
+  const { activeTenant, activeTenantRole, isPlatformMode, loading: contextLoading, enabledModules } = globalContext;
   const [userRole, setUserRole] = useState(null);
 
   // All hooks must be called unconditionally at the top
@@ -111,7 +114,7 @@ export default function Layout() {
 
   const allowedPaths = userRole ? NAV_BY_ROLE[userRole] : null;
   
-  // Determine which navigation to use
+  // SECURITY FIX: Determine which navigation to use based on context
   const visibleNav = isPlatformMode ? PLATFORM_NAV_ITEMS : TENANT_NAV_ITEMS.filter(item => {
     // Module-based items only appear if enabled
     if (item.module && item.module !== 'core' && !enabledModules.includes(item.module)) {
@@ -187,6 +190,11 @@ export default function Layout() {
               <div className="flex items-center gap-1.5">
                 <Building2 className="w-3 h-3" />
                 <span>Tenant Workspace</span>
+              </div>
+            )}
+            {!isPlatformMode && activeTenantRole && (
+              <div className="text-[10px] text-white/30 mt-1">
+                Role: {activeTenantRole}
               </div>
             )}
           </div>

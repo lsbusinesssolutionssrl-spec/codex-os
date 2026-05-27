@@ -9,15 +9,16 @@ export default function TeamPerformance() {
   const { activeTenant, enabledModules } = useGlobalContext();
   const [status, setStatus] = useState('loading');
 
+  // Check module and data readiness
   useEffect(() => {
-    // Check if financial_control module is enabled (required for team performance)
-    if (!enabledModules.includes('financial_control')) {
-      setStatus('disabled');
-      return;
-    }
+    const checkModule = async () => {
+      // Check if financial_control module is enabled
+      if (!enabledModules.includes('financial_control')) {
+        setStatus('disabled');
+        return;
+      }
 
-    // Check data readiness
-    const checkReadiness = async () => {
+      // Check data readiness
       try {
         const [timesheets, users] = await Promise.all([
           base44.entities.Timesheet.filter({ company_id: activeTenant.id }),
@@ -39,8 +40,17 @@ export default function TeamPerformance() {
       }
     };
 
-    checkReadiness();
-  }, [enabledModules, activeTenant]);
+    if (status === 'loading') {
+      checkModule();
+    }
+  }, [enabledModules, activeTenant, status]);
+
+  // Redirect when active
+  useEffect(() => {
+    if (status === 'active') {
+      navigate('/timesheets');
+    }
+  }, [status, navigate]);
 
   if (status === 'loading') {
     return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
@@ -99,13 +109,6 @@ export default function TeamPerformance() {
       </div>
     );
   }
-
-  // Active state - redirect to Timesheets (where team performance is shown)
-  useEffect(() => {
-    if (status === 'active') {
-      navigate('/timesheets');
-    }
-  }, [status, navigate]);
 
   return <div className="p-6 text-center text-gray-400">Reindirizzamento...</div>;
 }

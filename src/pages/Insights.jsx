@@ -46,6 +46,13 @@ export default function Insights() {
     checkReadiness();
   }, [enabledModules, activeTenant]);
 
+  // Active state - redirect to Executive Insights
+  useEffect(() => {
+    if (status === 'active') {
+      navigate('/executive-insights');
+    }
+  }, [status, navigate]);
+
   if (status === 'loading') {
     return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
   }
@@ -95,13 +102,6 @@ export default function Insights() {
       </div>
     );
   }
-
-  // Active state - redirect to Executive Insights
-  useEffect(() => {
-    if (status === 'active') {
-      navigate('/executive-insights');
-    }
-  }, [status, navigate]);
 
   return <div className="p-6 text-center text-gray-400">Reindirizzamento...</div>;
 }

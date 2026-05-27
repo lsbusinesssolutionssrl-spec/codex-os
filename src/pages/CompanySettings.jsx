@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building2, Palette, Users, CreditCard, Save, Shield, Zap, Brain, Globe, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Building2, Palette, Users, CreditCard, Save, Shield, Zap, Brain, Globe, CheckCircle2, AlertTriangle, Settings, FileText, Bell, Key, Lock } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +8,7 @@ import { useGlobalContext } from '@/lib/GlobalContextEngine';
 export default function CompanySettings() {
   const navigate = useNavigate();
   const globalContext = useGlobalContext();
+  const { activeTenant, contextType, platformRole, enabledModules } = globalContext;
   const [user, setUser] = useState(null);
   const [company, setCompany] = useState(null);
   const [subscription, setSubscription] = useState(null);
@@ -25,15 +26,9 @@ export default function CompanySettings() {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
       
-      // Super Admin viewing specific tenant - skip platform mode
-      if (currentUser?.role === 'admin' && company) {
-        setLoading(false);
-        return;
-      }
-      
-      // Super Admin without specific tenant - show platform settings
-      if (currentUser?.role === 'admin') {
-        setLoading(false);
+      // SECURITY FIX: Platform users should go to PlatformSettings
+      if (['admin', 'developer'].includes(currentUser?.role) && contextType === 'platform') {
+        navigate('/platform-settings');
         return;
       }
       
@@ -87,76 +82,9 @@ export default function CompanySettings() {
 
   if (loading) return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
   
-  // Super Admin / Developer - show platform settings
-  if (user?.role === 'admin') {
-    return (
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Impostazioni</h1>
-            <p className="text-sm text-gray-500">Configurazione platform & tenant</p>
-          </div>
-          <button
-            onClick={() => navigate('/platform-settings')}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium"
-            style={{ backgroundColor: '#7C3AED' }}
-          >
-            <Shield className="w-4 h-4" />
-            Impostazioni Platform
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <ModuleCard
-            title="Impostazioni Platform"
-            description="Configurazione enterprise"
-            icon={Shield}
-            path="/platform-settings"
-            color="#7C3AED"
-          />
-          <ModuleCard
-            title="Gestione Tenant"
-            description="Gestisci company tenant"
-            icon={Building2}
-            path="/super-admin"
-            color="#1147FF"
-          />
-          <ModuleCard
-            title="Piani SaaS"
-            description="Gestione piani subscription"
-            icon={CreditCard}
-            path="/saas-plans-admin"
-            color="#F59E0B"
-          />
-          <ModuleCard
-            title="Feature Flags"
-            description="Controllo accesso funzionalità"
-            icon={Zap}
-            path="/developer"
-            color="#10B981"
-          />
-          <ModuleCard
-            title="Provider AI"
-            description="Configurazione modelli AI"
-            icon={Brain}
-            path="/ai-foundation"
-            color="#8B5CF6"
-          />
-          <ModuleCard
-            title="Integrazioni"
-            description="Integrazioni platform"
-            icon={Globe}
-            path="/integrations"
-            color="#06B6D4"
-          />
-        </div>
-
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-          <p className="text-sm text-blue-800 font-medium">💡 Modalità Platform</p>
-          <p className="text-xs text-blue-600 mt-1">Hai accesso a livello platform. Usa i moduli sopra per configurare la platform o seleziona un tenant da gestire.</p>
-        </div>
-      </div>
-    );
+  // SECURITY FIX: Redirect platform users to PlatformSettings
+  if (['admin', 'developer'].includes(user?.role) && contextType === 'platform') {
+    return null; // Will redirect in useEffect
   }
 
   if (!company) {
@@ -277,10 +205,12 @@ export default function CompanySettings() {
   }
 
   const tabs = [
-    { id: 'general', label: 'Generale', icon: Building2 },
-    { id: 'brand', label: 'Brand', icon: Palette },
-    { id: 'subscription', label: 'Abbonamento', icon: CreditCard },
-    { id: 'usage', label: 'Utilizzo', icon: Users },
+    { id: 'general', label: 'Profilo Azienda', icon: Building2 },
+    { id: 'team', label: 'Team & Ruoli', icon: Users },
+    { id: 'brand', label: 'Branding', icon: Palette },
+    { id: 'modules', label: 'Moduli Attivi', icon: Zap },
+    { id: 'subscription', label: 'Fatturazione', icon: CreditCard },
+    { id: 'usage', label: 'Utilizzo', icon: CheckCircle2 },
   ];
 
   return (
@@ -288,12 +218,17 @@ export default function CompanySettings() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Impostazioni Company</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{company.name}</p>
+          <h1 className="text-2xl font-bold text-gray-900">Impostazioni</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Configurazione tenant</p>
         </div>
-        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium disabled:opacity-40" style={{ backgroundColor: '#1147FF' }}>
-          <Save className="w-4 h-4" /> {saving ? 'Salvataggio...' : 'Salva'}
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="px-3 py-1.5 text-xs font-medium text-white rounded-lg" style={{ backgroundColor: '#1147FF' }}>
+            {globalContext.activeTenantRole || 'tenant'}
+          </div>
+          <button onClick={save} disabled={saving} className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium disabled:opacity-40" style={{ backgroundColor: '#1147FF' }}>
+            <Save className="w-4 h-4" /> {saving ? 'Salvataggio...' : 'Salva'}
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -319,16 +254,61 @@ export default function CompanySettings() {
       {/* General Tab */}
       {activeTab === 'general' && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-          <h2 className="font-semibold text-gray-900 mb-4">Dettagli Azienda</h2>
+          <h2 className="font-semibold text-gray-900 mb-4">Profilo Azienda</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Nome Azienda" value={form.name} onChange={v => setForm(f => ({...f, name: v}))} />
-            <Field label="Slug (identificatore URL)" value={form.slug} onChange={v => setForm(f => ({...f, slug: v}))} disabled />
             <Field label="Email" value={form.email} onChange={v => setForm(f => ({...f, email: v}))} type="email" />
             <Field label="Telefono" value={form.phone} onChange={v => setForm(f => ({...f, phone: v}))} />
             <Field label="Partita IVA / Codice Fiscale" value={form.tax_id} onChange={v => setForm(f => ({...f, tax_id: v}))} className="sm:col-span-2" />
             <Field label="Indirizzo" value={form.address} onChange={v => setForm(f => ({...f, address: v}))} className="sm:col-span-2" />
             <Field label="Sito Web" value={form.website} onChange={v => setForm(f => ({...f, website: v}))} className="sm:col-span-2" />
             <Field label="Settore" value={form.industry} onChange={v => setForm(f => ({...f, industry: v}))} />
+          </div>
+        </div>
+      )}
+
+      {/* Team Tab */}
+      {activeTab === 'team' && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+          <h2 className="font-semibold text-gray-900 mb-4">Team & Ruoli</h2>
+          <button
+            onClick={() => navigate('/team')}
+            className="flex items-center gap-2 px-4 py-3 text-sm text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: '#1147FF' }}
+          >
+            <Users className="w-4 h-4" />
+            Gestisci Team e Permessi
+          </button>
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800 font-medium">Gestione Utenti</p>
+            <p className="text-xs text-blue-600 mt-1">Invita nuovi membri, assegna ruoli e gestisci i permessi del team.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Modules Tab */}
+      {activeTab === 'modules' && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+          <h2 className="font-semibold text-gray-900 mb-4">Moduli Attivi</h2>
+          <button
+            onClick={() => navigate('/company-settings/modules')}
+            className="flex items-center gap-2 px-4 py-3 text-sm text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: '#1147FF' }}
+          >
+            <Zap className="w-4 h-4" />
+            Attiva/Disattiva Moduli
+          </button>
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            {enabledModules.map(module => (
+              <div key={module} className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm font-semibold text-green-900 capitalize">{module.replace('_', ' ')}</p>
+                <p className="text-xs text-green-700 mt-0.5">Attivo</p>
+              </div>
+            ))}
+          </div>
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-sm text-amber-800 font-medium">Moduli Disponibili</p>
+            <p className="text-xs text-amber-700 mt-1">Alcuni moduli richiedono un upgrade del piano. Contatta il supporto per abilitare funzionalità aggiuntive.</p>
           </div>
         </div>
       )}
