@@ -40,8 +40,8 @@ export default function FinancialControl() {
     const load = async () => {
       try {
         const user = await base44.auth.me();
-        const companyRes = await base44.functions.invoke('getCurrentCompany', {});
-        const companyId = companyRes.data.company?.id;
+        const companyRes = await base44.functions.invoke('getCurrentCompany', {}).catch(() => ({ data: { company: null } }));
+        const companyId = companyRes.data?.company?.id;
 
         const [projs, projectCosts, financialAlerts] = await Promise.all([
           base44.entities.Project.list(),
