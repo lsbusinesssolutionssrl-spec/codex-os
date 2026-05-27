@@ -72,6 +72,9 @@ import WorkflowBuilder from './pages/WorkflowBuilder';
 import WorkflowAnalytics from './pages/WorkflowAnalytics';
 import Workflows from './pages/Workflows';
 import ApprovalsManager from './pages/ApprovalsManager';
+import IntegrationHub from './pages/IntegrationHub';
+import NotificationSettings from './pages/NotificationSettings';
+import SystemStatus from './pages/SystemStatus';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -165,6 +168,9 @@ const AuthenticatedApp = () => {
       <Route path="/workflow-analytics" element={<WorkflowAnalytics />} />
       <Route path="/approvals" element={<ApprovalsManager />} />
       <Route path="/operations" element={<OperationsDashboard />} />
+      <Route path="/integrations" element={<IntegrationHub />} />
+      <Route path="/notification-settings" element={<NotificationSettings />} />
+      <Route path="/system-status" element={<SystemStatus />} />
 
       </Route>
       <Route element={<PortalLayout />}>
