@@ -62,6 +62,8 @@ import MaintenancePlanning from './pages/MaintenancePlanning';
 import OperationsDashboard from './pages/OperationsDashboard';
 import ProjectSchedule from './pages/ProjectSchedule';
 import CodexAI from './pages/CodexAI';
+import AIAuditLog from './pages/AIAuditLog';
+import AIMemoryManager from './pages/AIMemoryManager';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -144,6 +146,8 @@ const AuthenticatedApp = () => {
         <Route path="/maintenance" element={<MaintenancePlanning />} />
         <Route path="/operations" element={<OperationsDashboard />} />
         <Route path="/schedule" element={<ProjectSchedule />} />
+        <Route path="/ai-audit" element={<AIAuditLog />} />
+        <Route path="/ai-memory" element={<AIMemoryManager />} />
 
       </Route>
       <Route element={<PortalLayout />}>
