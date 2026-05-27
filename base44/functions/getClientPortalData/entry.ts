@@ -4,17 +4,14 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Authenticate user
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // Find client strictly by authenticated email (server-side, not spoofable)
+    // Find client strictly by authenticated email
     const allClients = await base44.asServiceRole.entities.Client.list();
     const client = allClients.find(c => c.email?.toLowerCase() === user.email?.toLowerCase());
-
     if (!client) return Response.json({ client: null });
 
-    // Fetch all data filtered by client_id — server-side only
     const [properties, estimates, projects, tickets, documents] = await Promise.all([
       base44.asServiceRole.entities.Property.filter({ client_id: client.id }),
       base44.asServiceRole.entities.Estimate.filter({ client_id: client.id }),
@@ -38,7 +35,7 @@ Deno.serve(async (req) => {
       created_date: e.created_date,
     }));
 
-    // Strip internal cost fields from projects
+    // Strip internal cost fields from projects, include milestones
     const safeProjects = projects.map(p => ({
       id: p.id,
       title: p.title,
@@ -49,10 +46,11 @@ Deno.serve(async (req) => {
       estimate_type: p.estimate_type,
       quality_level: p.quality_level,
       notes: p.notes,
+      milestones: p.milestones || [],
       created_date: p.created_date,
     }));
 
-    // Strip internal cost fields from tickets
+    // Strip internal fields from tickets
     const safeTickets = tickets.map(t => ({
       id: t.id,
       title: t.title,
@@ -72,13 +70,12 @@ Deno.serve(async (req) => {
             const file_uri = doc.file_uri || `/files/${doc.file_url.split('/').pop()}`;
             const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({
               file_uri,
-              expires_in: 604800 // 7 days
+              expires_in: 604800
             });
             return { ...doc, signed_url };
           }
           return doc;
-        } catch (error) {
-          console.error('Failed to generate signed URL:', error);
+        } catch (err) {
           return doc;
         }
       })
