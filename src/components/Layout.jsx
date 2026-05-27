@@ -16,6 +16,7 @@ import { useOfflineSync } from '../hooks/useOfflineSync';
 import { useGlobalContext } from '@/lib/GlobalContextEngine';
 import SessionDebugPanel from './SessionDebugPanel';
 import ContextBanner from './tenant/ContextBanner';
+import LayoutInspector from './LayoutInspector';
 
 // Tenant navigation - modules enabled dynamically based on plan
 const TENANT_NAV_ITEMS = [
@@ -254,6 +255,7 @@ export default function Layout() {
           <Outlet />
         </main>
         <SessionDebugPanel />
+        <LayoutInspector />
       </div>
     </div>
   );

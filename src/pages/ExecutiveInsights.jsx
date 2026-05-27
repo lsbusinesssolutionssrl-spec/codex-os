@@ -1,34 +1,33 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, TrendingDown, DollarSign, Users, Award, AlertTriangle, BarChart3, PieChart, Activity, Target, Zap, Crown, Brain, BookOpen, CheckCircle, Bot, Bell, Settings } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Users, Award, AlertTriangle, BarChart3, PieChart, Activity, Target, Zap, Crown, Brain, BookOpen, CheckCircle, Bot, Bell, Settings, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
+import { ContextGate } from '@/components/ContextGate';
 import LiveKpiWidgets from '../components/LiveKpiWidgets';
 import AlertSettings from '../components/AlertSettings';
 
 export default function ExecutiveInsights() {
   const navigate = useNavigate();
+  const globalContext = useGlobalContext();
+  const { activeTenant, isPlatformMode, enabledModules } = globalContext;
   const [loading, setLoading] = useState(true);
-  const [execData, setExecData] = useState({
-    revenueTrend: [],
-    marginTrend: [],
-    bestCustomers: [],
-    worstCustomers: [],
-    bestSuppliers: [],
-    bestTeams: [],
-    growthOpportunities: [],
-    riskIndicators: [],
-    knowledgeScore: 0,
-  });
+  const [execData, setExecData] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [criticalAlerts, setCriticalAlerts] = useState([]);
   const [showAlertSettings, setShowAlertSettings] = useState(false);
   const previousDataRef = useRef(null);
 
   useEffect(() => {
+    // Module gate check
+    if (!enabledModules.includes('intelligence') && !isPlatformMode) {
+      setLoading(false);
+      return;
+    }
+    
     loadExecutiveData();
     
-    // Polling ottimizzato: aggiorna ogni 30 secondi
     const pollInterval = setInterval(() => {
       loadExecutiveData(true);
     }, 30000);
@@ -37,15 +36,33 @@ export default function ExecutiveInsights() {
   }, []);
 
   const loadExecutiveData = async (isRefresh = false) => {
+    // Platform mode - no data
+    if (isPlatformMode && !activeTenant) {
+      setExecData({ isEmpty: true });
+      setLoading(false);
+      return;
+    }
+    
+    // Get tenant filters for proper isolation
+    const filtersRes = await base44.functions.invoke('getUserFilters', {});
+    const company_id = filtersRes.data.filters?.Project?.company_id || filtersRes.data.filters?.company_id;
+    
+    if (!company_id) {
+      setExecData({ isEmpty: true, reason: 'no_tenant' });
+      setLoading(false);
+      return;
+    }
+
+    // Load ONLY tenant-scoped data
     const [projects, costs, clients, suppliers, timesheets, guardians, knowledgeBase, projectLearning] = await Promise.all([
-      base44.entities.Project.list(),
-      base44.entities.ProjectCost.list(),
-      base44.entities.Client.list(),
-      base44.entities.Supplier.list(),
-      base44.entities.Timesheet.list(),
-      base44.entities.GuardianSubscription.list(),
-      base44.entities.KnowledgeBase.list(),
-      base44.entities.ProjectLearning.list(),
+      base44.entities.Project.filter({ company_id }, '-updated_date', 50),
+      base44.entities.ProjectCost.filter({ company_id }, '-date', 100),
+      base44.entities.Client.filter({ company_id }),
+      base44.entities.Supplier.filter({ company_id }),
+      base44.entities.Timesheet.filter({ company_id }, '-date', 100),
+      base44.entities.GuardianSubscription.filter({ company_id }),
+      base44.entities.KnowledgeBase.filter({ company_id }),
+      base44.entities.ProjectLearning.filter({ company_id }, '-created_date', 50),
     ]);
 
     // Rileva margini critici e invia notifiche
@@ -208,9 +225,9 @@ export default function ExecutiveInsights() {
       growthOpportunities: opportunities,
       riskIndicators: risks,
       knowledgeScore,
+      hasRealData: projects.length > 0 || clients.length > 0,
     };
 
-    // Salva dati precedenti per confronto
     previousDataRef.current = execData;
     setExecData(newData);
     setLastUpdated(new Date());
@@ -261,7 +278,57 @@ export default function ExecutiveInsights() {
     }
   };
 
-  if (loading) return <div className="p-6 text-center text-gray-400">Caricamento Executive Insights...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+    </div>
+  );
+
+  // Module gate - show proper error
+  if (!enabledModules.includes('intelligence') && !isPlatformMode) {
+    return (
+      <ContextGate requiredContext="tenant" requiredModule="intelligence">
+        <div />
+      </ContextGate>
+    );
+  }
+
+  // Empty state - no real data
+  if (execData?.isEmpty) {
+    return (
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
+          <Brain className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Nessun Dato Disponibile</h2>
+          <p className="text-gray-500 mb-6 max-w-md mx-auto">
+            {execData.reason === 'no_tenant' 
+              ? 'Seleziona un tenant per visualizzare gli insight strategici.'
+              : 'Completa lonboarding e aggiungi progetti, clienti e timesheet per attivare gli insight direzionali.'}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-2xl mx-auto">
+            <EmptyStateButton 
+              icon={DollarSign}
+              title="Aggiungi Progetti"
+              description="Crea i primi progetti per tracciare ricavi e margini"
+              onClick={() => navigate('/projects')}
+            />
+            <EmptyStateButton 
+              icon={Users}
+              title="Aggiungi Clienti"
+              description="Registra i clienti per analisi dettagliate"
+              onClick={() => navigate('/clients')}
+            />
+            <EmptyStateButton 
+              icon={Activity}
+              title="Attiva Timesheet"
+              description="Traccia le ore per calcolare i costi reali"
+              onClick={() => navigate('/timesheets')}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -274,7 +341,9 @@ export default function ExecutiveInsights() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Executive Insights</h1>
             <div className="flex items-center gap-2 mt-0.5">
-              <p className="text-sm text-gray-500">Panoramica strategica per Stefano Desiato</p>
+              <p className="text-sm text-gray-500">
+                {activeTenant?.name ? `Dashboard di ${activeTenant.name}` : 'Panoramica strategica'}
+              </p>
               <span className="text-xs text-green-600 flex items-center gap-1">
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                 Live
@@ -310,58 +379,69 @@ export default function ExecutiveInsights() {
         </div>
       </div>
 
-      {/* Live KPI Widgets */}
-      <LiveKpiWidgets />
+      {/* Live KPI Widgets - only if has real data */}
+      {execData?.hasRealData ? (
+        <LiveKpiWidgets />
+      ) : (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <p className="text-sm text-amber-800 font-medium">
+            Dati insufficienti per i KPI live. Aggiungi almeno 3 progetti completati.
+          </p>
+        </div>
+      )}
 
-      {/* Revenue & Margin Trends */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <TrendCard 
-          title="Andamento Ricavi (6 mesi)" 
-          icon={DollarSign}
-          color="#1147FF"
-          data={execData.revenueTrend}
-          format="currency"
-        />
-        <TrendCard 
-          title="Andamento Margini (6 mesi)" 
-          icon={TrendingUp}
-          color="#10B981"
-          data={execData.marginTrend}
-          format="currency"
-        />
-      </div>
+      {/* Revenue & Margin Trends - only if has data */}
+      {execData?.hasRealData && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <TrendCard 
+            title="Andamento Ricavi (6 mesi)" 
+            icon={DollarSign}
+            color="#1147FF"
+            data={execData.revenueTrend}
+            format="currency"
+          />
+          <TrendCard 
+            title="Andamento Margini (6 mesi)" 
+            icon={TrendingUp}
+            color="#10B981"
+            data={execData.marginTrend}
+            format="currency"
+          />
+        </div>
+      )}
 
-      {/* Rankings */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Best Customers */}
-        <RankingCard 
-          title="Migliori Clienti" 
-          icon={Award}
-          color="#1147FF"
-          data={execData.bestCustomers}
-          valueKey="revenue"
-          valueFormat="currency"
-        />
+      {/* Rankings - only if has data */}
+      {execData?.hasRealData && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Best Customers */}
+          <RankingCard 
+            title="Migliori Clienti" 
+            icon={Award}
+            color="#1147FF"
+            data={execData.bestCustomers}
+            valueKey="revenue"
+            valueFormat="currency"
+          />
 
-        {/* Best Suppliers */}
-        <RankingCard 
-          title="Top Fornitori" 
-          icon={Users}
-          color="#10B981"
-          data={execData.bestSuppliers}
-          valueKey="rating"
-          valueFormat="rating"
-        />
+          {/* Best Suppliers */}
+          <RankingCard 
+            title="Top Fornitori" 
+            icon={Users}
+            color="#10B981"
+            data={execData.bestSuppliers}
+            valueKey="rating"
+            valueFormat="rating"
+          />
 
-        {/* Best Teams */}
-        <RankingCard 
-          title="Team Performance" 
-          icon={Activity}
-          color="#F58220"
-          data={execData.bestTeams}
-          valueKey="hours"
-          valueFormat="number"
-        />
+          {/* Best Teams */}
+          <RankingCard 
+            title="Team Performance" 
+            icon={Activity}
+            color="#F58220"
+            data={execData.bestTeams}
+            valueKey="hours"
+            valueFormat="number"
+          />
 
         {/* Growth Opportunities */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
@@ -372,30 +452,34 @@ export default function ExecutiveInsights() {
             <h3 className="font-semibold text-gray-900">Opportunità di Crescita</h3>
           </div>
           <div className="space-y-3">
-            {execData.growthOpportunities.map((opp, idx) => (
-              <div key={idx} className="p-3 bg-green-50 border border-green-100 rounded-lg">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-green-900">{opp.title}</p>
-                    <p className="text-xs text-green-700 mt-1">{opp.description}</p>
+            {execData.growthOpportunities?.length > 0 ? (
+              execData.growthOpportunities.map((opp, idx) => (
+                <div key={idx} className="p-3 bg-green-50 border border-green-100 rounded-lg">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-green-900">{opp.title}</p>
+                      <p className="text-xs text-green-700 mt-1">{opp.description}</p>
+                    </div>
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                      opp.priority === 'Critical' ? 'bg-red-100 text-red-700' :
+                      opp.priority === 'High' ? 'bg-orange-100 text-orange-700' :
+                      'bg-green-100 text-green-700'
+                    }`}>
+                      {opp.priority}
+                    </span>
                   </div>
-                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                    opp.priority === 'Critical' ? 'bg-red-100 text-red-700' :
-                    opp.priority === 'High' ? 'bg-orange-100 text-orange-700' :
-                    'bg-green-100 text-green-700'
-                  }`}>
-                    {opp.priority}
-                  </span>
+                  <p className="text-xs font-semibold text-green-800 mt-2">Impatto: {opp.impact}</p>
                 </div>
-                <p className="text-xs font-semibold text-green-800 mt-2">Impatto: {opp.impact}</p>
-              </div>
-            ))}
-            {execData.growthOpportunities.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-4">Nessuna opportunità identificata</p>
+              ))
+            ) : (
+              <p className="text-sm text-gray-400 text-center py-4">
+                {execData.hasRealData ? 'Nessuna opportunità identificata' : 'Aggiungi dati per vedere le opportunità'}
+              </p>
             )}
           </div>
         </div>
       </div>
+      )}
 
       {/* Critical Margin Alerts - Real-time */}
       {criticalAlerts.length > 0 && (
@@ -555,5 +639,18 @@ function RankingCard({ title, icon: Icon, color, data, valueKey, valueFormat }) 
         )}
       </div>
     </div>
+  );
+}
+
+function EmptyStateButton({ icon: Icon, title, description, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="p-4 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-colors text-left"
+    >
+      <Icon className="w-6 h-6 text-gray-400 mb-2" />
+      <p className="text-sm font-semibold text-gray-900 mb-1">{title}</p>
+      <p className="text-xs text-gray-500">{description}</p>
+    </button>
   );
 }
