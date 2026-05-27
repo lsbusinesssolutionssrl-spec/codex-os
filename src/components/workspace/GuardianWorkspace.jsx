@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Shield, Activity, Calendar, Home, AlertCircle, Clock, TrendingUp, CheckCircle } from 'lucide-react';
-import { useWorkspace } from './WorkspaceContext';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
 
 const quickActions = [
   { label: 'Guardian Subscriptions', icon: Shield, path: '/guardian' },
@@ -15,7 +15,7 @@ const quickActions = [
 
 export default function GuardianWorkspace() {
   const navigate = useNavigate();
-  const { config } = useWorkspace();
+  const { activeTenant } = useGlobalContext();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50">

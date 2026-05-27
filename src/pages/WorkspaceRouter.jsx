@@ -1,4 +1,4 @@
-import { useWorkspace } from '@/components/workspace/WorkspaceContext';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
 import SuperAdminWorkspace from '@/components/workspace/SuperAdminWorkspace';
 import ExecutiveWorkspace from '@/components/workspace/ExecutiveWorkspace';
 import OperationsWorkspace from '@/components/workspace/OperationsWorkspace';
@@ -8,7 +8,7 @@ import FinancialWorkspace from '@/components/workspace/FinancialWorkspace';
 import GuardianWorkspace from '@/components/workspace/GuardianWorkspace';
 
 export default function WorkspaceRouter() {
-  const { currentWorkspace, loading } = useWorkspace();
+  const { workspaceType, loading } = useGlobalContext();
 
   if (loading) {
     return (
@@ -18,7 +18,7 @@ export default function WorkspaceRouter() {
     );
   }
 
-  switch (currentWorkspace) {
+  switch (workspaceType) {
     case 'super_admin':
       return <SuperAdminWorkspace />;
     case 'executive':

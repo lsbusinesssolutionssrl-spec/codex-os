@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Shield, Building2, Users, Activity, Brain, Zap, BarChart2, Globe, Database, Key, Cpu, CreditCard, Palette } from 'lucide-react';
-import { useWorkspace } from './WorkspaceContext';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
 
 const quickActions = [
   { label: 'Gestione Tenant', icon: Building2, path: '/super-admin' },
@@ -18,7 +18,7 @@ const quickActions = [
 
 export default function SuperAdminWorkspace() {
   const navigate = useNavigate();
-  const { config } = useWorkspace();
+  const { activeTenant } = useGlobalContext();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">

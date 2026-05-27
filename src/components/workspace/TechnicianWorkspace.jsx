@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Wrench, ClipboardCheck, MapPin, Camera, Mic, BookOpen, CheckCircle, Phone } from 'lucide-react';
-import { useWorkspace } from './WorkspaceContext';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
 
 const quickActions = [
   { label: 'I Miei Lavori', icon: Wrench, path: '/technician' },
@@ -15,7 +15,7 @@ const quickActions = [
 
 export default function TechnicianWorkspace() {
   const navigate = useNavigate();
-  const { config } = useWorkspace();
+  const { activeTenant } = useGlobalContext();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">

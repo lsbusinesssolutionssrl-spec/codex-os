@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Crown, TrendingUp, DollarSign, AlertTriangle, Activity, Users, Shield, Briefcase } from 'lucide-react';
-import { useWorkspace } from './WorkspaceContext';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
 
 const quickActions = [
   { label: 'Insight Strategici', icon: TrendingUp, path: '/executive-insights' },
@@ -13,7 +13,7 @@ const quickActions = [
 
 export default function ExecutiveWorkspace() {
   const navigate = useNavigate();
-  const { config } = useWorkspace();
+  const { activeTenant } = useGlobalContext();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-blue-50">

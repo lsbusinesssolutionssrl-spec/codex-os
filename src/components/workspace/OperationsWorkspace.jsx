@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Activity, Calendar, ClipboardList, Wrench, AlertCircle, Users, FileText, Clock } from 'lucide-react';
-import { useWorkspace } from './WorkspaceContext';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
 
 const quickActions = [
   { label: 'Tutti i Progetti', icon: Activity, path: '/projects' },
@@ -15,7 +15,7 @@ const quickActions = [
 
 export default function OperationsWorkspace() {
   const navigate = useNavigate();
-  const { config } = useWorkspace();
+  const { activeTenant } = useGlobalContext();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">

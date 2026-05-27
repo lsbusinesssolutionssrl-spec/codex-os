@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { TrendingUp, Users, FileText, Phone, Mail, Calendar, DollarSign, Target } from 'lucide-react';
-import { useWorkspace } from './WorkspaceContext';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
 
 const quickActions = [
   { label: 'Lead', icon: Target, path: '/clients' },
@@ -15,7 +15,7 @@ const quickActions = [
 
 export default function SalesWorkspace() {
   const navigate = useNavigate();
-  const { config } = useWorkspace();
+  const { activeTenant } = useGlobalContext();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">

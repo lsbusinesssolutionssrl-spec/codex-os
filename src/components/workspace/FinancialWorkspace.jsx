@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { DollarSign, TrendingUp, AlertTriangle, CreditCard, FileText, Calculator, PieChart, Clock } from 'lucide-react';
-import { useWorkspace } from './WorkspaceContext';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
 
 const quickActions = [
   { label: 'Financial Control', icon: DollarSign, path: '/financial-control' },
@@ -15,7 +15,7 @@ const quickActions = [
 
 export default function FinancialWorkspace() {
   const navigate = useNavigate();
-  const { config } = useWorkspace();
+  const { activeTenant } = useGlobalContext();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-blue-50">
