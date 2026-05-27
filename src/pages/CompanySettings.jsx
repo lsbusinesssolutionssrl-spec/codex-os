@@ -84,8 +84,8 @@ export default function CompanySettings() {
       <div className="p-6 max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-            <p className="text-sm text-gray-500">Platform & tenant configuration</p>
+            <h1 className="text-2xl font-bold text-gray-900">Impostazioni</h1>
+            <p className="text-sm text-gray-500">Configurazione platform & tenant</p>
           </div>
           <button
             onClick={() => navigate('/platform-settings')}
@@ -93,49 +93,49 @@ export default function CompanySettings() {
             style={{ backgroundColor: '#7C3AED' }}
           >
             <Shield className="w-4 h-4" />
-            Platform Settings
+            Impostazioni Platform
           </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <ModuleCard
-            title="Platform Settings"
-            description="Enterprise-wide configuration"
+            title="Impostazioni Platform"
+            description="Configurazione enterprise"
             icon={Shield}
             path="/platform-settings"
             color="#7C3AED"
           />
           <ModuleCard
-            title="Tenant Management"
-            description="Manage tenant companies"
+            title="Gestione Tenant"
+            description="Gestisci company tenant"
             icon={Building2}
             path="/super-admin"
             color="#1147FF"
           />
           <ModuleCard
-            title="SaaS Plans"
-            description="Subscription plans"
+            title="Piani SaaS"
+            description="Piani di abbonamento"
             icon={CreditCard}
             path="/subscription-plans"
             color="#F59E0B"
           />
           <ModuleCard
             title="Feature Flags"
-            description="Control feature access"
+            description="Controllo accesso funzionalità"
             icon={Zap}
             path="/developer"
             color="#10B981"
           />
           <ModuleCard
-            title="AI Providers"
-            description="AI models configuration"
+            title="Provider AI"
+            description="Configurazione modelli AI"
             icon={Brain}
             path="/ai-foundation"
             color="#8B5CF6"
           />
           <ModuleCard
-            title="Integrations"
-            description="Platform integrations"
+            title="Integrazioni"
+            description="Integrazioni platform"
             icon={Globe}
             path="/integrations"
             color="#06B6D4"
@@ -143,8 +143,8 @@ export default function CompanySettings() {
         </div>
 
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-          <p className="text-sm text-blue-800 font-medium">💡 Platform Mode</p>
-          <p className="text-xs text-blue-600 mt-1">You have platform-level access. Use the modules above to configure the platform or select a tenant to manage.</p>
+          <p className="text-sm text-blue-800 font-medium">💡 Modalità Platform</p>
+          <p className="text-xs text-blue-600 mt-1">Hai accesso a livello platform. Usa i moduli sopra per configurare la platform o seleziona un tenant da gestire.</p>
         </div>
       </div>
     );
@@ -170,7 +170,7 @@ export default function CompanySettings() {
   const tabs = [
     { id: 'general', label: 'Generale', icon: Building2 },
     { id: 'brand', label: 'Brand', icon: Palette },
-    { id: 'subscription', label: 'Subscription', icon: CreditCard },
+    { id: 'subscription', label: 'Abbonamento', icon: CreditCard },
     { id: 'usage', label: 'Utilizzo', icon: Users },
   ];
 
@@ -210,16 +210,16 @@ export default function CompanySettings() {
       {/* General Tab */}
       {activeTab === 'general' && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-          <h2 className="font-semibold text-gray-900 mb-4">Informazioni Aziendali</h2>
+          <h2 className="font-semibold text-gray-900 mb-4">Dettagli Azienda</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Nome Azienda" value={form.name} onChange={v => setForm(f => ({...f, name: v}))} />
-            <Field label="Slug (URL identifier)" value={form.slug} onChange={v => setForm(f => ({...f, slug: v}))} disabled />
+            <Field label="Slug (identificatore URL)" value={form.slug} onChange={v => setForm(f => ({...f, slug: v}))} disabled />
             <Field label="Email" value={form.email} onChange={v => setForm(f => ({...f, email: v}))} type="email" />
             <Field label="Telefono" value={form.phone} onChange={v => setForm(f => ({...f, phone: v}))} />
-            <Field label="Partita IVA / Tax ID" value={form.tax_id} onChange={v => setForm(f => ({...f, tax_id: v}))} className="sm:col-span-2" />
+            <Field label="Partita IVA / Codice Fiscale" value={form.tax_id} onChange={v => setForm(f => ({...f, tax_id: v}))} className="sm:col-span-2" />
             <Field label="Indirizzo" value={form.address} onChange={v => setForm(f => ({...f, address: v}))} className="sm:col-span-2" />
-            <Field label="Website" value={form.website} onChange={v => setForm(f => ({...f, website: v}))} className="sm:col-span-2" />
-            <Field label="Industry" value={form.industry} onChange={v => setForm(f => ({...f, industry: v}))} />
+            <Field label="Sito Web" value={form.website} onChange={v => setForm(f => ({...f, website: v}))} className="sm:col-span-2" />
+            <Field label="Settore" value={form.industry} onChange={v => setForm(f => ({...f, industry: v}))} />
           </div>
         </div>
       )}
@@ -227,7 +227,7 @@ export default function CompanySettings() {
       {/* Brand Tab */}
       {activeTab === 'brand' && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-          <h2 className="font-semibold text-gray-900 mb-4">Brand Identity</h2>
+          <h2 className="font-semibold text-gray-900 mb-4">Identità Brand</h2>
           
           {/* Logo */}
           <div>
@@ -281,7 +281,7 @@ export default function CompanySettings() {
       {/* Subscription Tab */}
       {activeTab === 'subscription' && subscription && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-          <h2 className="font-semibold text-gray-900 mb-4">Subscription & Billing</h2>
+          <h2 className="font-semibold text-gray-900 mb-4">Abbonamento & Fatturazione</h2>
           
           {plan && (
             <div className="p-4 border border-gray-200 rounded-lg">
@@ -298,15 +298,15 @@ export default function CompanySettings() {
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            <InfoCard label="Status" value={subscription.status} />
-            <InfoCard label="Trial End" value={subscription.trial_end ? new Date(subscription.trial_end).toLocaleDateString('it-IT') : '—'} />
-            <InfoCard label="Next Billing" value={subscription.next_billing_date ? new Date(subscription.next_billing_date).toLocaleDateString('it-IT') : '—'} />
+            <InfoCard label="Stato" value={subscription.status} />
+            <InfoCard label="Fine Trial" value={subscription.trial_end ? new Date(subscription.trial_end).toLocaleDateString('it-IT') : '—'} />
+            <InfoCard label="Prossima Fatturazione" value={subscription.next_billing_date ? new Date(subscription.next_billing_date).toLocaleDateString('it-IT') : '—'} />
             <InfoCard label="MRR" value={`€${subscription.mrr || 0}`} />
           </div>
 
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800 font-medium">💡 Piano corrente: {plan?.name || 'N/A'}</p>
-            <p className="text-xs text-blue-600 mt-1">Contatta il supporto per cambiare piano o cancellare la subscription.</p>
+            <p className="text-xs text-blue-600 mt-1">Contatta il supporto per cambiare piano o cancellare l'abbonamento.</p>
           </div>
         </div>
       )}
