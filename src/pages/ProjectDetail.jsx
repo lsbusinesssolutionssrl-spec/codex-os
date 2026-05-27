@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Camera, BookOpen, Home, FileCheck, FileText, Download, TrendingUp, Brain, Activity, Clock, Users, Calendar, Mail } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Camera, BookOpen, Home, FileCheck, FileText, Download, TrendingUp, Brain, Activity, Clock, Users, Calendar, Mail, Zap } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 import FinancialSummary from '../components/FinancialSummary';
@@ -13,6 +13,7 @@ import OperationalTimeline from '../components/ai/OperationalTimeline';
 import TechnicianLoadAnalysis from '../components/ai/TechnicianLoadAnalysis';
 import WarrantyTracker from '../components/ai/WarrantyTracker';
 import AICommunicationGenerator from '../components/ai/AICommunicationGenerator';
+import AIWorkflowSuggestions from '../components/ai/AIWorkflowSuggestions';
 
 const STATUSES = ['Lead', 'Survey', 'Estimate', 'Approved', 'In Progress', 'Testing', 'Delivered', 'Guardian Active', 'Archived'];
 const SOP_CATEGORIES = ['Bathroom', 'Full Home', 'Electrical', 'Networking', 'Security', 'Roofing', 'Handover'];
@@ -48,6 +49,7 @@ export default function ProjectDetail() {
   const [showTechAnalysis, setShowTechAnalysis] = useState(false);
   const [showWarranties, setShowWarranties] = useState(false);
   const [showCommunication, setShowCommunication] = useState(false);
+  const [showWorkflowSuggestions, setShowWorkflowSuggestions] = useState(false);
 
   useEffect(() => {
     Promise.all([hasRole(['admin', 'project_manager']), canEditFinancialFields()]).then(([hasRoleRes, canEdit]) => {
@@ -315,6 +317,15 @@ export default function ProjectDetail() {
           Email AI
         </button>
         <button
+          onClick={() => setShowWorkflowSuggestions(!showWorkflowSuggestions)}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+            showWorkflowSuggestions ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Zap className="w-3.5 h-3.5" />
+          Workflow AI
+        </button>
+        <button
           onClick={() => setShowAIPanel(!showAIPanel)}
           className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
             showAIPanel ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
@@ -554,6 +565,9 @@ export default function ProjectDetail() {
 
       {/* Internal Comments */}
       <InternalComments entityType="project" entityId={id} />
+
+      {/* AI Workflow Suggestions */}
+      {showWorkflowSuggestions && <AIWorkflowSuggestions entityType="project" entityId={id} onClose={() => setShowWorkflowSuggestions(false)} />}
 
       {/* AI Copilot Panel */}
       {showAIPanel && <ContextualAIPanel entityType="project" entityId={id} onClose={() => setShowAIPanel(false)} />}
