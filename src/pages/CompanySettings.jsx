@@ -120,9 +120,9 @@ export default function CompanySettings() {
           />
           <ModuleCard
             title="Piani SaaS"
-            description="Piani di abbonamento"
+            description="Gestione piani subscription"
             icon={CreditCard}
-            path="/subscription-plans"
+            path="/saas-plans-admin"
             color="#F59E0B"
           />
           <ModuleCard

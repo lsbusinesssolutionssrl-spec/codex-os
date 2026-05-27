@@ -111,6 +111,7 @@ import TenantManagement from './pages/TenantManagement';
 import WhiteLabelCenter from './pages/WhiteLabelCenter';
 import BrandApprovalQueue from './pages/BrandApprovalQueue';
 import PlatformSettings from './pages/PlatformSettings';
+import SaasPlansAdmin from './pages/SaasPlansAdmin';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -243,6 +244,7 @@ const AuthenticatedApp = () => {
       <Route path="/white-label" element={<WhiteLabelCenter />} />
       <Route path="/brand-approval" element={<BrandApprovalQueue />} />
       <Route path="/platform-settings" element={<PlatformSettings />} />
+      <Route path="/saas-plans-admin" element={<SaasPlansAdmin />} />
 
       </Route>
       <Route element={<PortalLayout />}>
