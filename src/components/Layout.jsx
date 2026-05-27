@@ -59,6 +59,7 @@ const navItems = [
   { path: '/developer', icon: Shield, label: 'Developer', roles: ['admin', 'company_admin'] },
   { path: '/system-status', icon: Activity, label: 'System Status', roles: ['admin', 'company_admin'] },
   { path: '/platform-core', icon: Puzzle, label: 'Platform Core', roles: ['admin', 'company_admin'] },
+  { path: '/extensions', icon: Puzzle, label: 'Extensions', roles: ['admin', 'company_admin'] },
 ];
 
 export default function Layout() {
