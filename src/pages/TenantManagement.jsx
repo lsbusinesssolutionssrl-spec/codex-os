@@ -10,16 +10,16 @@ import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
 const FEATURES = [
-  { id: 'ai_estimator', label: 'AI Estimator', icon: Brain, plan: 'professional' },
-  { id: 'financial_control', label: 'Financial Control', icon: TrendingUp, plan: 'professional' },
-  { id: 'guardian', label: 'Guardian (Predictive Maintenance)', icon: Shield, plan: 'professional' },
-  { id: 'workflow_automation', label: 'Workflow Automation', icon: Zap, plan: 'professional' },
-  { id: 'predictive_intelligence', label: 'Predictive Intelligence', icon: Activity, plan: 'enterprise' },
+  { id: 'ai_estimator', label: 'Preventivatore AI', icon: Brain, plan: 'professional' },
+  { id: 'financial_control', label: 'Controllo Finanziario', icon: TrendingUp, plan: 'professional' },
+  { id: 'guardian', label: 'Guardian (Manutenzione Predittiva)', icon: Shield, plan: 'professional' },
+  { id: 'workflow_automation', label: 'Automazione Workflow', icon: Zap, plan: 'professional' },
+  { id: 'predictive_intelligence', label: 'Intelligenza Predittiva', icon: Activity, plan: 'enterprise' },
   { id: 'white_label', label: 'White Label', icon: Crown, plan: 'enterprise' },
-  { id: 'api_access', label: 'API Access', icon: Wifi, plan: 'enterprise' },
-  { id: 'advanced_analytics', label: 'Advanced Analytics', icon: FileText, plan: 'professional' },
-  { id: 'custom_integrations', label: 'Custom Integrations', icon: Settings, plan: 'enterprise' },
-  { id: 'priority_support', label: 'Priority Support', icon: CheckCircle, plan: 'enterprise' },
+  { id: 'api_access', label: 'Accesso API', icon: Wifi, plan: 'enterprise' },
+  { id: 'advanced_analytics', label: 'Analytics Avanzati', icon: FileText, plan: 'professional' },
+  { id: 'custom_integrations', label: 'Integrazioni Custom', icon: Settings, plan: 'enterprise' },
+  { id: 'priority_support', label: 'Supporto Prioritario', icon: CheckCircle, plan: 'enterprise' },
 ];
 
 const PLAN_COLORS = {
@@ -119,7 +119,7 @@ export default function TenantManagement() {
         performed_by: (await base44.auth.me())?.email || 'system',
       });
 
-      toast.success(`Tenant status updated to ${newStatus}`);
+      toast.success(`Status tenant aggiornato a ${newStatus}`);
       loadTenantData();
     } catch (error) {
       toast.error('Errore aggiornamento status');
@@ -131,7 +131,7 @@ export default function TenantManagement() {
   const startImpersonation = async () => {
     const adminUser = users.find(u => u.role === 'company_admin');
     if (!adminUser) {
-      toast.error('No admin user found for this tenant');
+      toast.error('Nessun utente admin trovato per questo tenant');
       return;
     }
 
@@ -154,7 +154,7 @@ export default function TenantManagement() {
       });
 
       setImpersonating(true);
-      toast.success('Impersonation started - Banner will be shown');
+      toast.success('Impersonazione avviata - Banner visibile');
     } catch (error) {
       toast.error('Errore avvio impersonation');
     }
@@ -262,13 +262,13 @@ export default function TenantManagement() {
           </div>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-500">Status</span>
+              <span className="text-gray-500">Stato</span>
               <span className={`text-xs font-medium px-2 py-1 rounded-full ${statusColors[subscription?.status] || 'bg-gray-100'}`}>
-                {subscription?.status || 'No subscription'}
+                {subscription?.status || 'Nessun abbonamento'}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Plan</span>
+              <span className="text-gray-500">Piano</span>
               <span className="font-medium">{plan?.name || '—'}</span>
             </div>
             <div className="flex justify-between">
