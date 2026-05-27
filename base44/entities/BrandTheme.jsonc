@@ -1,0 +1,198 @@
+{
+  "name": "BrandTheme",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "theme_name": {
+      "type": "string",
+      "title": "Theme Name"
+    },
+    "version": {
+      "type": "string",
+      "title": "Version",
+      "default": "1.0"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "Draft",
+        "Pending Approval",
+        "Approved",
+        "Rejected",
+        "Needs Revision",
+        "Active"
+      ],
+      "default": "Draft"
+    },
+    "tier": {
+      "type": "string",
+      "title": "Tier",
+      "enum": [
+        "professional",
+        "enterprise",
+        "elite"
+      ],
+      "default": "professional"
+    },
+    "logo_url": {
+      "type": "string",
+      "title": "Logo URL"
+    },
+    "favicon_url": {
+      "type": "string",
+      "title": "Favicon URL"
+    },
+    "colors": {
+      "type": "object",
+      "title": "Color Tokens",
+      "properties": {
+        "primary": {
+          "type": "string",
+          "title": "Primary Color",
+          "default": "#1147FF"
+        },
+        "primary_hover": {
+          "type": "string",
+          "title": "Primary Hover"
+        },
+        "secondary": {
+          "type": "string",
+          "title": "Secondary Color",
+          "default": "#0B2341"
+        },
+        "accent": {
+          "type": "string",
+          "title": "Accent Color",
+          "default": "#F58020"
+        },
+        "background": {
+          "type": "string",
+          "title": "Background",
+          "default": "#FFFFFF"
+        },
+        "surface": {
+          "type": "string",
+          "title": "Surface",
+          "default": "#F8FAFC"
+        },
+        "border": {
+          "type": "string",
+          "title": "Border",
+          "default": "#E2E8F0"
+        },
+        "success": {
+          "type": "string",
+          "title": "Success",
+          "default": "#10B981"
+        },
+        "warning": {
+          "type": "string",
+          "title": "Warning",
+          "default": "#F59E0B"
+        },
+        "danger": {
+          "type": "string",
+          "title": "Danger",
+          "default": "#EF4444"
+        }
+      }
+    },
+    "typography": {
+      "type": "object",
+      "title": "Typography",
+      "properties": {
+        "font_family": {
+          "type": "string",
+          "title": "Font Family",
+          "default": "Inter"
+        },
+        "heading_scale": {
+          "type": "string",
+          "title": "Heading Scale",
+          "enum": [
+            "compact",
+            "normal",
+            "spacious"
+          ],
+          "default": "normal"
+        }
+      }
+    },
+    "terminology": {
+      "type": "object",
+      "title": "Custom Terminology",
+      "properties": {
+        "platform_name": {
+          "type": "string",
+          "title": "Platform Name",
+          "default": "Codex OS"
+        },
+        "project_label": {
+          "type": "string",
+          "title": "Project Label",
+          "default": "Project"
+        },
+        "client_label": {
+          "type": "string",
+          "title": "Client Label",
+          "default": "Client"
+        }
+      }
+    },
+    "email_footer": {
+      "type": "string",
+      "title": "Email Footer Text"
+    },
+    "login_background_url": {
+      "type": "string",
+      "title": "Login Background URL"
+    },
+    "powered_by_visible": {
+      "type": "boolean",
+      "title": "Show Powered By",
+      "default": true
+    },
+    "custom_domain": {
+      "type": "string",
+      "title": "Custom Domain"
+    },
+    "submitted_by": {
+      "type": "string",
+      "title": "Submitted By"
+    },
+    "submitted_at": {
+      "type": "string",
+      "title": "Submitted At"
+    },
+    "approved_by": {
+      "type": "string",
+      "title": "Approved By"
+    },
+    "approved_at": {
+      "type": "string",
+      "title": "Approved At"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "title": "Rejection Reason"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Is Active",
+      "default": false
+    }
+  },
+  "required": [
+    "company_id",
+    "theme_name",
+    "status"
+  ]
+}

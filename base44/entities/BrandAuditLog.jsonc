@@ -1,0 +1,61 @@
+{
+  "name": "BrandAuditLog",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "brand_theme_id": {
+      "type": "string",
+      "title": "Brand Theme"
+    },
+    "event_type": {
+      "type": "string",
+      "title": "Event Type",
+      "enum": [
+        "theme_created",
+        "theme_submitted",
+        "theme_approved",
+        "theme_rejected",
+        "theme_revised",
+        "theme_activated",
+        "theme_rolled_back",
+        "color_changed",
+        "logo_changed",
+        "terminology_changed"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "performed_by": {
+      "type": "string",
+      "title": "Performed By"
+    },
+    "changes": {
+      "type": "object",
+      "title": "Changes (JSON diff)"
+    },
+    "previous_version": {
+      "type": "string",
+      "title": "Previous Version"
+    },
+    "new_version": {
+      "type": "string",
+      "title": "New Version"
+    },
+    "created_date": {
+      "type": "string",
+      "title": "Created Date"
+    }
+  },
+  "required": [
+    "company_id",
+    "brand_theme_id",
+    "event_type",
+    "description",
+    "performed_by"
+  ]
+}

@@ -108,6 +108,8 @@ import EvolutionDashboard from './pages/EvolutionDashboard';
 import ExecutionIntelligenceDashboard from './pages/ExecutionIntelligenceDashboard';
 import ActivationWizard from './pages/ActivationWizard';
 import TenantManagement from './pages/TenantManagement';
+import WhiteLabelCenter from './pages/WhiteLabelCenter';
+import BrandApprovalQueue from './pages/BrandApprovalQueue';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -237,6 +239,8 @@ const AuthenticatedApp = () => {
       <Route path="/property-intelligence" element={<PropertyIntelligence />} />
       <Route path="/activation-wizard" element={<ActivationWizard />} />
       <Route path="/tenant/:companyId" element={<TenantManagement />} />
+      <Route path="/white-label" element={<WhiteLabelCenter />} />
+      <Route path="/brand-approval" element={<BrandApprovalQueue />} />
 
       </Route>
       <Route element={<PortalLayout />}>
