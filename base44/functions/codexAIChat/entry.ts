@@ -64,6 +64,14 @@ Deno.serve(async (req) => {
     base44.entities.Document.list('-created_date', 5).catch(() => []),
   ]);
 
+  // Financial Control, Timesheets, Intelligence
+  const [timesheets, financialAlerts, intelligenceInsights, projectCostsRecent] = await Promise.all([
+    base44.entities.Timesheet.list('-date', 5).catch(() => []),
+    base44.entities.FinancialAlert.filter({ resolved: false }, '-created_date', 5).catch(() => []),
+    base44.entities.IntelligenceInsight.filter({ is_read: false }, '-created_date', 5).catch(() => []),
+    base44.entities.ProjectCost.list('-date', 5).catch(() => []),
+  ]);
+
   // Targeted context if hint provided
   let focusedProject = null, focusedClient = null, focusedProperty = null;
   let focusedCosts = [], focusedTickets = [];
@@ -92,6 +100,9 @@ Deno.serve(async (req) => {
   if (knowledge.length) contextEntityList.push('knowledge_base');
   if (focusedProject) contextEntityList.push('focused_project');
   if (focusedCosts.length) contextEntityList.push('project_financials');
+  if (timesheets.length) contextEntityList.push('timesheets');
+  if (financialAlerts.length) contextEntityList.push('financial_alerts');
+  if (intelligenceInsights.length) contextEntityList.push('intelligence');
 
   // ── Build System Prompt ─────────────────────────────────────────
   const today = new Date().toLocaleDateString('it-IT');
@@ -141,6 +152,19 @@ ${checklists.map(c => `• ${c.title} — Progetto: ${c.project_id || '—'}`).j
 
 DOCUMENTI RECENTI (${documents.length}):
 ${documents.map(d => `• [${d.type}] ${d.title}`).join('\n') || 'Nessun documento recente.'}
+
+HOME PASSPORT — PROPRIETA' DETTAGLIO:
+${properties.slice(0,3).map(p => `• ${p.property_name}: elettrico=${truncate(p.electrical_notes,60)||'—'} | idraulico=${truncate(p.plumbing_notes,60)||'—'} | rete=${truncate(p.networking_notes,60)||'—'}`).join('\n') || 'Nessun dato Home Passport.'}
+
+CONTROLLO FINANZIARIO:
+${role === 'admin' || role === 'project_manager' ? `Alert attivi (${financialAlerts.length}): ${financialAlerts.map(a => `[${a.severity}] ${a.alert_type}: ${truncate(a.message,80)}`).join(' | ') || 'Nessun alert.'}
+Costi recenti: ${projectCostsRecent.map(c => `${c.description} €${c.total_cost} (${c.cost_type})`).join(' | ') || '—'}` : '⚠️ Dati finanziari non disponibili per questo ruolo.'}
+
+TIMESHEET RECENTI:
+${role !== 'client' ? timesheets.map(t => `• Progetto: ${t.project_id} | ${t.hours}h | ${t.date} | €${t.total_labor_cost || '—'}`).join('\n') || 'Nessun timesheet recente.' : '—'}
+
+INTELLIGENCE INSIGHTS NON LETTI (${intelligenceInsights.length}):
+${intelligenceInsights.map(i => `• [${i.severity}] ${i.insight_type}: ${i.title} — ${truncate(i.description,100)}`).join('\n') || 'Nessun insight pendente.'}
 
 MANUTENZIONI PROGRAMMATE:
 ${maintenance.map(m => `• ${m.title} — Scadenza: ${m.next_due_date || '—'} — Tecnico: ${m.assigned_technician || '—'}`).join('\n') || 'Nessuna manutenzione.'}
