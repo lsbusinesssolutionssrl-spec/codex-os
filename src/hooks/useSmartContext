@@ -1,0 +1,63 @@
+import { useState, useEffect } from 'react';
+import { Clock, RotateCcw, TrendingUp } from 'lucide-react';
+
+export default function SmartContextMemory() {
+  const [context, setContext] = useState({
+    recentEntities: [],
+    activeWorkflows: [],
+    pendingTasks: [],
+    lastViewed: null,
+  });
+
+  useEffect(() => {
+    // Load context from localStorage
+    const saved = localStorage.getItem('codex_context');
+    if (saved) {
+      try {
+        setContext(JSON.parse(saved));
+      } catch (error) {
+        console.error('Context load error:', error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Save context to localStorage
+    localStorage.setItem('codex_context', JSON.stringify(context));
+  }, [context]);
+
+  const updateContext = (updates) => {
+    setContext(prev => ({ ...prev, ...updates }));
+  };
+
+  const trackView = (entityType, entityId, entityData) => {
+    updateContext({
+      lastViewed: { type: entityType, id: entityId, data: entityData, timestamp: new Date().toISOString() },
+      recentEntities: [
+        { type: entityType, id: entityId, data: entityData, timestamp: new Date().toISOString() },
+        ...context.recentEntities.slice(0, 9)
+      ]
+    });
+  };
+
+  const trackWorkflow = (workflowType, step) => {
+    updateContext({
+      activeWorkflows: [
+        { type: workflowType, step, timestamp: new Date().toISOString() },
+        ...context.activeWorkflows.filter(w => w.type !== workflowType).slice(0, 4)
+      ]
+    });
+  };
+
+  const clearContext = () => {
+    setContext({
+      recentEntities: [],
+      activeWorkflows: [],
+      pendingTasks: [],
+      lastViewed: null,
+    });
+    localStorage.removeItem('codex_context');
+  };
+
+  return { context, updateContext, trackView, trackWorkflow, clearContext };
+}

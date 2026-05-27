@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Home, FileText, FolderKanban,
-  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2, BookOpen, TrendingUp, Crown, Clock, Package, DollarSign, Brain, Database, Building2, CreditCard, ListTodo, Wrench, Activity, Bell, Zap, Command
+  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2, BookOpen, TrendingUp, Crown, Clock, Package, DollarSign, Brain, Database, Building2, CreditCard, ListTodo, Wrench, Activity, Bell, Zap, Command, Plus
 } from 'lucide-react';
 
 import { base44 } from '@/api/base44Client';
@@ -11,6 +11,7 @@ import CodexLogo from './CodexLogo';
 import GlobalSearch from './GlobalSearch';
 import BrandSelector from './BrandSelector';
 import CommandPalette from './CommandPalette';
+import QuickCreate from './QuickCreate';
 import { useOfflineSync } from '../hooks/useOfflineSync';
 
 const navItems = [
@@ -31,6 +32,7 @@ export default function Layout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const { isOnline, queueCount } = useOfflineSync();
   const [userRole, setUserRole] = useState(null);
 
@@ -45,6 +47,10 @@ export default function Layout() {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         setCommandPaletteOpen(prev => !prev);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+        e.preventDefault();
+        setQuickCreateOpen(true);
       }
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -157,11 +163,21 @@ export default function Layout() {
             <span>Cerca...</span>
             <span className="text-xs text-gray-400 border border-gray-300 px-1.5 py-0.5 rounded">⌘K</span>
           </button>
+          <button 
+            onClick={() => setQuickCreateOpen(true)}
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-white rounded-lg hover:opacity-90 transition-opacity ml-2"
+            style={{ backgroundColor: '#1147FF' }}
+          >
+            <Plus className="w-4 h-4" />
+            <span>Crea</span>
+            <span className="text-xs text-white/80 border border-white/30 px-1.5 py-0.5 rounded">⌘N</span>
+          </button>
           <div className="flex-1" />
           <BrandSelector />
           <NotificationBell />
         </header>
         <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
+        <QuickCreate isOpen={quickCreateOpen} onClose={() => setQuickCreateOpen(false)} />
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
