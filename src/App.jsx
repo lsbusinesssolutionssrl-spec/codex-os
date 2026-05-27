@@ -110,6 +110,7 @@ import ActivationWizard from './pages/ActivationWizard';
 import TenantManagement from './pages/TenantManagement';
 import WhiteLabelCenter from './pages/WhiteLabelCenter';
 import BrandApprovalQueue from './pages/BrandApprovalQueue';
+import PlatformSettings from './pages/PlatformSettings';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -241,6 +242,7 @@ const AuthenticatedApp = () => {
       <Route path="/tenant/:companyId" element={<TenantManagement />} />
       <Route path="/white-label" element={<WhiteLabelCenter />} />
       <Route path="/brand-approval" element={<BrandApprovalQueue />} />
+      <Route path="/platform-settings" element={<PlatformSettings />} />
 
       </Route>
       <Route element={<PortalLayout />}>

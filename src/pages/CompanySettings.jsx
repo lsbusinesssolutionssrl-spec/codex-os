@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Building2, Palette, Users, CreditCard, Save, Upload, CheckCircle2 } from 'lucide-react';
+import { Building2, Palette, Users, CreditCard, Save, Shield, Zap, Brain, Globe, CheckCircle2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export default function CompanySettings() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
   const [company, setCompany] = useState(null);
   const [subscription, setSubscription] = useState(null);
   const [plan, setPlan] = useState(null);
@@ -16,6 +19,15 @@ export default function CompanySettings() {
 
   useEffect(() => {
     const load = async () => {
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
+      
+      // Super Admin / Developer - show platform settings
+      if (currentUser?.role === 'admin') {
+        setLoading(false);
+        return;
+      }
+      
       try {
         const res = await base44.functions.invoke('getCurrentCompany', {});
         setCompany(res.data.company);
@@ -65,6 +77,79 @@ export default function CompanySettings() {
   };
 
   if (loading) return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
+  
+  // Super Admin / Developer - show platform settings
+  if (user?.role === 'admin') {
+    return (
+      <div className="p-6 max-w-7xl mx-auto space-y-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+            <p className="text-sm text-gray-500">Platform & tenant configuration</p>
+          </div>
+          <button
+            onClick={() => navigate('/platform-settings')}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium"
+            style={{ backgroundColor: '#7C3AED' }}
+          >
+            <Shield className="w-4 h-4" />
+            Platform Settings
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <ModuleCard
+            title="Platform Settings"
+            description="Enterprise-wide configuration"
+            icon={Shield}
+            path="/platform-settings"
+            color="#7C3AED"
+          />
+          <ModuleCard
+            title="Tenant Management"
+            description="Manage tenant companies"
+            icon={Building2}
+            path="/super-admin"
+            color="#1147FF"
+          />
+          <ModuleCard
+            title="SaaS Plans"
+            description="Subscription plans"
+            icon={CreditCard}
+            path="/subscription-plans"
+            color="#F59E0B"
+          />
+          <ModuleCard
+            title="Feature Flags"
+            description="Control feature access"
+            icon={Zap}
+            path="/developer"
+            color="#10B981"
+          />
+          <ModuleCard
+            title="AI Providers"
+            description="AI models configuration"
+            icon={Brain}
+            path="/ai-foundation"
+            color="#8B5CF6"
+          />
+          <ModuleCard
+            title="Integrations"
+            description="Platform integrations"
+            icon={Globe}
+            path="/integrations"
+            color="#06B6D4"
+          />
+        </div>
+
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+          <p className="text-sm text-blue-800 font-medium">💡 Platform Mode</p>
+          <p className="text-xs text-blue-600 mt-1">You have platform-level access. Use the modules above to configure the platform or select a tenant to manage.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!company) return (
     <div className="p-6 max-w-md mx-auto mt-20 bg-white rounded-2xl border border-gray-200 shadow-lg text-center space-y-4">
       <Building2 className="w-12 h-12 text-gray-300 mx-auto" />
@@ -321,5 +406,22 @@ function QuotaItem({ label, value }) {
       <p className="text-xs text-gray-500">{label}</p>
       <p className="text-sm font-semibold text-gray-900">{value || '∞'}</p>
     </div>
+  );
+}
+
+function ModuleCard({ title, description, icon: Icon, path, color }) {
+  return (
+    <button
+      onClick={() => window.location.href = path}
+      className="flex items-start gap-4 p-4 bg-white rounded-xl border border-gray-200 hover:shadow-lg hover:border-gray-300 transition-all text-left"
+    >
+      <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}15` }}>
+        <Icon className="w-5 h-5" style={{ color: color }} />
+      </div>
+      <div>
+        <h3 className="font-semibold text-gray-900">{title}</h3>
+        <p className="text-sm text-gray-500 mt-0.5">{description}</p>
+      </div>
+    </button>
   );
 }
