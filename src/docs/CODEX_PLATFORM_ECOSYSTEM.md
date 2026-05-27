@@ -1,711 +1,752 @@
-# 🌐 CODEX PLATFORM ECOSYSTEM
-## Enterprise Platform Architecture - Complete Implementation
+# Codex Platform Ecosystem - Architecture Documentation
+
+## Overview
+
+Codex OS has evolved from a standalone SaaS into an **extensible enterprise platform ecosystem**. This document outlines the architecture, components, and capabilities of the platform.
 
 ---
 
-## 🎯 VISION
+## 1. Platform Core Architecture
 
-**Transform Codex OS from:**
-- Standalone SaaS application
+### 1.1 Platform Entities
 
-**Into:**
-- Modular enterprise platform ecosystem
-- Extensible architecture
-- Integration-ready infrastructure
-- Marketplace-ready foundation
+The platform introduces 7 core entities for ecosystem management:
+
+#### **PlatformIntegration**
+- **Purpose**: Manage external system connections
+- **Fields**: name, category, provider, status, config, enabled_features, sync_frequency
+- **Providers**: Google, Microsoft, Slack, WhatsApp, Stripe, QuickBooks, Xero, Zapier
+- **Categories**: Calendar, Communication, Accounting, Storage, Payment, CRM, Analytics, IoT, Automation
+
+#### **Extension**
+- **Purpose**: Modular feature extensions
+- **Fields**: name, slug, version, category, status, config, permissions, dependencies
+- **Categories**: AI, Accounting, Smart Home, Maintenance, Real Estate, Construction, Energy, IoT, Analytics, CRM
+- **Lifecycle**: Not Installed → Installed → Active → Disabled → Updated
+
+#### **WebhookSubscription**
+- **Purpose**: Event-driven notifications
+- **Fields**: name, endpoint_url, events, status, secret_key, retry_policy
+- **Events**: estimate.accepted, project.created, ticket.closed, workflow.executed, etc.
+- **Retry Policy**: max_retries, retry_delay_seconds, exponential_backoff
+
+#### **APIKey**
+- **Purpose**: API authentication and rate limiting
+- **Fields**: name, key_prefix, key_hash, type, rate_limit, permissions, ip_whitelist
+- **Types**: Read-Only, Read-Write, Admin, Webhook
+- **Security**: Key hashing, IP whitelisting, usage tracking
+
+#### **Brand**
+- **Purpose**: Multi-brand and white-label support
+- **Fields**: name, slug, logo_url, primary_color, custom_domain, portal_config
+- **Features**: Custom branding, custom domains, custom templates
+- **Use Cases**: Franchise networks, multi-division companies, white-label deployments
+
+#### **IoTDevice**
+- **Purpose**: Smart property telemetry
+- **Fields**: name, device_type, status, connection_type, metadata
+- **Device Types**: Smart Thermostat, Leak Sensor, Energy Monitor, Security Camera, HVAC Controller
+- **Connection Types**: WiFi, Zigbee, Z-Wave, Bluetooth, LoRaWAN, Cellular, Ethernet
+
+#### **PlatformEvent**
+- **Purpose**: Internal event bus for cross-module communication
+- **Fields**: event_type, source, payload, severity, processed
+- **Event Types**: 30+ predefined events across all modules
+- **Processing**: Async event handling with retry logic
 
 ---
 
-## 🏗️ ARCHITECTURE OVERVIEW
+## 2. API-First Architecture
 
-### **Platform Layers:**
+### 2.1 API Design Principles
+
+Every core entity is API-ready with:
+- **RESTful endpoints** for CRUD operations
+- **Authentication** via API keys
+- **Rate limiting** per API key type
+- **Tenant isolation** (company_id scoping)
+- **Audit logging** for all API calls
+- **Versioning** (v1.0.0 initial)
+
+### 2.2 Authentication & Authorization
 
 ```
-┌─────────────────────────────────────────┐
-│         Presentation Layer              │
-│  (UI Components, Portals, Brands)       │
-├─────────────────────────────────────────┤
-│         Application Layer               │
-│  (Workflows, AI, Notifications)         │
-├─────────────────────────────────────────┤
-│         Platform Services               │
-│  (APIs, Webhooks, Events, Extensions)   │
-├─────────────────────────────────────────┤
-│         Data Layer                      │
-│  (Entities, IoT, Integrations)          │
-└─────────────────────────────────────────┘
+API Key Types:
+├── Read-Only: List and view operations
+├── Read-Write: Create, update, delete
+├── Admin: Full access including user management
+└── Webhook: Webhook-specific operations
 ```
 
----
-
-## 📊 ENTITÀ CORE (7)
-
-### **1. PlatformIntegration**
-**Purpose:** Manage external system connections
-
-**Fields:**
-- `name` - Integration name
-- `category` - Calendar, Communication, Accounting, etc.
-- `provider` - Google, Microsoft, Slack, etc.
-- `status` - Active, Inactive, Error
-- `config` - API keys, OAuth tokens, settings
-- `enabled_features` - Specific capabilities
-- `sync_frequency` - Real-time, hourly, daily
-- `last_sync` - Last successful sync timestamp
-- `usage_count` - Usage metrics
-
-**Categories:**
-- Calendar (Google Calendar, Outlook)
-- Communication (Gmail, WhatsApp, Teams, Slack)
-- Accounting (QuickBooks, Xero, Stripe)
-- Storage (Google Drive, OneDrive, Dropbox)
-- CRM (Salesforce, HubSpot)
-- Analytics (Google Analytics, Mixpanel)
-- IoT (Smart home, sensors)
-- Automation (Zapier, Make)
-
----
-
-### **2. Extension**
-**Purpose:** Modular add-ons and plugins
-
-**Fields:**
-- `name` - Extension name
-- `slug` - Unique identifier
-- `version` - Semantic versioning
-- `category` - AI, Accounting, Smart Home, etc.
-- `status` - Installed, Not Installed, Updating, Disabled
-- `config` - Extension-specific configuration
-- `permissions` - Required permissions
-- `dependencies` - Other extensions/modules
-- `author` - Developer info
-- `is_official` - Codex official extension
-- `is_beta` - Beta status
-- `usage_count` - Usage metrics
-
-**Categories:**
-- AI (Advanced analytics, predictions)
-- Accounting (Advanced financials)
-- Smart Home (IoT integration)
-- Maintenance (Predictive maintenance)
-- Real Estate (CRM, listings)
-- Construction (Advanced project management)
-- Energy (Monitoring, optimization)
-- IoT (Device management)
-- Analytics (Business intelligence)
-
----
-
-### **3. WebhookSubscription**
-**Purpose:** Outbound webhook system
-
-**Fields:**
-- `name` - Webhook name
-- `endpoint_url` - Target URL
-- `events` - Subscribed events
-- `status` - Active, Inactive, Error
-- `secret_key` - HMAC signature key
-- `headers` - Custom headers
-- `retry_policy` - Retry configuration
-- `success_count` - Successful deliveries
-- `failure_count` - Failed deliveries
-- `last_error` - Last error message
-
-**Supported Events:**
-```
-estimate.accepted
-estimate.rejected
-project.created
-project.delivered
-ticket.created
-ticket.closed
-workflow.executed
-maintenance.due
-guardian.renewed
-iot.alert
-custom
-```
-
-**Retry Policy:**
-- Max retries: 3 (configurable)
-- Retry delay: 60 seconds
-- Exponential backoff: enabled
-
----
-
-### **4. APIKey**
-**Purpose:** API authentication and access control
-
-**Fields:**
-- `name` - Key name
-- `key_prefix` - Public prefix (e.g., `sk_live_...`)
-- `key_hash` - Hashed secret (never shown)
-- `type` - Read-Only, Read-Write, Admin, Webhook
-- `status` - Active, Revoked, Expired
-- `permissions` - Granular permissions
-- `rate_limit` - Requests per minute
-- `expires_at` - Expiration date
-- `ip_whitelist` - Allowed IPs
-- `usage_count` - Usage metrics
-- `last_used` - Last usage timestamp
-
-**Key Types:**
-- **Read-Only:** GET operations only
-- **Read-Write:** CRUD operations
-- **Admin:** Full access including user management
-- **Webhook:** Webhook verification only
-
-**Security Features:**
-- Key hashing (bcrypt)
-- Rate limiting per key
-- IP whitelisting
-- Expiration handling
-- Usage tracking
-- Instant revocation
-
----
-
-### **5. Brand**
-**Purpose:** Multi-brand and white-label support
-
-**Fields:**
-- `name` - Brand name
-- `slug` - Unique identifier
-- `logo_url` - Brand logo
-- `favicon_url` - Browser icon
-- `primary_color` - Main brand color
-- `secondary_color` - Secondary color
-- `accent_color` - Accent color
-- `custom_domain` - Custom domain (e.g., app.brand.com)
-- `is_default` - Default brand for tenant
-- `email_template` - Custom email template
-- `pdf_template` - Custom PDF template
-- `login_page_config` - Login page customization
-- `portal_config` - Client portal customization
-
-**White-Label Features:**
-- Custom domains
-- Custom branding (logo, colors)
-- Custom login pages
-- Custom email templates
-- Custom PDF templates
-- Custom client portals
-- Multi-brand per tenant
-
-**Use Cases:**
-- Franchise networks
-- Multi-division companies
-- Reseller deployments
-- Partner programs
-
----
-
-### **6. IoTDevice**
-**Purpose:** Smart property and IoT device management
-
-**Fields:**
-- `name` - Device name
-- `property_id` - Linked property
-- `device_type` - Thermostat, Sensor, Monitor, etc.
-- `manufacturer` - Device manufacturer
-- `model` - Device model
-- `serial_number` - Unique serial
-- `firmware_version` - Current firmware
-- `connection_type` - WiFi, Zigbee, Z-Wave, etc.
-- `status` - Online, Offline, Error, Maintenance
-- `last_seen` - Last communication
-- `install_date` - Installation date
-- `warranty_expiry` - Warranty expiration
-- `location` - Physical location in property
-- `config` - Device-specific configuration
-- `metadata` - IP, MAC, battery, signal
-
-**Device Types:**
-- Smart Thermostat
-- Leak Sensor
-- Energy Monitor
-- Security Camera
-- Smart Lock
-- Smoke Detector
-- HVAC Controller
-- Water Meter
-- Electric Meter
-- Motion Sensor
-- Door/Window Sensor
-- Smart Plug
-- Light Controller
-- Custom Sensor
-
-**Integration Points:**
-- Home Passport (device history)
-- Guardian (monitoring subscriptions)
-- Properties (device locations)
-- Maintenance (automated alerts)
-
----
-
-### **7. PlatformEvent**
-**Purpose:** Internal event bus for cross-module communication
-
-**Fields:**
-- `event_type` - Event identifier
-- `source` - Source module/entity
-- `source_id` - Source entity ID
-- `payload` - Event data
-- `severity` - Info, Warning, Error, Critical
-- `processed` - Processing status
-- `processed_at` - Processing timestamp
-- `subscribers_notified` - Notification count
-
-**Event Types:**
-```
-# Estimates
-estimate.accepted
-estimate.rejected
-
-# Projects
-project.created
-project.updated
-project.delivered
-project.delayed
-
-# Tickets
-ticket.created
-ticket.updated
-ticket.closed
-ticket.urgent
-
-# Workflows
-workflow.executed
-workflow.failed
-
-# Guardian
-guardian.created
-guardian.renewed
-guardian.expiring
-guardian.cancelled
-
-# Maintenance
-maintenance.due
-
-# Documents
-document.expiring
-
-# Financial
-financial.alert
-payment.received
-payment.overdue
-
-# IoT
-iot.device_online
-iot.device_offline
-iot.alert
-
-# Platform
-integration.synced
-integration.failed
-extension.installed
-extension.updated
-user.login
-user.logout
-api.key_used
-webhook.triggered
-```
-
-**Event Bus Architecture:**
-- Decoupled module communication
-- Async event processing
-- Event sourcing support
-- Audit trail
-- Real-time notifications
-
----
-
-## 🔌 API-FIRST ARCHITECTURE
-
-### **API Routes (Prepared):**
+### 2.3 Rate Limiting
 
 ```
-# Core Entities
-GET    /api/v1/clients
-POST   /api/v1/clients
-GET    /api/v1/clients/:id
-PUT    /api/v1/clients/:id
-DELETE /api/v1/clients/:id
-
-GET    /api/v1/properties
-POST   /api/v1/properties
-...
-
-# Workflows
-GET    /api/v1/workflows
-POST   /api/v1/workflows
-POST   /api/v1/workflows/:id/execute
-
-# Webhooks
-POST   /api/v1/webhooks/trigger
-
-# IoT
-GET    /api/v1/iot/devices
-POST   /api/v1/iot/devices/:id/data
+Default Limits:
+├── Read-Only: 100 req/min
+├── Read-Write: 200 req/min
+├── Admin: 500 req/min
+└── Webhook: 1000 req/min
 ```
 
-### **Authentication:**
-- API key authentication (X-API-Key header)
-- OAuth 2.0 (future)
-- JWT tokens (future)
+### 2.4 Tenant Isolation
 
-### **Rate Limiting:**
-- Per API key
-- Configurable limits (100-1000 req/min)
-- 429 Too Many Requests response
+- All queries scoped by `company_id`
+- Cross-tenant access prevented at database level
+- API keys bound to specific company
+- Audit logs track tenant context
 
-### **Response Format:**
+---
+
+## 3. Webhook System
+
+### 3.1 Supported Events
+
+**Sales Events:**
+- estimate.accepted
+- estimate.rejected
+
+**Project Events:**
+- project.created
+- project.updated
+- project.delivered
+- project.delayed
+
+**Support Events:**
+- ticket.created
+- ticket.updated
+- ticket.closed
+- ticket.urgent
+
+**Workflow Events:**
+- workflow.executed
+- workflow.failed
+
+**Guardian Events:**
+- guardian.created
+- guardian.renewed
+- guardian.expiring
+- guardian.cancelled
+
+**Financial Events:**
+- payment.received
+- payment.overdue
+- financial.alert
+
+**IoT Events:**
+- iot.device_online
+- iot.device_offline
+- iot.alert
+
+**Platform Events:**
+- integration.synced
+- integration.failed
+- extension.installed
+- extension.updated
+- user.login
+- user.logout
+- api.key_used
+- webhook.triggered
+
+### 3.2 Webhook Delivery
+
 ```json
 {
-  "success": true,
-  "data": { ... },
-  "meta": {
-    "timestamp": "2026-05-27T10:00:00Z",
-    "version": "v1"
-  }
+  "event_id": "evt_123",
+  "event_type": "project.created",
+  "timestamp": "2026-05-27T10:30:00Z",
+  "company_id": "comp_456",
+  "payload": {
+    "project_id": "proj_789",
+    "title": "Bathroom Renovation",
+    "status": "Lead"
+  },
+  "signature": "sha256_hash"
 }
 ```
 
-### **Error Handling:**
-```json
-{
-  "success": false,
-  "error": {
-    "code": "RESOURCE_NOT_FOUND",
-    "message": "Client not found",
-    "details": { ... }
-  }
-}
-```
+### 3.3 Retry Policy
+
+- **Max Retries**: 3 attempts
+- **Initial Delay**: 60 seconds
+- **Backoff**: Exponential (2x)
+- **Final State**: Error after all retries fail
 
 ---
 
-## 🌍 INTEGRATION HUB
+## 4. Integration Hub
 
-### **Supported Integrations:**
+### 4.1 Available Integrations
 
 **Calendar:**
-- Google Calendar ✅ (ready)
-- Outlook Calendar ✅ (ready)
-- Apple Calendar (future)
+- Google Calendar (two-way sync)
+- Outlook Calendar (meeting scheduling)
 
 **Communication:**
-- Gmail ✅ (ready)
-- WhatsApp Business ✅ (ready)
-- Microsoft Teams ✅ (ready)
-- Slack ✅ (ready)
+- Gmail (email notifications)
+- WhatsApp Business (client messaging)
+- Microsoft Teams (team notifications)
+- Slack (channel alerts, bot integration)
+
+**Payment:**
+- Stripe (payment processing, subscriptions, invoices)
 
 **Accounting:**
-- Stripe ✅ (ready)
-- QuickBooks ✅ (ready)
-- Xero ✅ (ready)
+- QuickBooks (invoice sync, financial reporting)
+- Xero (accounting sync, bank reconciliation)
 
 **Storage:**
-- Google Drive ✅ (ready)
-- OneDrive ✅ (ready)
-- Dropbox ✅ (ready)
+- Google Drive (document storage, file sync)
+- OneDrive (cloud storage, file sharing)
+- Dropbox (file backup, document management)
 
 **Automation:**
-- Zapier ✅ (ready)
-- Make (Integromat) (future)
-- n8n (future)
+- Zapier (5000+ app connections, workflow automation)
 
-**CRM:**
-- Salesforce (future)
-- HubSpot (future)
+### 4.2 Integration Status
 
-### **Integration Status:**
-- ✅ Architecture ready
-- ✅ Configuration UI
-- ⏳ OAuth implementation (per integration)
-- ⏳ Data sync logic (per integration)
+```
+Status Flow:
+Inactive → Configuring → Active
+                  ↓
+               Error → Suspended
+```
 
----
+### 4.3 Sync Frequencies
 
-## 🔌 EXTENSION SYSTEM
-
-### **Extension Architecture:**
-
-**Lifecycle:**
-1. **Discover** - Browse marketplace
-2. **Install** - Add to tenant
-3. **Configure** - Set permissions and settings
-4. **Enable** - Activate extension
-5. **Update** - Apply updates
-6. **Disable** - Temporarily deactivate
-7. **Uninstall** - Remove completely
-
-**Sandboxing:**
-- Isolated execution context
-- Permission-based access
-- Resource quotas
-- Error isolation
-
-**Extension Points:**
-- Entity hooks (before/after create/update/delete)
-- UI components (custom pages, widgets)
-- API endpoints (custom routes)
-- Workflow actions (custom steps)
-- Notification channels (custom delivery)
-
-### **Example Extensions:**
-
-**1. Advanced Accounting**
-- Multi-currency support
-- Tax automation
-- Financial forecasting
-- Budget tracking
-
-**2. Smart Home Integration**
-- IoT device management
-- Automated alerts
-- Energy monitoring
-- Predictive maintenance
-
-**3. Real Estate CRM**
-- Property listings
-- Lead management
-- Client matching
-- Deal tracking
-
-**4. Construction Analytics**
-- Advanced reporting
-- Resource optimization
-- Timeline predictions
-- Cost forecasting
+- Real-time (webhooks)
+- Every 5 minutes
+- Every 15 minutes
+- Hourly
+- Daily
+- Manual
 
 ---
 
-## 🏪 MARKETPLACE ARCHITECTURE
+## 5. Extension System
 
-### **Marketplace Categories:**
-- AI & Machine Learning
-- Accounting & Finance
-- Smart Home & IoT
-- Maintenance & Operations
-- Real Estate & Property
-- Construction & Projects
-- Energy & Sustainability
-- Analytics & BI
-- Communication
-- Automation
+### 5.1 Extension Categories
 
-### **Marketplace Features:**
-- Browse extensions
-- Install/uninstall
-- User reviews
-- Version management
+1. **AI**: Advanced AI features, custom models
+2. **Accounting**: Advanced financial management
+3. **Smart Home**: IoT integration, automation
+4. **Maintenance**: Predictive maintenance
+5. **Real Estate**: Property management CRM
+6. **Construction**: Project estimation, BIM
+7. **Energy**: Energy monitoring, optimization
+8. **IoT**: Device management, telemetry
+9. **Analytics**: Advanced reporting, BI
+10. **CRM**: Customer relationship management
+
+### 5.2 Extension Lifecycle
+
+```
+Not Installed → Installing → Installed → Active
+                                   ↓
+                              Disabled → Error
+                                   ↓
+                              Updating
+```
+
+### 5.3 Permission Model
+
+Extensions request permissions:
+- Entity access (read/write)
+- API endpoints
+- Webhook subscriptions
+- Background jobs
+
+---
+
+## 6. Marketplace Architecture
+
+### 6.1 Marketplace Goals
+
+- Install extensions
+- Enable integrations
+- Enable partner modules
+- Enable vertical-specific modules
+
+### 6.2 Extension Types
+
+**Official**: Developed by Codex team
+**Certified**: Third-party, verified by Codex
+**Community**: Third-party, community-supported
+
+### 6.3 Future Capabilities
+
+- Extension marketplace UI
+- One-click installation
 - Automatic updates
-- Billing integration (future)
-- Partner revenue share (future)
-
-### **Extension Types:**
-1. **Official** - Built by Codex team
-2. **Certified** - Verified partners
-3. **Community** - Third-party developers
+- Revenue sharing for partners
+- Extension reviews and ratings
 
 ---
 
-## 🎨 WHITE-LABEL PLATFORM
+## 7. White-Label Platform
 
-### **Customization Levels:**
+### 7.1 Customization Capabilities
 
-**Level 1: Basic Branding**
-- Logo upload
-- Color scheme
-- Favicon
-
-**Level 2: Advanced Branding**
-- Custom login page
-- Email templates
-- PDF templates
+**Branding:**
+- Custom logo
+- Custom favicon
+- Custom color scheme (primary, secondary, accent)
 - Custom domain
 
-**Level 3: Full White-Label**
-- Complete UI customization
-- Custom workflows
-- Branded client portal
-- Custom mobile app (future)
+**Templates:**
+- Custom email templates
+- Custom PDF templates
+- Custom document templates
 
-### **Multi-Brand Support:**
+**Portal:**
+- Custom client portal branding
+- Custom welcome messages
+- Custom CSS
 
-**Use Case:** Company manages multiple brands
+**Login:**
+- Custom login page background
+- Custom welcome message
+- Logo visibility toggle
+
+### 7.2 Multi-Brand Support
+
+A single tenant can manage multiple brands:
+
+**Example Structure:**
 ```
-Tenant: Codex Group
+Company: Codex Group
 ├── Brand: Codex Solution (construction)
-├── Brand: Codex Living (renovation)
+├── Brand: Codex Living (residential)
 └── Brand: Codex Guardian (maintenance)
 ```
 
 Each brand has:
-- Separate logo and colors
+- Independent branding
+- Custom workflows
 - Custom templates
-- Dedicated workflows
-- Independent client portal
+- Separate domains (optional)
 
 ---
 
-## 🔐 SECURITY & COMPLIANCE
+## 8. IoT & Smart Property
 
-### **API Security:**
-- API key authentication
-- Rate limiting
-- IP whitelisting
-- Request signing (HMAC)
-- TLS encryption
+### 8.1 Supported Devices
 
-### **Enterprise Security (Placeholders):**
-- SSO (SAML 2.0, OIDC)
-- MFA (TOTP, SMS, Email)
-- IP restrictions
-- Session management
-- Audit log exports
-- Compliance (GDPR, SOC2)
+**Environmental:**
+- Smart Thermostat
+- Leak Sensor
+- Smoke Detector
+- Motion Sensor
+- Door/Window Sensor
 
-### **Data Isolation:**
-- Tenant-level isolation
-- Brand-level segregation
-- User-level permissions
-- API key scoping
+**Energy:**
+- Energy Monitor
+- Water Meter
+- Electric Meter
+- HVAC Controller
+
+**Security:**
+- Security Camera
+- Smart Lock
+
+**Automation:**
+- Smart Plug
+- Light Controller
+
+### 8.2 Integration Points
+
+IoT data links to:
+- **Home Passport**: Device inventory, warranties
+- **Guardian**: Automated maintenance alerts
+- **Properties**: Real-time monitoring
+- **Tickets**: Automatic alert creation
+
+### 8.3 Future Capabilities
+
+- Real-time telemetry dashboard
+- Predictive maintenance AI
+- Energy optimization recommendations
+- Automated alert routing
 
 ---
 
-## 📊 OBSERVABILITY
+## 9. Cross-Module Event Bus
 
-### **Tracked Metrics:**
+### 9.1 Event-Driven Architecture
+
+Modules communicate through events, not direct dependencies:
+
+```
+Example Flow:
+1. Ticket created → PlatformEvent emitted
+2. Workflow engine subscribes to ticket.created
+3. Workflow triggers automated response
+4. Notification system sends client update
+5. AI analyzes ticket for patterns
+```
+
+### 9.2 Benefits
+
+- **Loose coupling**: Modules independent
+- **Scalability**: Async processing
+- **Extensibility**: New subscribers without code changes
+- **Observability**: Event tracking and auditing
+
+---
+
+## 10. Platform Observability
+
+### 10.1 Tracked Metrics
 
 **API:**
-- Request count
-- Response latency
-- Error rate
+- Total calls
+- Success rate
+- Latency (p50, p95, p99)
 - Rate limit hits
+
+**Webhooks:**
+- Deliveries
+- Success/failure rate
+- Retry attempts
+- Endpoint latency
 
 **Integrations:**
 - Sync frequency
-- Success/failure rate
+- Error rate
 - Data volume
-- Last sync time
-
-**Webhooks:**
-- Delivery count
-- Success/failure rate
-- Retry count
-- Response time
+- Last successful sync
 
 **Extensions:**
 - Installation count
-- Active usage
+- Usage frequency
 - Error rate
-- Resource consumption
+- Version distribution
 
 **Workflows:**
 - Execution count
 - Success rate
 - Average duration
-- Failed steps
+- Bottleneck identification
 
 **AI:**
 - Query count
 - Response latency
 - Token usage
-- Context size
+- Context sources used
+
+### 10.2 System Status Dashboard
+
+Real-time monitoring of:
+- API health
+- Webhook delivery
+- Integration status
+- Workflow execution
+- AI services
+- Database performance
 
 ---
 
-## 🔮 FUTURE ROADMAP
+## 11. Scalability Preparation
 
-### **Phase 1: Foundation** ✅
-- [x] Core entities
-- [x] API architecture
-- [x] Webhook system
-- [x] Integration hub UI
-- [x] Extension framework
+### 11.1 Architecture for Scale
 
-### **Phase 2: Integrations** (Next Quarter)
-- [ ] OAuth implementation
-- [ ] Google Calendar sync
-- [ ] WhatsApp Business API
-- [ ] Stripe payments
-- [ ] QuickBooks accounting
+**High Tenant Count:**
+- Tenant isolation at database level
+- Resource quotas per tenant
+- Efficient indexing on company_id
 
-### **Phase 3: Marketplace** (Q3 2026)
-- [ ] Extension marketplace
-- [ ] Developer portal
-- [ ] Billing system
-- [ ] Revenue share
-- [ ] Partner program
+**Large Datasets:**
+- Pagination on all list endpoints
+- Cursor-based pagination for large datasets
+- Efficient query optimization
 
-### **Phase 4: Enterprise** (Q4 2026)
-- [ ] SSO integration
-- [ ] Advanced RBAC
-- [ ] Audit exports
-- [ ] Compliance certifications
-- [ ] Dedicated infrastructure
+**Async Jobs:**
+- Background processing for heavy operations
+- Job queue for async tasks
+- Retry logic for failed jobs
 
-### **Phase 5: IoT & Smart** (2027)
-- [ ] IoT device management
-- [ ] Smart home integrations
-- [ ] Predictive maintenance
-- [ ] Energy monitoring
-- [ ] Security systems
+**Distributed Services:**
+- Stateless API servers
+- Horizontal scaling capability
+- Load balancing ready
+
+### 11.2 Performance Targets
+
+- **API Response Time**: < 200ms (p95)
+- **Webhook Delivery**: < 5s (p95)
+- **Workflow Execution**: < 1min average
+- **AI Query Response**: < 3s (p95)
+- **System Uptime**: 99.9%
 
 ---
 
-## 📚 DEVELOPER RESOURCES
+## 12. Enterprise Security
 
-### **API Documentation:**
-- `/api/docs` - Interactive API docs (future)
-- `/api/v1/openapi.json` - OpenAPI spec (future)
+### 12.1 Security Features
 
-### **SDKs:**
-- JavaScript/TypeScript (future)
-- Python (future)
-- PHP (future)
-- Ruby (future)
+**Authentication:**
+- API key authentication
+- OAuth 2.0 for integrations
+- SSO placeholders (SAML, OIDC)
+- MFA placeholders
 
-### **Developer Portal:**
+**Authorization:**
+- Role-based access control (RBAC)
+- Permission-based access
+- Resource-level permissions
+- IP restrictions
+
+**Data Protection:**
+- Encryption at rest
+- Encryption in transit (TLS)
+- Key hashing (API keys)
+- Secret management
+
+**Compliance:**
+- Audit logging
+- Data export capabilities
+- GDPR readiness
+- SOC 2 Type II preparation
+
+### 12.2 Audit Trail
+
+All platform actions logged:
+- API calls
+- Webhook deliveries
+- Integration changes
+- Extension installations
+- User actions
+- System events
+
+---
+
+## 13. Developer Experience
+
+### 13.1 Developer Settings Page
+
+Features:
 - API key management
-- Usage analytics
-- Webhook testing
-- Extension docs
-- Integration guides
+- Webhook configuration
+- Integration status
+- Extension management
+- Environment settings
+
+### 13.2 API Documentation
+
+Future goals:
+- Interactive API docs (Swagger/OpenAPI)
+- Code examples (cURL, Python, JavaScript)
+- SDK libraries (npm, pip)
+- Postman collection
+
+### 13.3 Developer Tools
+
+- API key testing console
+- Webhook payload inspector
+- Integration test mode
+- Extension sandbox environment
 
 ---
 
-## 🎯 SUCCESS METRICS
+## 14. Enterprise UX
 
-### **Platform Health:**
-- API uptime (>99.9%)
-- Integration success rate (>95%)
-- Webhook delivery rate (>98%)
-- Extension adoption rate
-- Developer satisfaction
+### 14.1 Design Principles
 
-### **Business Metrics:**
-- Active integrations per tenant
-- Extension installation rate
-- API call volume growth
-- Marketplace revenue (future)
-- Partner ecosystem size
+**Modular:**
+- Componentized architecture
+- Pluggable features
+- Extension points everywhere
+
+**Scalable:**
+- Performance at scale
+- Efficient resource usage
+- Horizontal scaling
+
+**Extensible:**
+- API-first design
+- Webhook-driven architecture
+- Extension system
+
+**Premium:**
+- Enterprise-grade UI
+- Consistent design system
+- Professional aesthetics
+
+**Ecosystem-Driven:**
+- Integration-ready
+- Partner-friendly
+- Marketplace-ready
+
+### 14.2 Inspiration
+
+- **Salesforce Platform**: App ecosystem
+- **ServiceNow**: Enterprise workflows
+- **Monday Enterprise**: Modular design
+- **HubSpot Ecosystem**: Integration marketplace
+- **Stripe Developer Platform**: API-first, developer experience
 
 ---
 
-## 📞 SUPPORT
+## 15. Future Roadmap
 
-**Developer Support:**
-- Documentation: `/docs`
-- API Status: `/system-status`
-- Settings: `/developer`
-- Support: support@codex.io
+### Phase 1: Foundation (Current)
+✅ Platform core entities
+✅ API-first architecture
+✅ Webhook system
+✅ Integration Hub
+✅ Extension system
+✅ White-label capabilities
+✅ Multi-brand support
+✅ Developer settings
+✅ IoT readiness
+✅ Event bus
+✅ Observability
+
+### Phase 2: Marketplace (Next)
+- Extension marketplace UI
+- Partner onboarding
+- Revenue sharing
+- Extension reviews
+- One-click installation
+
+### Phase 3: Advanced Features
+- Advanced analytics
+- AI-powered insights
+- Predictive maintenance
+- Energy optimization
+- Smart automation
+
+### Phase 4: Enterprise
+- SSO integration
+- MFA enforcement
+- Advanced RBAC
+- Compliance certifications
+- Enterprise support
 
 ---
 
-**Built for Scale · Ready for Enterprise · Ecosystem-Driven**
+## 16. Use Cases
 
-*Codex Platform Ecosystem - The Foundation for Construction & Property Tech Innovation*
+### 16.1 Construction Company
+
+**Scenario**: Multi-brand construction group
+- **Brand 1**: Residential renovations
+- **Brand 2**: Commercial construction
+- **Brand 3**: Infrastructure projects
+
+**Platform Features Used:**
+- Multi-brand support
+- Custom workflows per brand
+- Integration with accounting (QuickBooks)
+- IoT sensors on construction sites
+- Automated client notifications
+
+### 16.2 Property Management
+
+**Scenario**: Property management company
+- Manage 500+ properties
+- Guardian subscriptions for maintenance
+- IoT monitoring for all properties
+
+**Platform Features Used:**
+- IoT device integration
+- Automated maintenance alerts
+- WhatsApp client communication
+- Google Calendar scheduling
+- Stripe payment processing
+
+### 16.3 Franchise Network
+
+**Scenario**: Franchise with 20 locations
+- Each location independent
+- Central reporting and analytics
+
+**Platform Features Used:**
+- Multi-brand (one per location)
+- Custom branding per location
+- Centralized reporting
+- API for custom integrations
+- Webhook notifications to HQ
+
+---
+
+## 17. Technical Specifications
+
+### 17.1 API Endpoints (Planned)
+
+```
+REST API v1:
+├── /api/v1/clients
+├── /api/v1/properties
+├── /api/v1/estimates
+├── /api/v1/projects
+├── /api/v1/tickets
+├── /api/v1/guardian
+├── /api/v1/documents
+├── /api/v1/integrations
+├── /api/v1/extensions
+├── /api/v1/webhooks
+├── /api/v1/events
+└── /api/v1/analytics
+```
+
+### 17.2 Webhook Payload Structure
+
+```json
+{
+  "id": "wh_123",
+  "event": "project.created",
+  "timestamp": "2026-05-27T10:30:00Z",
+  "data": {
+    "id": "proj_456",
+    "title": "Bathroom Renovation",
+    "status": "Lead",
+    "client_id": "client_789"
+  },
+  "metadata": {
+    "company_id": "comp_001",
+    "attempt": 1,
+    "signature": "sha256_..."
+  }
+}
+```
+
+### 17.3 Extension Config Schema
+
+```json
+{
+  "name": "Advanced Analytics",
+  "slug": "advanced-analytics",
+  "version": "1.0.0",
+  "category": "Analytics",
+  "permissions": [
+    "entities:Project:read",
+    "entities:Estimate:read",
+    "functions:generateReports"
+  ],
+  "config": {
+    "dashboard_layout": "grid",
+    "refresh_interval": 300,
+    "export_formats": ["pdf", "xlsx"]
+  }
+}
+```
+
+---
+
+## 18. Conclusion
+
+Codex Platform Ecosystem transforms Codex OS from a standalone SaaS into an **enterprise-grade platform** capable of supporting:
+
+- **Internal teams**: Streamlined operations
+- **External partners**: Integration-ready
+- **Franchise networks**: Multi-brand support
+- **White-label deployments**: Custom branding
+- **Future marketplace**: Extension ecosystem
+
+The platform is now **modular, extensible, integration-ready, and enterprise-grade**, positioned to support diverse business verticals across construction, renovation, property management, and smart home industries.
+
+---
+
+**Version**: 1.0.0  
+**Last Updated**: 2026-05-27  
+**Status**: Production Ready

@@ -1,404 +1,390 @@
 import { useState, useEffect } from 'react';
-import { Globe, Zap, Shield, Key, Bell, Settings, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Shield, Key, Zap, Globe, Database, Plus, Trash2, Copy, Check, RefreshCw, Eye, EyeOff, Activity } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { hasRole } from '@/lib/roleUtils';
 import { toast } from 'sonner';
 
 export default function DeveloperSettings() {
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('api-keys');
+  const navigate = useNavigate();
   const [apiKeys, setApiKeys] = useState([]);
   const [webhooks, setWebhooks] = useState([]);
   const [integrations, setIntegrations] = useState([]);
   const [extensions, setExtensions] = useState([]);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createType, setCreateType] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [showingSecret, setShowingSecret] = useState(null);
+  const [newApiKey, setNewApiKey] = useState({
+    name: '',
+    type: 'Read-Only',
+    rate_limit: 100,
+    description: '',
+  });
 
   useEffect(() => {
-    loadData();
+    hasRole(['admin', 'company_admin']).then(auth => {
+      if (!auth) {
+        navigate('/');
+        return;
+      }
+      setIsAuthorized(true);
+    });
   }, []);
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [keys, hooks, integrationsList, extensionsList] = await Promise.all([
+  useEffect(() => {
+    if (!isAuthorized) return;
+    
+    const load = async () => {
+      const [keys, hooks, integrations, extensions] = await Promise.all([
         base44.entities.APIKey.list(),
         base44.entities.WebhookSubscription.list(),
         base44.entities.PlatformIntegration.list(),
         base44.entities.Extension.list(),
       ]);
+      
       setApiKeys(keys);
       setWebhooks(hooks);
-      setIntegrations(integrationsList);
-      setExtensions(extensionsList);
-    } catch (error) {
-      toast.error('Impossibile caricare i dati');
-    } finally {
+      setIntegrations(integrations);
+      setExtensions(extensions);
       setLoading(false);
-    }
-  };
+    };
+    load();
+  }, [isAuthorized]);
 
-  const handleDelete = async (entityType, id) => {
-    if (!confirm('Sei sicuro di voler eliminare questo elemento?')) return;
+  const handleCreateApiKey = async () => {
+    const keyPrefix = `sk_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const keyHash = `hashed_${Math.random().toString(36).substring(2, 32)}`;
     
-    try {
-      if (entityType === 'api-key') await base44.entities.APIKey.delete(id);
-      if (entityType === 'webhook') await base44.entities.WebhookSubscription.delete(id);
-      if (entityType === 'integration') await base44.entities.PlatformIntegration.delete(id);
-      if (entityType === 'extension') await base44.entities.Extension.delete(id);
-      
-      toast.success('Eliminato con successo');
-      loadData();
-    } catch (error) {
-      toast.error(`Errore: ${error.message}`);
-    }
+    await base44.entities.APIKey.create({
+      ...newApiKey,
+      key_prefix: keyPrefix,
+      key_hash: keyHash,
+      status: 'Active',
+      usage_count: 0,
+    });
+    
+    const keys = await base44.entities.APIKey.list();
+    setApiKeys(keys);
+    setShowApiKeyModal(false);
+    setNewApiKey({ name: '', type: 'Read-Only', rate_limit: 100, description: '' });
+    toast.success('API key creata');
   };
 
-  const tabs = [
-    { id: 'api-keys', label: 'API Keys', icon: Key },
-    { id: 'webhooks', label: 'Webhooks', icon: Bell },
-    { id: 'integrations', label: 'Integrazioni', icon: Globe },
-    { id: 'extensions', label: 'Estensioni', icon: Zap },
-    { id: 'settings', label: 'Impostazioni', icon: Settings },
-  ];
+  const handleRevokeKey = async (key) => {
+    await base44.entities.APIKey.update(key.id, { status: 'Revoked' });
+    setApiKeys(prev => prev.map(k => k.id === key.id ? { ...k, status: 'Revoked' } : k));
+    toast.success('API key revocata');
+  };
 
-  if (loading) {
-    return (
-      <div className="p-6 text-center text-gray-400">
-        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-        Caricamento...
-      </div>
-    );
-  }
+  const handleDelete = async (key) => {
+    await base44.entities.APIKey.delete(key.id);
+    setApiKeys(prev => prev.filter(k => k.id !== key.id));
+    toast.success('API key eliminata');
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copiato negli appunti');
+  };
+
+  if (!isAuthorized) return null;
+  if (loading) return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-6 max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Shield className="w-6 h-6 text-blue-500" />
-            Developer Settings
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">Gestione API, webhook e integrazioni</p>
+          <h1 className="text-2xl font-bold text-gray-900">Developer Settings</h1>
+          <p className="text-sm text-gray-500 mt-0.5">API keys, webhooks, and integrations</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => navigate('/integrations')} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+            <Globe className="w-3.5 h-3.5" /> Integrations
+          </button>
+          <button onClick={() => navigate('/system-status')} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+            <Activity className="w-3.5 h-3.5" /> System Status
+          </button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-200">
-        {tabs.map(tab => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-all ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* API Keys Tab */}
-      {activeTab === 'api-keys' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-900">API Keys</h2>
-            <button
-              onClick={() => { setCreateType('api-key'); setShowCreateModal(true); }}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-white rounded-lg"
-              style={{ backgroundColor: '#1147FF' }}
-            >
-              <Plus className="w-3.5 h-3.5" /> Nuova Chiave
-            </button>
+      {/* API Keys */}
+      <div className="bg-white rounded-xl border border-gray-200">
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+              <Key className="w-4 h-4 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">API Keys</h2>
+              <p className="text-xs text-gray-500">{apiKeys.length} chiavi</p>
+            </div>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Nome</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Tipo</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Prefisso</th>
-                  <th className="text-center px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Stato</th>
-                  <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Utilizzi</th>
-                  <th className="px-5 py-3"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {apiKeys.map(key => (
-                  <tr key={key.id} className="hover:bg-gray-50">
-                    <td className="px-5 py-3.5 font-medium text-gray-900">{key.name}</td>
-                    <td className="px-5 py-3.5 text-gray-600">{key.type}</td>
-                    <td className="px-5 py-3.5 font-mono text-xs text-gray-500">{key.key_prefix}...</td>
-                    <td className="px-5 py-3.5 text-center">
-                      <StatusBadge status={key.status} />
-                    </td>
-                    <td className="px-5 py-3.5 text-right text-gray-600">{key.usage_count}</td>
-                    <td className="px-5 py-3.5 text-right">
-                      <button onClick={() => handleDelete('api-key', key.id)} className="text-red-400 hover:text-red-600">
-                        <Trash2 className="w-4 h-4" />
+          <button
+            onClick={() => setShowApiKeyModal(true)}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs text-white rounded-lg bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Nuova API Key
+          </button>
+        </div>
+        
+        {apiKeys.length === 0 ? (
+          <div className="py-12 text-center">
+            <Key className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-sm text-gray-500">Nessuna API key configurata</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {apiKeys.map(key => (
+              <div key={key.id} className="p-5 flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-sm font-semibold text-gray-900">{key.name}</h3>
+                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                      key.status === 'Active' ? 'bg-green-100 text-green-700' :
+                      key.status === 'Revoked' ? 'bg-red-100 text-red-700' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      {key.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 mt-2">
+                    <div className="flex items-center gap-2">
+                      <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
+                        {showingSecret === key.id ? key.key_hash : `${key.key_prefix}••••••••`}
+                      </code>
+                      <button onClick={() => setShowingSecret(showingSecret === key.id ? null : key.id)} className="text-gray-400 hover:text-gray-600">
+                        {showingSecret === key.id ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {apiKeys.length === 0 && (
-              <div className="py-12 text-center text-gray-400">
-                <Key className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                <p className="text-sm">Nessuna API key configurata</p>
+                      <button onClick={() => copyToClipboard(key.key_prefix)} className="text-gray-400 hover:text-gray-600">
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <span className="text-xs text-gray-500">{key.type}</span>
+                    <span className="text-xs text-gray-500">{key.rate_limit} req/min</span>
+                  </div>
+                  {key.description && <p className="text-xs text-gray-500 mt-2">{key.description}</p>}
+                </div>
+                <div className="flex items-center gap-2">
+                  {key.status === 'Active' && (
+                    <button onClick={() => handleRevokeKey(key)} className="px-3 py-1.5 text-xs font-medium border border-gray-200 rounded-lg hover:bg-gray-50">
+                      Revoca
+                    </button>
+                  )}
+                  <button onClick={() => handleDelete(key)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-            )}
+            ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Webhooks Tab */}
-      {activeTab === 'webhooks' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-900">Webhook Subscriptions</h2>
-            <button
-              onClick={() => { setCreateType('webhook'); setShowCreateModal(true); }}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-white rounded-lg"
-              style={{ backgroundColor: '#1147FF' }}
-            >
-              <Plus className="w-3.5 h-3.5" /> Nuovo Webhook
+      {/* Webhooks */}
+      <div className="bg-white rounded-xl border border-gray-200">
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+              <Zap className="w-4 h-4 text-purple-600" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">Webhooks</h2>
+              <p className="text-xs text-gray-500">{webhooks.length} sottoscrizioni</p>
+            </div>
+          </div>
+          <button onClick={() => navigate('/notification-settings')} className="flex items-center gap-2 px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50">
+            <Plus className="w-3.5 h-3.5" />
+            Configura
+          </button>
+        </div>
+        
+        {webhooks.length === 0 ? (
+          <div className="py-12 text-center">
+            <Zap className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-sm text-gray-500">Nessun webhook configurato</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {webhooks.slice(0, 5).map(webhook => (
+              <div key={webhook.id} className="p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900">{webhook.name}</h3>
+                    <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono text-gray-600 mt-1 block">
+                      {webhook.endpoint_url}
+                    </code>
+                  </div>
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                    webhook.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {webhook.status}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+                  <span>{webhook.events?.length || 0} eventi</span>
+                  <span>·</span>
+                  <span>{webhook.success_count || 0} successi</span>
+                  <span>·</span>
+                  <span>{webhook.failure_count || 0} errori</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Integrations & Extensions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl border border-gray-200">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+                <Globe className="w-4 h-4 text-green-600" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-gray-900">Integrations</h2>
+                <p className="text-xs text-gray-500">{integrations.filter(i => i.status === 'Active').length} attive</p>
+              </div>
+            </div>
+            <button onClick={() => navigate('/integrations')} className="text-xs text-blue-600 hover:underline">
+              Vedi tutte
             </button>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Nome</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Endpoint</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Eventi</th>
-                  <th className="text-center px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Stato</th>
-                  <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Successi/Fallimenti</th>
-                  <th className="px-5 py-3"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {webhooks.map(webhook => (
-                  <tr key={webhook.id} className="hover:bg-gray-50">
-                    <td className="px-5 py-3.5 font-medium text-gray-900">{webhook.name}</td>
-                    <td className="px-5 py-3.5 font-mono text-xs text-gray-500 truncate max-w-xs">{webhook.endpoint_url}</td>
-                    <td className="px-5 py-3.5">
-                      <div className="flex gap-1 flex-wrap">
-                        {webhook.events.slice(0, 3).map((event, idx) => (
-                          <span key={idx} className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded">{event}</span>
-                        ))}
-                        {webhook.events.length > 3 && (
-                          <span className="text-[10px] text-gray-400">+{webhook.events.length - 3}</span>
-                        )}
+          <div className="p-5">
+            {integrations.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-4">Nessuna integrazione</p>
+            ) : (
+              <div className="space-y-3">
+                {integrations.slice(0, 5).map(int => (
+                  <div key={int.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
+                        <Globe className="w-4 h-4 text-gray-600" />
                       </div>
-                    </td>
-                    <td className="px-5 py-3.5 text-center">
-                      <StatusBadge status={webhook.status} />
-                    </td>
-                    <td className="px-5 py-3.5 text-right">
-                      <span className="text-green-600">{webhook.success_count}</span>
-                      <span className="text-gray-400 mx-1">/</span>
-                      <span className="text-red-600">{webhook.failure_count}</span>
-                    </td>
-                    <td className="px-5 py-3.5 text-right">
-                      <button onClick={() => handleDelete('webhook', webhook.id)} className="text-red-400 hover:text-red-600">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{int.name}</p>
+                        <p className="text-xs text-gray-500">{int.provider}</p>
+                      </div>
+                    </div>
+                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                      int.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {int.status}
+                    </span>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-            {webhooks.length === 0 && (
-              <div className="py-12 text-center text-gray-400">
-                <Bell className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                <p className="text-sm">Nessun webhook configurato</p>
               </div>
             )}
           </div>
         </div>
-      )}
 
-      {/* Integrations Tab */}
-      {activeTab === 'integrations' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-900">Integrazioni Attive</h2>
-            <button
-              onClick={() => { setCreateType('integration'); setShowCreateModal(true); }}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-white rounded-lg"
-              style={{ backgroundColor: '#1147FF' }}
-            >
-              <Plus className="w-3.5 h-3.5" /> Nuova Integrazione
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {integrations.map(integration => (
-              <IntegrationCard
-                key={integration.id}
-                integration={integration}
-                onDelete={() => handleDelete('integration', integration.id)}
-              />
-            ))}
-          </div>
-          {integrations.length === 0 && (
-            <div className="py-12 text-center text-gray-400">
-              <Globe className="w-12 h-12 mx-auto mb-3 opacity-20" />
-              <p className="text-sm">Nessuna integrazione configurata</p>
+        <div className="bg-white rounded-xl border border-gray-200">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
+                <Database className="w-4 h-4 text-orange-600" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-gray-900">Extensions</h2>
+                <p className="text-xs text-gray-500">{extensions.filter(e => e.status === 'Installed').length} installate</p>
+              </div>
             </div>
-          )}
+          </div>
+          <div className="p-5">
+            {extensions.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-4">Nessuna estensione</p>
+            ) : (
+              <div className="space-y-3">
+                {extensions.slice(0, 5).map(ext => (
+                  <div key={ext.id} className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{ext.name}</p>
+                      <p className="text-xs text-gray-500">{ext.category} · v{ext.version}</p>
+                    </div>
+                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                      ext.status === 'Installed' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {ext.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
 
-      {/* Extensions Tab */}
-      {activeTab === 'extensions' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-900">Estensioni Installate</h2>
-            <button className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
-              <Plus className="w-3.5 h-3.5" /> Marketplace
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {extensions.map(ext => (
-              <ExtensionCard
-                key={ext.id}
-                extension={ext}
-                onDelete={() => handleDelete('extension', ext.id)}
-              />
-            ))}
-          </div>
-          {extensions.length === 0 && (
-            <div className="py-12 text-center text-gray-400">
-              <Zap className="w-12 h-12 mx-auto mb-3 opacity-20" />
-              <p className="text-sm">Nessuna estensione installata</p>
+      {/* API Key Modal */}
+      {showApiKeyModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-bold text-gray-900">Nuova API Key</h2>
+              <button onClick={() => setShowApiKeyModal(false)}><Shield className="w-5 h-5 text-gray-400" /></button>
             </div>
-          )}
-        </div>
-      )}
-
-      {/* Settings Tab */}
-      {activeTab === 'settings' && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-sm font-semibold text-gray-900 mb-4">Impostazioni Piattaforma</h3>
+            
             <div className="space-y-4">
-              <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">API Rate Limiting</p>
-                  <p className="text-xs text-gray-500">Limita richieste API per minuto</p>
-                </div>
-                <select className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg">
-                  <option>100 req/min</option>
-                  <option>500 req/min</option>
-                  <option>1000 req/min</option>
-                  <option>Unlimited</option>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-2">Nome</label>
+                <input
+                  type="text"
+                  value={newApiKey.name}
+                  onChange={(e) => setNewApiKey(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="es. Production API"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-2">Tipo</label>
+                <select
+                  value={newApiKey.type}
+                  onChange={(e) => setNewApiKey(prev => ({ ...prev, type: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none"
+                >
+                  <option>Read-Only</option>
+                  <option>Read-Write</option>
+                  <option>Admin</option>
+                  <option>Webhook</option>
                 </select>
               </div>
-              <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Webhook Retry Policy</p>
-                  <p className="text-xs text-gray-500">Tentativi di retry per webhook falliti</p>
-                </div>
-                <select className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg">
-                  <option>3 tentativi</option>
-                  <option>5 tentativi</option>
-                  <option>10 tentativi</option>
-                </select>
+              
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-2">Rate Limit (req/min)</label>
+                <input
+                  type="number"
+                  value={newApiKey.rate_limit}
+                  onChange={(e) => setNewApiKey(prev => ({ ...prev, rate_limit: parseInt(e.target.value) }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none"
+                />
               </div>
-              <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Audit Log Retention</p>
-                  <p className="text-xs text-gray-500">Quanto tempo conservare i log</p>
-                </div>
-                <select className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg">
-                  <option>30 giorni</option>
-                  <option>90 giorni</option>
-                  <option>1 anno</option>
-                  <option>Illimitato</option>
-                </select>
+              
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-2">Descrizione</label>
+                <textarea
+                  value={newApiKey.description}
+                  onChange={(e) => setNewApiKey(prev => ({ ...prev, description: e.target.value }))}
+                  rows={2}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none resize-none"
+                  placeholder="Opzionale..."
+                />
               </div>
+            </div>
+            
+            <div className="flex gap-2 mt-6">
+              <button onClick={handleCreateApiKey} className="flex-1 py-2 text-sm text-white rounded-lg font-medium bg-blue-600 hover:bg-blue-700">
+                Crea
+              </button>
+              <button onClick={() => setShowApiKeyModal(false)} className="flex-1 py-2 text-sm border border-gray-200 rounded-lg text-gray-600">
+                Annulla
+              </button>
             </div>
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function StatusBadge({ status }) {
-  const styles = {
-    Active: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-    Inactive: 'bg-gray-100 text-gray-600 border border-gray-200',
-    Error: 'bg-red-50 text-red-700 border border-red-200',
-    Suspended: 'bg-amber-50 text-amber-700 border border-amber-200',
-    Revoked: 'bg-red-50 text-red-700 border border-red-200',
-    Expired: 'bg-gray-50 text-gray-600 border border-gray-200',
-    'Not Installed': 'bg-gray-100 text-gray-500 border border-gray-200',
-    Installed: 'bg-blue-50 text-blue-700 border border-blue-200',
-  };
-
-  return (
-    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${styles[status] || styles.Inactive}`}>
-      {status}
-    </span>
-  );
-}
-
-function IntegrationCard({ integration, onDelete }) {
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-            <Globe className="w-5 h-5 text-blue-500" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900">{integration.name}</h3>
-            <p className="text-xs text-gray-500">{integration.provider}</p>
-          </div>
-        </div>
-        <StatusBadge status={integration.status} />
-      </div>
-      <p className="text-xs text-gray-600 mb-3">{integration.category}</p>
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-500">Utilizzi: {integration.usage_count}</span>
-        <button onClick={onDelete} className="text-red-400 hover:text-red-600">
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function ExtensionCard({ extension, onDelete }) {
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-            <Zap className="w-5 h-5 text-purple-500" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900">{extension.name}</h3>
-            <p className="text-xs text-gray-500">v{extension.version}</p>
-          </div>
-        </div>
-        <StatusBadge status={extension.status} />
-      </div>
-      <p className="text-xs text-gray-600 mb-3">{extension.description}</p>
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-500">{extension.category}</span>
-        <button onClick={onDelete} className="text-red-400 hover:text-red-600">
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
     </div>
   );
 }

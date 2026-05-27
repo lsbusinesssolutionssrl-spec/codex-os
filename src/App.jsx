@@ -173,6 +173,7 @@ const AuthenticatedApp = () => {
       <Route path="/notification-settings" element={<NotificationSettings />} />
       <Route path="/system-status" element={<SystemStatus />} />
       <Route path="/developer" element={<DeveloperSettings />} />
+      <Route path="/api-keys" element={<ApiKeys />} />
 
       </Route>
       <Route element={<PortalLayout />}>
