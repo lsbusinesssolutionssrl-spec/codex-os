@@ -89,6 +89,7 @@ import DailyOperations from './pages/DailyOperations';
 import DataQuality from './pages/DataQuality';
 import WorkflowEnforcement from './pages/WorkflowEnforcement';
 import TeamAccountability from './pages/TeamAccountability';
+import ProjectCommandCenter from './pages/ProjectCommandCenter';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -126,6 +127,7 @@ const AuthenticatedApp = () => {
       <Route path="/data-quality" element={<DataQuality />} />
       <Route path="/workflow-enforcement" element={<WorkflowEnforcement />} />
       <Route path="/team-accountability" element={<TeamAccountability />} />
+      <Route path="/projects/:id/command" element={<ProjectCommandCenter />} />
       <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/clients/:id" element={<ClientDetail />} />
