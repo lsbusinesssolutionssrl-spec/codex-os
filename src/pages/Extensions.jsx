@@ -38,24 +38,24 @@ const AVAILABLE_EXTENSIONS = [
     price_yearly: 0
   },
   {
-    name: 'Smart Home',
-    slug: 'smart-home',
-    version: '1.0.0',
-    description: 'Home automation with device integration, automation rules, and energy monitoring',
+    name: 'Smart Home Monitor',
+    slug: 'smart-home-monitor',
+    version: '0.9.0',
+    description: 'Advanced home monitoring with real-time device tracking, security alerts, and remote control',
     category: 'IoT',
     author: 'Codex OS',
     is_official: true,
-    is_beta: false,
+    is_beta: true,
     features: [
-      'Device integration (thermostats, lights, locks)',
-      'Automation rules engine (IFTTT)',
-      'Energy monitoring and optimization',
-      'Voice assistant integration (Alexa, Google Home)'
+      'Real-time device status monitoring',
+      'Security breach detection and alerts',
+      'Remote device control via mobile app',
+      'Integration with major smart home protocols (Zigbee, Z-Wave, Matter)'
     ],
-    entities: ['SmartDevice', 'AutomationRule', 'EnergyReading', 'Scene'],
-    permissions: ['entities:SmartDevice:*', 'entities:AutomationRule:*', 'integrations:googlehome:use'],
-    price_monthly: 9.99,
-    price_yearly: 99.99
+    entities: ['SmartDevice', 'SecurityAlert', 'DeviceLog', 'RemoteSession'],
+    permissions: ['entities:SmartDevice:*', 'entities:SecurityAlert:*', 'integrations:smarthome:use'],
+    price_monthly: 7.99,
+    price_yearly: 79.99
   },
   {
     name: 'IoT Monitoring',
@@ -116,6 +116,46 @@ const AVAILABLE_EXTENSIONS = [
     permissions: ['entities:InsurancePolicy:*', 'entities:Claim:*', 'functions:calculatePremium:invoke'],
     price_monthly: 39.99,
     price_yearly: 399.99
+  },
+  {
+    name: 'BIM Integration',
+    slug: 'bim-integration',
+    version: '2.0.0',
+    description: 'Building Information Modeling integration for construction projects with 3D model visualization and clash detection',
+    category: 'Operations',
+    author: 'Codex OS',
+    is_official: true,
+    is_beta: false,
+    features: [
+      '3D BIM model viewer and navigation',
+      'Automated clash detection and reporting',
+      'Quantity takeoff from BIM models',
+      'Integration with Revit, ArchiCAD, and Navisworks'
+    ],
+    entities: ['BIMModel', 'ClashReport', 'ModelElement', 'QuantityTakeoff'],
+    permissions: ['entities:BIMModel:*', 'entities:ClashReport:*', 'functions:processBIM:invoke'],
+    price_monthly: 49.99,
+    price_yearly: 499.99
+  },
+  {
+    name: 'Energy Optimizer',
+    slug: 'energy-optimizer',
+    version: '1.5.0',
+    description: 'AI-powered energy optimization for buildings with consumption analysis and automated savings',
+    category: 'IoT',
+    author: 'Codex OS',
+    is_official: true,
+    is_beta: false,
+    features: [
+      'Real-time energy consumption monitoring',
+      'AI-driven optimization recommendations',
+      'Automated HVAC and lighting control',
+      'Energy cost forecasting and budgeting'
+    ],
+    entities: ['EnergyReading', 'OptimizationRule', 'CostForecast', 'SavingReport'],
+    permissions: ['entities:EnergyReading:*', 'entities:OptimizationRule:*', 'integrations:energymonitor:use'],
+    price_monthly: 14.99,
+    price_yearly: 149.99
   },
   {
     name: 'Construction Analytics',
