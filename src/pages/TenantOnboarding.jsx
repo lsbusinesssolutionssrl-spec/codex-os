@@ -23,6 +23,7 @@ export default function TenantOnboarding() {
 
   const [form, setForm] = useState({
     name: '',
+    slug: '',
     email: '',
     phone: '',
     address: '',
@@ -58,6 +59,7 @@ export default function TenantOnboarding() {
     setSaving(true);
     const company = await base44.entities.Company.create({
       name: form.name,
+      slug: form.slug || form.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
       email: form.email,
       phone: form.phone,
       address: form.address,
@@ -128,6 +130,8 @@ export default function TenantOnboarding() {
             <div className="space-y-4">
               <h2 className="font-semibold text-gray-900 mb-4">Informazioni Azienda</h2>
               <FormField label="Ragione Sociale *" value={form.name} onChange={v => update('name', v)} placeholder="Codex Solution Srl" />
+              <FormField label="Slug (URL-safe) *" value={form.slug} onChange={v => update('slug', v)} placeholder="codex-solution" />
+              <p className="text-xs text-gray-400 -mt-3">Identificativo univoco per URL (es: nome-azienda)</p>
               <FormField label="Email Aziendale *" value={form.email} onChange={v => update('email', v)} placeholder="info@azienda.it" type="email" />
               <FormField label="Telefono" value={form.phone} onChange={v => update('phone', v)} placeholder="+39 02 1234567" />
               <FormField label="Indirizzo" value={form.address} onChange={v => update('address', v)} placeholder="Via Roma 1, Milano" />
@@ -269,6 +273,7 @@ export default function TenantOnboarding() {
               <h2 className="font-semibold text-gray-900 mb-4">Riepilogo e Creazione</h2>
               <div className="space-y-3">
                 <ReviewRow label="Azienda" value={form.name} />
+                <ReviewRow label="Slug" value={form.slug || 'Auto-generato'} />
                 <ReviewRow label="Email" value={form.email} />
                 <ReviewRow label="Paese" value={form.country} />
                 <ReviewRow label="Valuta" value={form.currency} />
