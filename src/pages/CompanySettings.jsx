@@ -36,11 +36,21 @@ export default function CompanySettings() {
       
       // SECURITY FIX: Platform users should go to PlatformSettings ONLY if they don't have tenant memberships
       // Admin users with tenant memberships can access company settings
-      if (['admin', 'developer'].includes(currentUser?.role) && contextType === 'platform' && (!tenantMemberships || tenantMemberships.length === 0)) {
+      const isPlatformRole = ['admin', 'developer'].includes(currentUser?.role);
+      const hasNoMemberships = !tenantMemberships || tenantMemberships.length === 0;
+      
+      console.log('Is platform role:', isPlatformRole);
+      console.log('Has memberships:', !hasNoMemberships);
+      console.log('Membership count:', tenantMemberships?.length || 0);
+      console.log('Context type:', contextType);
+      
+      if (isPlatformRole && hasNoMemberships && contextType === 'platform') {
         console.log('Platform user without tenant memberships, redirecting to PlatformSettings');
         navigate('/platform-settings');
         return;
       }
+      
+      console.log('User has tenant memberships, allowing access to CompanySettings');
       
       try {
         const res = await base44.functions.invoke('getCurrentCompany', {});
@@ -106,9 +116,14 @@ export default function CompanySettings() {
 
   if (loading) return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
   
-  // SECURITY FIX: Redirect platform users to PlatformSettings
-  if (['admin', 'developer'].includes(user?.role) && contextType === 'platform') {
-    return null; // Will redirect in useEffect
+  // Debug panel
+  if (user) {
+    console.log('=== COMPANY SETTINGS RENDER ===');
+    console.log('User:', user.email, user.role);
+    console.log('Context:', contextType);
+    console.log('Active Tenant:', activeTenant?.name);
+    console.log('Tenant Memberships:', tenantMemberships?.length);
+    console.log('Enabled Modules:', enabledModules);
   }
 
   if (!company) {
