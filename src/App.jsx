@@ -90,6 +90,16 @@ import DataQuality from './pages/DataQuality';
 import WorkflowEnforcement from './pages/WorkflowEnforcement';
 import TeamAccountability from './pages/TeamAccountability';
 import ProjectCommandCenter from './pages/ProjectCommandCenter';
+import FieldAdoptionTracking from './pages/FieldAdoptionTracking';
+import OperationalFrictionLog from './pages/OperationalFrictionLog';
+import RealTimeOperationalAlerts from './pages/RealTimeOperationalAlerts';
+import AIOperationsReview from './pages/AIOperationsReview';
+import CustomerExperienceTracking from './pages/CustomerExperienceTracking';
+import OperationalKPISystem from './pages/OperationalKPISystem';
+import ExecutionDisciplineEngine from './pages/ExecutionDisciplineEngine';
+import RealityGapAnalytics from './pages/RealityGapAnalytics';
+import AITrainingDataQuality from './pages/AITrainingDataQuality';
+import EnterpriseOperationalUX from './pages/EnterpriseOperationalUX';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -128,6 +138,16 @@ const AuthenticatedApp = () => {
       <Route path="/workflow-enforcement" element={<WorkflowEnforcement />} />
       <Route path="/team-accountability" element={<TeamAccountability />} />
       <Route path="/projects/:id/command" element={<ProjectCommandCenter />} />
+      <Route path="/field-adoption" element={<FieldAdoptionTracking />} />
+      <Route path="/friction-log" element={<OperationalFrictionLog />} />
+      <Route path="/operational-alerts" element={<RealTimeOperationalAlerts />} />
+      <Route path="/ai-operations-review" element={<AIOperationsReview />} />
+      <Route path="/customer-experience" element={<CustomerExperienceTracking />} />
+      <Route path="/operational-kpis" element={<OperationalKPISystem />} />
+      <Route path="/execution-discipline" element={<ExecutionDisciplineEngine />} />
+      <Route path="/reality-gap" element={<RealityGapAnalytics />} />
+      <Route path="/ai-data-quality" element={<AITrainingDataQuality />} />
+      <Route path="/enterprise-ux" element={<EnterpriseOperationalUX />} />
       <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/clients/:id" element={<ClientDetail />} />
