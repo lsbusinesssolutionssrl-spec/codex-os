@@ -10,8 +10,8 @@ Deno.serve(async (req) => {
     }
 
     // Get user's company_id for multi-tenant isolation
-    const users = await base44.entities.User.filter({ email: user.email });
-    const company_id = users[0]?.company_id || null;
+    // Use the authenticated user's company_id directly (no need to query User entity)
+    const company_id = user.company_id || null;
 
     // PLATFORM MODE: Super Admin / Developer
     // No default filters - they can access all tenants via tenant switcher
