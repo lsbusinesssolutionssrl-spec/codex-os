@@ -19,6 +19,7 @@ import ContextBanner from './tenant/ContextBanner';
 import LayoutInspector from './LayoutInspector';
 import ModuleEntitlementDebug from './ModuleEntitlementDebug';
 import RBACDebugPanel from './RBACDebugPanel';
+import ContextVerification from './ContextVerification';
 
 // Tenant navigation - modules enabled dynamically based on plan
 const TENANT_NAV_ITEMS = [
@@ -266,6 +267,7 @@ export default function Layout() {
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
+        <ContextVerification />
         <SessionDebugPanel />
         <LayoutInspector />
         <RBACDebugPanel />

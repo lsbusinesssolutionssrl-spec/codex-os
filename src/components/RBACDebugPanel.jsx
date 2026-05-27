@@ -18,6 +18,9 @@ export default function RBACDebugPanel() {
     permissions,
     contextType,
     isPlatformMode,
+    contextId,
+    rbacContextId,
+    moduleRegistryId,
   } = useGlobalContext();
 
   const [debugInfo, setDebugInfo] = useState(null);
@@ -39,6 +42,25 @@ export default function RBACDebugPanel() {
       </div>
       
       <div className="p-3 space-y-3">
+        {/* Context IDs - CRITICAL */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
+          <p className="text-[10px] font-semibold text-blue-700 uppercase mb-1">Global Context IDs (Must Match Across All Pages)</p>
+          <div className="space-y-0.5 font-mono text-[10px] text-blue-800">
+            <div className="flex justify-between">
+              <span>Context ID:</span>
+              <span className="truncate max-w-[150px]">{contextId}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>RBAC ID:</span>
+              <span className="truncate max-w-[150px]">{rbacContextId}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Module Registry:</span>
+              <span className="truncate max-w-[150px]">{moduleRegistryId}</span>
+            </div>
+          </div>
+        </div>
+
         {/* User Context */}
         <div>
           <div className="flex items-center gap-1.5 mb-1.5">

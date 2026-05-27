@@ -59,6 +59,7 @@ export function GlobalContextProvider({ children }) {
   // Capabilities
   const [enabledModules, setEnabledModules] = useState([]);
   const [permissions, setPermissions] = useState([]);
+  const [contextId, setContextId] = useState(`ctx_${Date.now()}`);
   
   // State tracking
   const [onboardingState, setOnboardingState] = useState(null);
@@ -535,9 +536,19 @@ export function GlobalContextProvider({ children }) {
     loading,
     error,
     
+    // Debug IDs (CRITICAL - ensures single context instance)
+    contextId,
+    rbacContextId: `rbac_${contextId}`,
+    moduleRegistryId: `mod_${contextId}`,
+    
     // Actions
     switchTenant,
     clearImpersonation,
+    refreshContext: () => {
+      const newId = `ctx_${Date.now()}`;
+      setContextId(newId);
+      window.dispatchEvent(new CustomEvent('context_refresh', { detail: { contextId: newId } }));
+    },
     
     // Helpers
     isPlatformMode: contextType === CONTEXT_TYPE.PLATFORM,
