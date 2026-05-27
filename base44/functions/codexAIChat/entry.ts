@@ -1,12 +1,35 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-// Role-based field filters
+// ── Role-based data access policy ───────────────────────────────────────────
+// Field-level: which entity fields to strip before injecting into the LLM prompt
 const ROLE_RESTRICTIONS = {
-  client: ['contract_value','approved_variations','material_costs','labor_costs','gross_margin','gross_margin_pct','total_invoiced','total_collected'],
-  technician: ['contract_value','gross_margin','gross_margin_pct','total_invoiced','total_collected','approved_variations'],
-  sales: [],
+  client:          ['contract_value','approved_variations','material_costs','labor_costs','gross_margin','gross_margin_pct','total_invoiced','total_collected','other_costs'],
+  technician:      ['contract_value','approved_variations','gross_margin','gross_margin_pct','total_invoiced','total_collected','material_costs','labor_costs','other_costs'],
+  sales:           ['gross_margin','gross_margin_pct','material_costs','labor_costs','other_costs'],
   project_manager: [],
-  admin: [],
+  admin:           [],
+  company_admin:   [],
+};
+
+// Context-level: which data categories to completely exclude by role
+const ROLE_FORBIDDEN_CONTEXT = {
+  client:     ['financialAlerts','intelligenceInsights','projectCostsRecent','timesheets','suppliers','memories','focusedCosts','focusedTimesheets'],
+  technician: ['financialAlerts','intelligenceInsights','projectCostsRecent','estimates','guardians'],
+  sales:      ['financialAlerts','intelligenceInsights','projectCostsRecent','timesheets'],
+  project_manager: [],
+  admin:           [],
+  company_admin:   [],
+};
+
+// Actions each role is allowed to suggest
+const ROLE_ALLOWED_ACTIONS = {
+  admin:           null, // all
+  company_admin:   null,
+  project_manager: ['create_task','create_checklist','create_ticket','assign_technician','generate_report','summarize_project','generate_meeting_notes','generate_handover'],
+  sales:           ['create_estimate_draft','suggest_pricing','summarize_project'],
+  technician:      ['create_task','create_checklist','create_ticket'],
+  user:            ['create_task','create_ticket'],
+  client:          [],
 };
 
 function sanitizeForRole(obj, role) {
@@ -77,14 +100,17 @@ Deno.serve(async (req) => {
     base44.entities.Supplier.list('-updated_date', 8).catch(() => []),
   ]);
 
+  const forbidden = ROLE_FORBIDDEN_CONTEXT[role] || [];
+  const canSee = (key) => !forbidden.includes(key);
+
   const [guardians, checklists, documents, timesheets, financialAlerts, intelligenceInsights, projectCostsRecent] = await Promise.all([
     base44.entities.GuardianSubscription.filter({ status: 'Active' }, '-created_date', 5).catch(() => []),
     base44.entities.ChecklistItem.filter({ status: 'Blocked' }, '-updated_date', 5).catch(() => []),
     base44.entities.Document.list('-created_date', 8).catch(() => []),
-    base44.entities.Timesheet.list('-date', 5).catch(() => []),
-    base44.entities.FinancialAlert.filter({ resolved: false }, '-created_date', 5).catch(() => []),
-    base44.entities.IntelligenceInsight.filter({ is_read: false }, '-created_date', 5).catch(() => []),
-    base44.entities.ProjectCost.list('-date', 5).catch(() => []),
+    canSee('timesheets') ? base44.entities.Timesheet.list('-date', 5).catch(() => []) : Promise.resolve([]),
+    canSee('financialAlerts') ? base44.entities.FinancialAlert.filter({ resolved: false }, '-created_date', 5).catch(() => []) : Promise.resolve([]),
+    canSee('intelligenceInsights') ? base44.entities.IntelligenceInsight.filter({ is_read: false }, '-created_date', 5).catch(() => []) : Promise.resolve([]),
+    canSee('projectCostsRecent') ? base44.entities.ProjectCost.list('-date', 5).catch(() => []) : Promise.resolve([]),
   ]);
 
   // ── CONTEXT ENGINE — Phase 2: Deep Entity Graph (when focus hint provided) ──
@@ -106,12 +132,12 @@ Deno.serve(async (req) => {
         focusedCosts, focusedTimesheets, focusedProjectTickets,
         focusedProjectDocs, focusedProjectChecklists, focusedProjectEstimates,
       ] = await Promise.all([
-        base44.entities.ProjectCost.filter({ project_id: hintProjectId }, '-date', 15).catch(() => []),
-        base44.entities.Timesheet.filter({ project_id: hintProjectId }, '-date', 10).catch(() => []),
+        canSee('focusedCosts') ? base44.entities.ProjectCost.filter({ project_id: hintProjectId }, '-date', 15).catch(() => []) : Promise.resolve([]),
+        canSee('focusedTimesheets') ? base44.entities.Timesheet.filter({ project_id: hintProjectId }, '-date', 10).catch(() => []) : Promise.resolve([]),
         base44.entities.SupportTicket.filter({ property_id: propId || '' }, '-created_date', 5).catch(() => []),
         base44.entities.Document.filter({ project_id: hintProjectId }, '-created_date', 10).catch(() => []),
         base44.entities.ChecklistItem.filter({ project_id: hintProjectId }, '-updated_date', 10).catch(() => []),
-        clientId ? base44.entities.Estimate.filter({ client_id: clientId }, '-created_date', 5).catch(() => []) : Promise.resolve([]),
+        clientId && canSee('estimates') ? base44.entities.Estimate.filter({ client_id: clientId }, '-created_date', 5).catch(() => []) : Promise.resolve([]),
       ]);
     }
   }
@@ -325,9 +351,18 @@ AI MEMORY (${memories.length} memorie — scoped a questo contesto):
 KNOWLEDGE BASE (${knowledge.length} articoli):
 ${knowledge.map(k => `• [${k.category}] ${k.title}: Prob: ${truncate(k.problem, 80)} → Sol: ${truncate(k.solution, 80)}`).join('\n') || 'Nessun articolo KB.'}
 
---- REGOLE DI RISPOSTA ---
-${role === 'client' ? '⚠️ NON mostrare mai dati finanziari interni, margini, costi operativi o informazioni riservate al cliente.' : ''}
-${role === 'technician' ? '⚠️ NON mostrare margini, valori contrattuali o dati finanziari — solo dati operativi e tecnici.' : ''}
+--- REGOLE DI RISPOSTA E SICUREZZA DATI ---
+${{  
+  admin: '✅ Accesso completo a tutti i dati.',
+  company_admin: '✅ Accesso completo a tutti i dati.',
+  project_manager: '🔒 Non rivelare: dati Super Admin, configurazioni sistema, piani di abbonamento, costi aziendali aggregati non legati ai propri progetti.',
+  sales: '🔒 NON rivelare mai: margini operativi interni, costi di manodopera/materiali, alert finanziari, intelligence insights, timesheet, dati Super Admin, configurazioni sistema. Puoi parlare di preventivi, clienti e opportunità commerciali.',
+  technician: '🔒 NON rivelare mai: valori contrattuali, margini, fatturato, incassato, costi interni, preventivi economici, intelligence insights, alert finanziari, dati di altri utenti. Parla SOLO di: attività operative, checklist, ticket, manutenzioni, istruzioni tecniche.',
+  client: '🚫 ACCESSO ESTREMAMENTE LIMITATO. NON rivelare MAI: costi interni, margini, fatturato, fornitori, timesheet, preventivi di altri clienti, intelligence insights, dati del team, configurazioni aziendali. Mostra SOLO: stato avanzamento propri progetti, propri documenti, propri ticket, informazioni tecniche sulla propria proprietà.',
+}[role] || '🔒 Accesso limitato — mostra solo dati operativi di base.'}
+
+REGOLA ASSOLUTA: Se la domanda riguarda argomenti fuori dal tuo perimetro di ruolo, rispondi: "Queste informazioni non sono disponibili per il tuo profilo di accesso."
+REGOLA ASSOLUTA: Non ragionare ad alta voce su dati che non puoi mostrare. Se un dato è riservato, non menzionarlo nemmeno indirettamente.
 
 Rispondi SEMPRE in italiano, in modo preciso, operativo e conciso.
 Quando suggerisci azioni, elencale chiaramente come azioni confermate dall'utente.
@@ -340,19 +375,28 @@ USO MEMORIA:
 - Se noti nuove informazioni utili da memorizzare (preferenza, lezione, pattern), integralo nella risposta.
 - Usa le memorie storiche per personalizzare le risposte (es. preferenze note del cliente, problemi ricorrenti).
 
-AZIONI DISPONIBILI (suggeriscile quando appropriato, richiederanno conferma):
-- create_estimate_draft: Crea bozza preventivo
-- create_task: Crea task
-- create_ticket: Crea ticket supporto
-- create_checklist: Crea checklist
-- assign_technician: Assegna tecnico
-- generate_report: Genera report progetto
-- summarize_project: Riassumi stato progetto
-- suggest_pricing: Suggerisci prezzi basati su storico
-- generate_handover: Genera report consegna
-- generate_meeting_notes: Genera verbale riunione
-- update_homepassport: Aggiorna Home Passport
-- extract_knowledge: Estrai lessons learned da progetto
+AZIONI DISPONIBILI PER QUESTO RUOLO (suggeriscile quando appropriato — tutte richiedono conferma esplicita):
+${(() => {
+  const allActions = [
+    { type: 'create_estimate_draft', label: 'Crea bozza preventivo' },
+    { type: 'create_task', label: 'Crea task' },
+    { type: 'create_ticket', label: 'Crea ticket supporto' },
+    { type: 'create_checklist', label: 'Crea checklist' },
+    { type: 'assign_technician', label: 'Assegna tecnico' },
+    { type: 'generate_report', label: 'Genera report progetto' },
+    { type: 'summarize_project', label: 'Riassumi stato progetto' },
+    { type: 'suggest_pricing', label: 'Suggerisci prezzi' },
+    { type: 'generate_handover', label: 'Genera report consegna' },
+    { type: 'generate_meeting_notes', label: 'Genera verbale riunione' },
+    { type: 'update_homepassport', label: 'Aggiorna Home Passport' },
+  ];
+  const allowed = ROLE_ALLOWED_ACTIONS[role];
+  const visible = allowed === null ? allActions : allActions.filter(a => allowed.includes(a.type));
+  if (visible.length === 0) return 'Nessuna azione disponibile per questo ruolo.';
+  return visible.map(a => `- ${a.type}: ${a.label}`).join('\n');
+})()}
+
+NON suggerire azioni che il tuo ruolo non può eseguire.
 
 Quando suggerisci un'azione, includi alla fine della risposta un blocco JSON così:
 <actions>
