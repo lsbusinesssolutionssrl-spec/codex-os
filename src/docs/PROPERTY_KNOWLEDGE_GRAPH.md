@@ -2,603 +2,731 @@
 
 ## Panoramica
 
-Codex OS implementa un **Property Knowledge Graph** che connette tutte le entità del sistema in una rete semantica di relazioni, abilitando query complesse e insight contestuali.
+Codex OS implementa un **Property Knowledge Graph** che connette tutte le entità relative alle proprietà in una rete semantica interconnessa. Questo permette all'AI di ragionare su relazioni complesse e generare insight predittivi avanzati.
 
 ---
 
-## Entity Core del Graph
+## Nodi del Grafo (Entities)
 
-### Nodi Principali
+### Core Nodes
 
 ```
-Company (Tenant)
-├── Client
-│   └── Property
-│       ├── Equipment
-│       ├── Maintenance
-│       ├── Risk
-│       ├── Insight
-│       ├── IoTDevice
-│       └── Project
-│           ├── Task
-│           ├── Cost
-│           └── Checklist
-├── Supplier
-├── User
-└── Document
+📍 Property (Nodo Centrale)
+├── 🏢 Client (proprietario)
+├── 🏗️ Projects (interventi)
+├── 🎫 Tickets (issue)
+├── 🔧 Equipment (sistemi)
+├── 🛠️ Maintenance (manutenzioni)
+├── ⚠️ Risks (rischi)
+├── 💡 Insights (AI recommendations)
+├── 📄 Documents (certificazioni)
+└── 👷 Suppliers (fornitori)
 ```
 
 ---
 
-## Relazioni (Edges)
+## Relazioni del Grafo
 
-### 1. Property → Systems
+### 1. Property ↔ Client
 
-**Relation:** `HAS_EQUIPMENT`
+**Relazione:** `OWNED_BY` / `OWNS`
 ```typescript
 Property {
-  id: "prop_123"
+  client_id: string → Client.id
 }
--- [HAS_EQUIPMENT] -->
-PropertyEquipment {
-  id: "equip_456",
-  name: "HVAC System",
-  category: "HVAC",
-  installation_date: "2020-03-15",
-  warranty_expiration: "2025-03-15"
-}
-```
 
-**Properties:**
-- installation_date
-- warranty_status
-- maintenance_count
-- replacement_cost
-
----
-
-### 2. Equipment → Maintenance
-
-**Relation:** `REQUIRES_MAINTENANCE`
-```typescript
-PropertyEquipment {
-  id: "equip_456"
-}
--- [REQUIRES_MAINTENANCE] -->
-PropertyMaintenance {
-  id: "maint_789",
-  maintenance_type: "Preventive",
-  scheduled_date: "2024-06-01",
-  status: "Scheduled",
-  cost: 300
-}
-```
-
-**Properties:**
-- maintenance_interval_months
-- last_maintenance_date
-- next_due_date
-- total_cost_ytd
-
----
-
-### 3. Equipment → Tickets
-
-**Relation:** `HAS_ISSUE`
-```typescript
-PropertyEquipment {
-  id: "equip_456"
-}
--- [HAS_ISSUE {severity: 'High', count: 3}] -->
-SupportTicket {
-  id: "ticket_001",
-  issue_type: "HVAC Failure",
-  status: "Open",
-  created_date: "2024-05-20"
-}
-```
-
-**Properties:**
-- issue_count
-- last_issue_date
-- recurring (boolean)
-- resolution_rate
-
----
-
-### 4. Property → Projects
-
-**Relation:** `INTERVENTION_HISTORY`
-```typescript
-Property {
-  id: "prop_123"
-}
--- [INTERVENTION_HISTORY] -->
-Project {
-  id: "proj_999",
-  title: "HVAC Replacement",
-  status: "Delivered",
-  contract_value: 5000,
-  start_date: "2023-08-01",
-  end_date: "2023-08-15"
-}
-```
-
-**Properties:**
-- intervention_count
-- total_invested
-- last_intervention_date
-- roi_estimate
-
----
-
-### 5. Project → Costs
-
-**Relation:** `INCURRED_COST`
-```typescript
-Project {
-  id: "proj_999"
-}
--- [INCURRED_COST] -->
-ProjectCost {
-  id: "cost_111",
-  cost_type: "Material",
-  category: "HVAC Equipment",
-  total_cost: 3000,
-  paid: true
-}
-```
-
-**Properties:**
-- cost_category
-- actual_vs_budget
-- payment_status
-
----
-
-### 6. Project → Documents
-
-**Relation:** `HAS_DOCUMENTATION`
-```typescript
-Project {
-  id: "proj_999"
-}
--- [HAS_DOCUMENTATION] -->
-Document {
-  id: "doc_222",
-  type: "Invoice",
-  url: "s3://...",
-  related_entity_type: "Project",
-  related_entity_id: "proj_999"
-}
-```
-
-**Properties:**
-- document_type
-- upload_date
-- expiry_date (if applicable)
-
----
-
-### 7. Property → Risks
-
-**Relation:** `HAS_RISK`
-```typescript
-Property {
-  id: "prop_123"
-}
--- [HAS_RISK {severity: 'Critical'}] -->
-PropertyRisk {
-  id: "risk_333",
-  risk_type: "Water Leak",
-  severity: "Critical",
-  confidence_level: 90,
-  estimated_cost_impact: 5000
-}
-```
-
-**Properties:**
-- risk_severity
-- confidence
-- mitigation_status
-- cost_impact
-
----
-
-### 8. Risk → Maintenance
-
-**Relation:** `MITIGATED_BY`
-```typescript
-PropertyRisk {
-  id: "risk_333"
-}
--- [MITIGATED_BY] -->
-PropertyMaintenance {
-  id: "maint_444",
-  title: "Plumbing Inspection",
-  maintenance_type: "Corrective",
-  status: "Scheduled"
-}
-```
-
-**Properties:**
-- mitigation_effectiveness
-- risk_reduction_pct
-
----
-
-### 9. Property → Insights
-
-**Relation:** `HAS_INSIGHT`
-```typescript
-Property {
-  id: "prop_123"
-}
--- [HAS_INSIGHT {priority: 'High'}] -->
-PropertyInsight {
-  id: "insight_555",
-  insight_type: "Predictive Maintenance",
-  title: "HVAC Maintenance Overdue",
-  estimated_cost_savings: 500,
-  actionable: true
-}
-```
-
-**Properties:**
-- insight_priority
-- estimated_impact
-- action_status
-
----
-
-### 10. Insight → Action
-
-**Relation:** `GENERATES_ACTION`
-```typescript
-PropertyInsight {
-  id: "insight_555"
-}
--- [GENERATES_ACTION] -->
-PropertyMaintenance {
-  id: "maint_666",
-  title: "HVAC Maintenance",
-  ai_generated: true,
-  ai_reasoning: "..."
-}
-```
-
-**Properties:**
-- action_taken
-- action_date
-- outcome
-
----
-
-### 11. Client → Property
-
-**Relation:** `OWNS_PROPERTY`
-```typescript
 Client {
-  id: "client_777",
-  name: "Mario Rossi"
-}
--- [OWNS_PROPERTY] -->
-Property {
-  id: "prop_123",
-  property_name: "Villa Verde"
+  properties: Property[] (derived)
 }
 ```
 
-**Properties:**
-- ownership_type
-- acquisition_date
-- portfolio_priority
+**Query Example:**
+```javascript
+// Trova tutte le proprietà di un cliente
+const properties = await base44.entities.Property.filter({ 
+  client_id: clientId 
+});
+```
 
 ---
 
-### 12. Supplier → Project
+### 2. Property ↔ Projects
 
-**Relation:** `CONTRACTED_FOR`
+**Relazione:** `HAS_PROJECT` / `BELONGS_TO`
 ```typescript
-Supplier {
-  id: "supp_888",
-  name: "Idraulica Rossi Srl",
-  category: "Plumbing"
+Property {
+  projects: Project[] (derived via property_id)
 }
--- [CONTRACTED_FOR] -->
+
 Project {
-  id: "proj_999",
-  title: "Bathroom Renovation"
+  property_id: string → Property.id
 }
 ```
 
-**Properties:**
-- contract_value
-- performance_rating
-- repeat_collaboration
+**Relazioni Derivative:**
+- `Project → Estimate` (CONVERTED_FROM)
+- `Project → ProjectCost` (HAS_COST)
+- `Project → Task` (HAS_TASK)
 
----
-
-## Graph Queries (Esempi)
-
-### Query 1: Property Health Traversal
-
+**Query Example:**
 ```javascript
-// Get full health picture for a property
-const property = await base44.entities.Property.get(propId);
-
-const healthData = {
-  equipment: await base44.entities.PropertyEquipment.filter({ property_id: propId }),
-  maintenance: await base44.entities.PropertyMaintenance.filter({ property_id: propId }),
-  tickets: await base44.entities.SupportTicket.filter({ property_id: propId }),
-  risks: await base44.entities.PropertyRisk.filter({ property_id: propId }),
-  insights: await base44.entities.PropertyInsight.filter({ property_id: propId }),
-  projects: await base44.entities.Project.filter({ property_id: propId }),
-};
-
-// Calculate health score
-const score = calculateHealthScore(healthData);
+// Storico interventi per proprietà
+const projects = await base44.entities.Project.filter({ 
+  property_id: propertyId 
+});
 ```
 
 ---
 
-### Query 2: Recurring Issues Detection
+### 3. Property ↔ Tickets
 
+**Relazione:** `HAS_TICKET` / `REPORTED_AT`
+```typescript
+Property {
+  tickets: SupportTicket[] (derived via property_id)
+}
+
+SupportTicket {
+  property_id: string → Property.id
+}
+```
+
+**Relazioni Derivative:**
+- `Ticket → Client` (REPORTED_BY)
+- `Ticket → Technician` (ASSIGNED_TO)
+- `Ticket → GuardianSubscription` (COVERED_BY)
+
+**Pattern Detection:**
 ```javascript
-// Find equipment with repeated failures
-const equipment = await base44.entities.PropertyEquipment.filter({ property_id: propId });
+// Rileva issue ricorrenti
+const tickets = await base44.entities.SupportTicket.filter({ 
+  property_id: propertyId 
+});
 
-const recurringIssues = await Promise.all(
-  equipment.map(async (equip) => {
-    const tickets = await base44.entities.SupportTicket.filter({
-      property_id: propId,
-      // Filter by equipment name in title/description
+const issuePatterns = {};
+tickets.forEach(t => {
+  const key = t.issue_type;
+  issuePatterns[key] = (issuePatterns[key] || 0) + 1;
+});
+
+// Se issue_type >= 3 → rischio ricorrenza
+if (issuePatterns['Water Leak'] >= 3) {
+  // Crea risk: "Perdite ricorrenti"
+}
+```
+
+---
+
+### 4. Property ↔ Equipment
+
+**Relazione:** `HAS_EQUIPMENT` / `INSTALLED_IN`
+```typescript
+Property {
+  equipment: PropertyEquipment[] (derived via property_id)
+}
+
+PropertyEquipment {
+  property_id: string → Property.id
+}
+```
+
+**Relazioni Equipment:**
+- `Equipment → Maintenance` (REQUIRES)
+- `Equipment → Tickets` (HAS_ISSUE)
+- `Equipment → Supplier` (SUPPLIED_BY)
+- `Equipment → Documents` (HAS_MANUAL)
+
+**Lifecycle Tracking:**
+```typescript
+PropertyEquipment {
+  installation_date: date
+  warranty_expiration: date
+  expected_lifespan_years: number
+  last_maintenance_date: date
+  next_maintenance_due: date
+  status: enum
+}
+```
+
+---
+
+### 5. Property ↔ Maintenance
+
+**Relazione:** `REQUIRES_MAINTENANCE` / `PERFORMED_AT`
+```typescript
+Property {
+  maintenance: PropertyMaintenance[] (derived via property_id)
+}
+
+PropertyMaintenance {
+  property_id: string → Property.id
+  equipment_id?: string → PropertyEquipment.id
+}
+```
+
+**Relazioni Derivative:**
+- `Maintenance → Equipment` (PERFORMED_ON)
+- `Maintenance → Supplier` (PERFORMED_BY)
+- `Maintenance → Project` (GENERATED_FROM)
+
+**Compliance Tracking:**
+```javascript
+// Calcola compliance rate
+const maintenance = await base44.entities.PropertyMaintenance.filter({ 
+  property_id: propertyId 
+});
+
+const total = maintenance.length;
+const completed = maintenance.filter(m => m.status === 'Completed').length;
+const overdue = maintenance.filter(m => 
+  m.status === 'Scheduled' && new Date(m.scheduled_date) < new Date()
+).length;
+
+const complianceRate = (completed / total * 100);
+```
+
+---
+
+### 6. Property ↔ Risks
+
+**Relazione:** `HAS_RISK` / `AFFECTS`
+```typescript
+Property {
+  risks: PropertyRisk[] (derived via property_id)
+}
+
+PropertyRisk {
+  property_id: string → Property.id
+  linked_maintenance_id?: string → PropertyMaintenance.id
+  linked_ticket_id?: string → SupportTicket.id
+}
+```
+
+**Risk Evidence Graph:**
+```typescript
+PropertyRisk {
+  evidence: string[] // Array di entity IDs
+  // Example: ["ticket_123", "ticket_456", "project_789"]
+  
+  ai_reasoning: string // Spiegazione del rischio
+  confidence_level: number // 0-100
+}
+```
+
+**Risk Propagation:**
+```javascript
+// Se risk_type = "Water Leak" e severity = "Critical"
+// → Crea maintenance preventiva
+// → Crea insight AI
+// → Notifica cliente
+
+if (risk.severity === 'Critical') {
+  await base44.entities.PropertyMaintenance.create({
+    property_id: risk.property_id,
+    maintenance_type: 'Emergency',
+    title: `Intervento urgente: ${risk.title}`,
+    ai_generated: true,
+    ai_reasoning: `Generato da rischio critico: ${risk.ai_reasoning}`,
+  });
+  
+  await base44.entities.PropertyInsight.create({
+    property_id: risk.property_id,
+    insight_type: 'Risk Reduction',
+    title: `Mitigazione: ${risk.title}`,
+    suggested_action: risk.recommended_actions[0],
+  });
+}
+```
+
+---
+
+### 7. Property ↔ AI Insights
+
+**Relazione:** `HAS_INSIGHT` / `GENERATED_FOR`
+```typescript
+Property {
+  insights: PropertyInsight[] (derived via property_id)
+}
+
+PropertyInsight {
+  property_id: string → Property.id
+  linked_entities: {
+    entity_type: string
+    entity_id: string
+  }[]
+}
+```
+
+**Insight Types:**
+- `Predictive Maintenance` → linked to Equipment
+- `Cost Optimization` → linked to Projects
+- `Risk Reduction` → linked to Risks
+- `Efficiency Improvement` → linked to Equipment/Property
+- `Lifecycle Planning` → linked to multiple entities
+
+**AI Reasoning Chain:**
+```javascript
+// Example: AI genera insight connesso a multiple entities
+const insight = await base44.entities.PropertyInsight.create({
+  property_id: propertyId,
+  insight_type: 'Predictive Maintenance',
+  title: 'Sostituzione HVAC raccomandata',
+  description: 'HVAC ha 18 anni, efficienza < 70%',
+  ai_reasoning: `
+    Equipment età: 18 anni (installation_date: 2008)
+    Efficiency degradation: 32% (da telemetry)
+    Manutenzioni: 3 negli ultimi 5 anni (sotto media)
+    Ticket correlati: 2 (HVAC Failure)
+    Costo sostituzione: €8,000
+    Costo riparazioni annuali: €1,200
+    ROI sostituzione: 6.7 anni
+  `,
+  linked_entities: [
+    { entity_type: 'PropertyEquipment', entity_id: hvacId },
+    { entity_type: 'PropertyMaintenance', entity_id: maintId },
+    { entity_type: 'SupportTicket', entity_id: ticketId1 },
+    { entity_type: 'SupportTicket', entity_id: ticketId2 },
+  ],
+  estimated_cost_savings: 15000, // 10 anni di riparazioni evitate
+  time_horizon: 'Long-term (1+ years)',
+});
+```
+
+---
+
+### 8. Property ↔ Suppliers
+
+**Relazione:** `SERVED_BY` / `SERVES`
+```typescript
+// Indiretta tramite Projects, Maintenance, Equipment
+Property {
+  suppliers: Supplier[] (derived via relationships)
+}
+
+Project {
+  supplier_id?: string → Supplier.id
+}
+
+PropertyMaintenance {
+  supplier_id?: string → Supplier.id
+}
+
+PropertyEquipment {
+  supplier_id?: string → Supplier.id
+}
+```
+
+**Supplier Network:**
+```javascript
+// Trova tutti i fornitori per una proprietà
+const [projects, maintenance, equipment] = await Promise.all([
+  base44.entities.Project.filter({ property_id: propertyId }),
+  base44.entities.PropertyMaintenance.filter({ property_id: propertyId }),
+  base44.entities.PropertyEquipment.filter({ property_id: propertyId }),
+]);
+
+const supplierIds = new Set([
+  ...projects.map(p => p.supplier_id).filter(Boolean),
+  ...maintenance.map(m => m.supplier_id).filter(Boolean),
+  ...equipment.map(e => e.supplier_id).filter(Boolean),
+]);
+
+const suppliers = await base44.entities.Supplier.filter({ 
+  id: { $in: Array.from(supplierIds) } 
+});
+```
+
+---
+
+### 9. Systems Interconnections
+
+**Equipment ↔ Projects:**
+```typescript
+// Un progetto può installare/modificare equipment
+Project {
+  title: "Sostituzione HVAC"
+  // Dopo completamento:
+  → Crea PropertyEquipment (nuovo HVAC)
+  → Aggiorna PropertyEquipment.status (decommissioned per vecchio)
+}
+```
+
+**Equipment ↔ Maintenance:**
+```typescript
+PropertyEquipment {
+  last_maintenance_date: date
+  next_maintenance_due: date
+  maintenance_interval_months: number
+}
+
+PropertyMaintenance {
+  equipment_id: string → PropertyEquipment.id
+  // After completion:
+  → Aggiorna Equipment.last_maintenance_date
+  → Calcola Equipment.next_maintenance_due
+}
+```
+
+**Tickets ↔ Risks:**
+```javascript
+// Pattern: 3+ ticket stesso issue_type → Risk
+const ticketsByType = {};
+tickets.forEach(t => {
+  ticketsByType[t.issue_type] = (ticketsByType[t.issue_type] || 0) + 1;
+});
+
+Object.entries(ticketsByType).forEach(([type, count]) => {
+  if (count >= 3) {
+    await base44.entities.PropertyRisk.create({
+      property_id: propertyId,
+      risk_type: mapIssueToRisk(type),
+      severity: count >= 5 ? 'Critical' : 'High',
+      confidence_level: 85 + (count * 3),
+      evidence: tickets.filter(t => t.issue_type === type).map(t => t.id),
+      ai_reasoning: `${count} ticket per ${type} negli ultimi 12 mesi`,
     });
-    
-    if (tickets.length >= 2) {
-      return {
-        equipment: equip,
-        issue_count: tickets.length,
-        last_occurrence: tickets.sort(...)[0],
-      };
-    }
-  })
-);
+  }
+});
 ```
 
 ---
 
-### Query 3: Lifecycle Cost Analysis
+## Graph Traversal Examples
+
+### Example 1: Impact Analysis
+
+**Query:** "Qual è l'impatto totale di un rischio su una proprietà?"
 
 ```javascript
-// Total cost of ownership for equipment
-async function getLifecycleCost(equipmentId) {
-  const equipment = await base44.entities.PropertyEquipment.get(equipmentId);
-  
-  // Find all related maintenance
-  const maintenance = await base44.entities.PropertyMaintenance.filter({
-    equipment_id: equipmentId,
-  });
-  const maintenanceCost = maintenance.reduce((sum, m) => sum + (m.cost || 0), 0);
-  
-  // Find related projects (installations/upgrades)
-  const projects = await base44.entities.Project.filter({
-    property_id: equipment.property_id,
-    // Filter by equipment category
-  });
-  const projectCost = projects.reduce((sum, p) => sum + (p.contract_value || 0), 0);
-  
-  return {
-    initial_cost: projectCost,
-    maintenance_cost: maintenanceCost,
-    total_lifecycle_cost: projectCost + maintenanceCost,
-    years_in_service: calculateYearsInService(equipment.installation_date),
-    annual_cost: (projectCost + maintenanceCost) / calculateYearsInService(equipment.installation_date),
-  };
-}
-```
-
----
-
-### Query 4: Risk Propagation
-
-```javascript
-// How one risk affects other systems
-async function getRiskPropagation(riskId) {
+async function calculateRiskImpact(riskId) {
   const risk = await base44.entities.PropertyRisk.get(riskId);
   
-  // Find related equipment
-  const relatedEquipment = await findEquipmentByRiskType(risk.risk_type);
-  
-  // Find related properties (if multi-property risk)
-  const relatedProperties = await findPropertiesAtRisk(risk.risk_type);
-  
-  // Calculate total exposure
-  const totalExposure = relatedEquipment.reduce((sum, e) => 
-    sum + (e.replacement_cost_estimate || 0), 0);
-  
-  return {
-    primary_risk: risk,
-    affected_equipment: relatedEquipment,
-    affected_properties: relatedProperties,
-    total_exposure: totalExposure,
-    recommended_actions: risk.recommended_actions,
-  };
-}
-```
-
----
-
-### Query 5: Insight-to-Action Tracking
-
-```javascript
-// Track how many insights become actions
-async function getInsightConversion(propertyId) {
-  const insights = await base44.entities.PropertyInsight.filter({
-    property_id: propertyId,
+  // 1. Trova ticket correlati
+  const tickets = await base44.entities.SupportTicket.filter({ 
+    property_id: risk.property_id,
+    issue_type: mapRiskToIssue(risk.risk_type)
   });
   
-  const conversionData = await Promise.all(
-    insights.map(async (insight) => {
-      // Check if insight generated maintenance
-      const maintenance = await base44.entities.PropertyMaintenance.filter({
-        property_id: propertyId,
-        ai_generated: true,
-        // Match by insight reference
-      });
-      
-      return {
-        insight,
-        converted: maintenance.length > 0,
-        actions: maintenance,
-      };
-    })
-  );
+  // 2. Trova equipment interessato
+  const equipment = await base44.entities.PropertyEquipment.filter({
+    property_id: risk.property_id,
+    category: mapRiskToCategory(risk.risk_type)
+  });
   
-  const conversionRate = conversionData.filter(d => d.converted).length / insights.length;
+  // 3. Trova manutenzione necessaria
+  const maintenance = await base44.entities.PropertyMaintenance.filter({
+    property_id: risk.property_id,
+    status: 'Scheduled'
+  });
+  
+  // 4. Calcola costo totale
+  const totalCost = 
+    tickets.reduce((sum, t) => sum + (t.estimated_cost || 0), 0) +
+    equipment.reduce((sum, e) => sum + (e.replacement_cost_estimate || 0), 0) +
+    maintenance.reduce((sum, m) => sum + (m.cost || 0), 0);
   
   return {
-    total_insights: insights.length,
-    converted_insights: conversionData.filter(d => d.converted).length,
-    conversion_rate: conversionRate,
-    total_actions: conversionData.reduce((sum, d) => sum + d.actions.length, 0),
+    risk,
+    impact: {
+      tickets: tickets.length,
+      equipment: equipment.length,
+      maintenance: maintenance.length,
+      total_cost: totalCost,
+      timeline: getTimeline(tickets, equipment, maintenance),
+    }
+  };
+}
+```
+
+### Example 2: Predictive Maintenance Chain
+
+**Query:** "Quali manutenzioni saranno necessarie nei prossimi 6 mesi?"
+
+```javascript
+async function predictMaintenance(propertyId, months = 6) {
+  const [equipment, maintenanceHistory, risks, insights] = await Promise.all([
+    base44.entities.PropertyEquipment.filter({ property_id: propertyId }),
+    base44.entities.PropertyMaintenance.filter({ property_id: propertyId }),
+    base44.entities.PropertyRisk.filter({ property_id: propertyId, status: { $ne: 'Resolved' } }),
+    base44.entities.PropertyInsight.filter({ property_id: propertyId, status: 'New' }),
+  ]);
+  
+  const predictions = [];
+  
+  // 1. Equipment-based predictions
+  equipment.forEach(e => {
+    if (e.next_maintenance_due) {
+      const dueDate = new Date(e.next_maintenance_due);
+      const monthsUntilDue = (dueDate - new Date()) / (1000 * 60 * 60 * 24 * 30);
+      
+      if (monthsUntilDue <= months) {
+        predictions.push({
+          type: 'scheduled',
+          equipment: e.name,
+          due_date: dueDate,
+          priority: monthsUntilDue <= 1 ? 'High' : 'Medium',
+          source: 'Equipment schedule',
+        });
+      }
+    }
+    
+    // Age-based replacement
+    const age = new Date().getFullYear() - new Date(e.installation_date).getFullYear();
+    if (age >= e.expected_lifespan_years * 0.9) {
+      predictions.push({
+        type: 'replacement',
+        equipment: e.name,
+        reason: `Età: ${age} anni (vita utile: ${e.expected_lifespan_years})`,
+        priority: 'High',
+        estimated_cost: e.replacement_cost_estimate,
+      });
+    }
+  });
+  
+  // 2. Risk-based predictions
+  risks.filter(r => r.severity === 'Critical' || r.severity === 'High').forEach(r => {
+    predictions.push({
+      type: 'preventive',
+      reason: `Mitigazione rischio: ${r.title}`,
+      priority: r.severity,
+      source: 'Risk engine',
+    });
+  });
+  
+  // 3. AI insights
+  insights.forEach(i => {
+    if (i.insight_type === 'Predictive Maintenance') {
+      predictions.push({
+        type: 'ai_generated',
+        title: i.title,
+        reasoning: i.ai_reasoning,
+        estimated_savings: i.estimated_cost_savings,
+      });
+    }
+  });
+  
+  return predictions.sort((a, b) => {
+    const priorityOrder = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+    return priorityOrder[b.priority] - priorityOrder[a.priority];
+  });
+}
+```
+
+### Example 3: Property Health Score (Graph-Based)
+
+```javascript
+async function calculatePropertyHealthScore(propertyId) {
+  const [property, tickets, projects, equipment, maintenance, risks] = await Promise.all([
+    base44.entities.Property.get(propertyId),
+    base44.entities.SupportTicket.filter({ property_id: propertyId }),
+    base44.entities.Project.filter({ property_id: propertyId }),
+    base44.entities.PropertyEquipment.filter({ property_id: propertyId }),
+    base44.entities.PropertyMaintenance.filter({ property_id: propertyId }),
+    base44.entities.PropertyRisk.filter({ property_id: propertyId }),
+  ]);
+  
+  let score = 100;
+  const factors = [];
+  
+  // Factor 1: Active tickets (-3 per ticket)
+  const activeTickets = tickets.filter(t => t.status !== 'Resolved' && t.status !== 'Closed').length;
+  score -= activeTickets * 3;
+  factors.push({ name: 'Active Tickets', impact: -activeTickets * 3, value: activeTickets });
+  
+  // Factor 2: Equipment age
+  const oldEquipment = equipment.filter(e => {
+    const age = new Date().getFullYear() - new Date(e.installation_date).getFullYear();
+    return age > e.expected_lifespan_years * 0.8;
+  }).length;
+  score -= oldEquipment * 5;
+  factors.push({ name: 'Old Equipment', impact: -oldEquipment * 5, value: oldEquipment });
+  
+  // Factor 3: Maintenance compliance
+  const overdueMaintenance = maintenance.filter(m => 
+    m.status === 'Scheduled' && new Date(m.scheduled_date) < new Date()
+  ).length;
+  score -= overdueMaintenance * 4;
+  factors.push({ name: 'Overdue Maintenance', impact: -overdueMaintenance * 4, value: overdueMaintenance });
+  
+  // Factor 4: Active risks
+  const activeRisks = risks.filter(r => r.status !== 'Resolved' && r.status !== 'Mitigating').length;
+  const criticalRisks = risks.filter(r => r.severity === 'Critical').length;
+  score -= activeRisks * 5 + criticalRisks * 10;
+  factors.push({ 
+    name: 'Active Risks', 
+    impact: -(activeRisks * 5 + criticalRisks * 10), 
+    value: `${activeRisks} (${criticalRisks} critical)` 
+  });
+  
+  // Factor 5: Recent projects (positive if completed)
+  const recentProjects = projects.filter(p => {
+    const endDate = new Date(p.actual_end_date || p.expected_end_date);
+    const monthsAgo = (new Date() - endDate) / (1000 * 60 * 60 * 24 * 30);
+    return monthsAgo <= 12 && p.status === 'Delivered';
+  }).length;
+  score += recentProjects * 2;
+  factors.push({ name: 'Recent Projects', impact: recentProjects * 2, value: recentProjects });
+  
+  return {
+    score: Math.max(0, Math.min(100, score)),
+    factors,
+    severity: score >= 85 ? 'Excellent' : score >= 70 ? 'Good' : score >= 50 ? 'Warning' : 'Critical',
   };
 }
 ```
 
 ---
 
-## Graph Visualization
+## Knowledge Graph Benefits
 
-### Node Types
-- **Property** (center node)
-- **Equipment** (connected to property)
-- **Maintenance** (connected to equipment/property)
-- **Ticket** (connected to property/equipment)
-- **Risk** (connected to property)
-- **Insight** (connected to property)
-- **Project** (connected to property)
-- **Client** (connected to property)
-- **Supplier** (connected to projects)
+### 1. AI Reasoning Enhancement
 
-### Edge Weights
-- **Strong** (weight=3): Direct relationships (property-equipment)
-- **Medium** (weight=2): Indirect relationships (equipment-maintenance)
-- **Weak** (weight=1): Temporal relationships (property-project)
+**Senza Graph:**
+```
+"Manutenzione HVAC raccomandata"
+```
 
----
+**Con Graph:**
+```
+"Manutenzione HVAC raccomandata PERCHÉ:
+- Equipment: 14 mesi senza manutenzione (intervallo: 12 mesi)
+- Ticket: 2 chiamate per 'HVAC Failure' negli ultimi 3 mesi
+- Risk: 'HVAC Efficiency Degradation' con severity: High
+- Insight AI: Efficienza calata dal 92% al 74%
+- Progetto 2010: Installazione originale (16 anni fa)
+- Equipaggiamento correlato: Thermostat ha 8 anni (within lifespan)
 
-## Implementation Patterns
+AZIONI RACCOMANDATE:
+1. Ispezione immediata (entro 7 giorni)
+2. Preventivo sostituzione (se efficienza < 70%)
+3. Monitoraggio telemetria (se IoT disponibile)
 
-### Pattern 1: Entity References
+COSTI STIMATI:
+- Manutenzione: €300
+- Sostituzione (se necessaria): €5,000-8,000
+- Inazione: €1,200/anno in riparazioni + €400/anno in energia extra"
+```
+
+### 2. Predictive Capabilities
+
+**Pattern Recognition:**
+```javascript
+// Se Property A ha:
+// - 3 water leak tickets
+// - età impianto idraulico > 20 anni
+// - maintenance compliance < 50%
+// → Genera risk: "Probabile perdita strutturale"
+// → Genera insight: "Sostituzione tubazioni raccomandata"
+// → Genera maintenance: "Ispezione termografica"
+```
+
+### 3. Cross-Property Learning
 
 ```javascript
-// Store entity references in metadata
-PropertyInsight {
-  linked_entities: [
-    { entity_type: 'PropertyEquipment', entity_id: 'equip_123' },
-    { entity_type: 'PropertyRisk', entity_id: 'risk_456' },
-  ]
-}
-```
-
-### Pattern 2: Bidirectional Links
-
-```javascript
-// Equipment → Tickets
-PropertyEquipment {
-  linked_tickets: ['ticket_1', 'ticket_2']
-}
-
-// Ticket → Equipment (reverse)
-SupportTicket {
-  related_equipment_id: 'equip_123'
-}
-```
-
-### Pattern 3: Aggregated Metrics
-
-```javascript
-// Pre-calculated graph metrics on property
-Property {
-  graph_metrics: {
-    total_equipment: 15,
-    active_tickets: 3,
-    pending_maintenance: 5,
-    active_risks: 2,
-    total_invested: 150000,
-    health_score: 78,
-    last_updated: '2024-05-27'
-  }
-}
+// Se 5 proprietà con:
+// - Stesso tipo di HVAC
+// - Stessa età (15-18 anni)
+// - Tutte hanno avuto failures negli ultimi 6 mesi
+// → Genera insight per TUTTE le proprietà con HVAC simile
+// "Pattern rilevato: HVAC model X ha failure rate 80% a 15 anni"
 ```
 
 ---
 
-## AI/ML Opportunities
+## Implementation Status
 
-### 1. Link Prediction
-```
-Predict: Which equipment will need maintenance next?
-Features: Age, maintenance history, ticket patterns, seasonality
-Model: Graph neural network (GNN)
-```
+### ✅ Implemented (Phase 1)
 
-### 2. Node Classification
-```
-Predict: Is this property high-risk?
-Features: Equipment age, ticket frequency, maintenance compliance
-Model: Random forest on graph features
-```
+- [x] Entity: Property
+- [x] Entity: PropertyEquipment
+- [x] Entity: PropertyMaintenance
+- [x] Entity: PropertyRisk
+- [x] Entity: PropertyInsight
+- [x] Entity: SupportTicket
+- [x] Entity: Project
+- [x] Entity: Supplier
+- [x] Function: generatePredictiveInsights (graph traversal)
+- [x] Component: PredictivePropertyHealth (health score)
+- [x] Component: LifecycleTimeline (graph visualization)
+- [x] Component: PredictiveGuardian (opportunity detection)
 
-### 3. Community Detection
-```
-Find: Clusters of properties with similar issues
-Use case: Benchmarking, pattern recognition
-Algorithm: Louvain community detection
-```
+### 🔄 In Progress (Phase 2)
 
-### 4. Centrality Analysis
-```
-Find: Most critical equipment in property network
-Metric: Betweenness centrality
-Action: Prioritize maintenance for high-centrality nodes
-```
+- [ ] Entity: IoTDevice (IoT-ready)
+- [ ] Entity: IoTReading (design pronto)
+- [ ] Function: ingestIoTTelemetry (design pronto)
+- [ ] Real-time graph updates (subscriptions)
 
----
+### 📋 Future (Phase 3)
 
-## Benefits
-
-**Operational:**
-- Query complesse su dati correlati
-- Identificazione pattern nascosti
-- Decisioni basate su contesto completo
-
-**AI/ML:**
-- Feature engineering da relazioni
-- Training data arricchito
-- Predictive accuracy migliorata
-
-**Business:**
-- Upsell identificato tramite pattern
-- Risk exposure quantificato
-- ROI per intervento calcolato
+- [ ] Graph database integration (Neo4j)
+- [ ] ML-based relationship discovery
+- [ ] Automated insight generation
+- [ ] Cross-property pattern learning
 
 ---
 
-## Future Enhancements
+## Query Performance
 
-1. **Graph Database**: Migrare a Neo4j o Amazon Neptune per query più efficienti
-2. **Real-time Updates**: Subscription a cambiamenti nel graph
-3. **Visual Explorer**: UI per navigare il knowledge graph
-4. **Semantic Search**: Ricerca basata su relazioni, non solo keyword
-5. **Recommendation Engine**: "Properties like this also had..."
+### Optimization Strategies
+
+1. **Indexing:**
+   - `property_id` su tutte le entity correlate
+   - `status` per filtering rapido
+   - `created_date` per timeline queries
+
+2. **Caching:**
+   - Health scores: cache 1 ora
+   - Risk assessments: cache 30 min
+   - Insights: cache fino a update
+
+3. **Pagination:**
+   - Max 50 results per query
+   - Cursor-based pagination per timeline
+
+4. **Parallel Fetching:**
+   ```javascript
+   const [tickets, projects, equipment, maintenance, risks] = await Promise.all([...]);
+   ```
 
 ---
 
-## Security
+## Business Value
 
-- **Tenant Isolation**: company_id filter su tutte le query
-- **Access Control**: Property-scoped permissions
-- **Audit Trail**: Log di tutte le traversals
-- **Data Minimization**: Only necessary relationships exposed
+### Per Property Manager:
+- **Decisioni basate su dati completi** (non silos)
+- **Identificazione pattern invisibili** (cross-entity)
+- **Prioritizzazione intelligente** (impact-based)
+
+### Per Clienti:
+- **Trasparenza totale** (tutte le relazioni visibili)
+- **Prevenzione proattiva** (AI vede problemi prima che accadano)
+- **Ottimizzazione costi** (lifecycle planning)
+
+### Per Codex OS:
+- **Competitive moat** (più dati → AI migliore → più clienti)
+- **Revenue ricorrente** (subscription su insight premium)
+- **Scalabilità** (graph cresce con ogni property)
+
+---
+
+## Next Steps
+
+1. **Graph Visualization UI**
+   - Interactive node-link diagram
+   - Filter by entity type
+   - Click to navigate relationships
+
+2. **Graph-Based AI**
+   - Graph neural networks per prediction
+   - Embedding per similarity search
+   - Automated relationship discovery
+
+3. **Real-Time Updates**
+   - WebSocket subscriptions per graph changes
+   - Instant insight regeneration
+   - Live health score updates
+
+---
+
+**Il Property Knowledge Graph è l'infrastruttura semantica che abilita l'intelligenza predittiva di Codex OS.** 🧠
