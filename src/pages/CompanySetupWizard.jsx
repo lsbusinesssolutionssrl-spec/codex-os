@@ -116,18 +116,14 @@ export default function CompanySetupWizard() {
       await base44.functions.invoke('updateTenantStatus', {
         companyId,
         status: 'active',
-        onboardingStep: 'company_completed',
       });
-
-      // Refresh context to get updated data
-      await refreshContext();
 
       toast.success('Configurazione azienda completata!');
       
-      // Redirect to dashboard
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
+      console.log('Redirecting to dashboard...');
+      
+      // Redirect to dashboard immediately
+      navigate('/dashboard');
     } catch (error) {
       console.error('Error saving company:', error);
       toast.error('Errore nel salvataggio: ' + error.message);
