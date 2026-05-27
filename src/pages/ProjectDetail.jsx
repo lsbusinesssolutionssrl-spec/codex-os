@@ -7,6 +7,7 @@ import FinancialSummary from '../components/FinancialSummary';
 import PhotoGallery from '../components/PhotoGallery';
 import Breadcrumb from '../components/Breadcrumb';
 import { hasRole, canEditFinancialFields } from '../lib/roleUtils';
+import InternalComments from '../components/InternalComments';
 
 const STATUSES = ['Lead', 'Survey', 'Estimate', 'Approved', 'In Progress', 'Testing', 'Delivered', 'Guardian Active', 'Archived'];
 const SOP_CATEGORIES = ['Bathroom', 'Full Home', 'Electrical', 'Networking', 'Security', 'Roofing', 'Handover'];
@@ -476,6 +477,9 @@ export default function ProjectDetail() {
           <p className="text-sm text-gray-600 whitespace-pre-wrap">{project.notes}</p>
         </div>
       )}
+
+      {/* Internal Comments */}
+      <InternalComments entityType="project" entityId={id} />
 
       {/* Report Modal */}
       {reportModal && (

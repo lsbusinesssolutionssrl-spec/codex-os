@@ -57,6 +57,9 @@ import ApiKeys from './pages/ApiKeys';
 import Tasks from './pages/Tasks';
 import TechnicianView from './pages/TechnicianView';
 import ActivityFeed from './pages/ActivityFeed';
+import NotificationCenter from './pages/NotificationCenter';
+import MaintenancePlanning from './pages/MaintenancePlanning';
+import OperationsDashboard from './pages/OperationsDashboard';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -135,6 +138,9 @@ const AuthenticatedApp = () => {
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/technician" element={<TechnicianView />} />
         <Route path="/activity" element={<ActivityFeed />} />
+        <Route path="/notifications" element={<NotificationCenter />} />
+        <Route path="/maintenance" element={<MaintenancePlanning />} />
+        <Route path="/operations" element={<OperationsDashboard />} />
       </Route>
       <Route element={<PortalLayout />}>
         <Route path="/portal" element={<ClientPortal />} />

@@ -1,0 +1,70 @@
+{
+  "name": "Comment",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "entity_type": {
+      "type": "string",
+      "title": "Entity Type",
+      "enum": [
+        "project",
+        "estimate",
+        "ticket",
+        "task",
+        "property"
+      ]
+    },
+    "entity_id": {
+      "type": "string",
+      "title": "Entity ID"
+    },
+    "content": {
+      "type": "string",
+      "title": "Content"
+    },
+    "author_email": {
+      "type": "string",
+      "title": "Author"
+    },
+    "author_name": {
+      "type": "string",
+      "title": "Author Name"
+    },
+    "mentions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Mentions (emails)"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Attachments (URLs)"
+    },
+    "parent_id": {
+      "type": "string",
+      "title": "Parent Comment ID"
+    },
+    "is_internal": {
+      "type": "boolean",
+      "title": "Internal Only",
+      "default": true
+    },
+    "is_edited": {
+      "type": "boolean",
+      "title": "Edited",
+      "default": false
+    }
+  },
+  "required": [
+    "entity_type",
+    "entity_id",
+    "content"
+  ]
+}

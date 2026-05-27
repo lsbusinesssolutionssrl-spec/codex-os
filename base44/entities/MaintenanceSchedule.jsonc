@@ -1,0 +1,99 @@
+{
+  "name": "MaintenanceSchedule",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "maintenance_type": {
+      "type": "string",
+      "title": "Type",
+      "enum": [
+        "HVAC",
+        "Electrical Inspection",
+        "Roof Inspection",
+        "Security Inspection",
+        "Network Maintenance",
+        "Plumbing",
+        "Fire Safety",
+        "Elevator",
+        "Pest Control",
+        "Other"
+      ]
+    },
+    "property_id": {
+      "type": "string",
+      "title": "Property"
+    },
+    "client_id": {
+      "type": "string",
+      "title": "Client"
+    },
+    "guardian_subscription_id": {
+      "type": "string",
+      "title": "Guardian Subscription"
+    },
+    "frequency": {
+      "type": "string",
+      "title": "Frequency",
+      "enum": [
+        "Weekly",
+        "Monthly",
+        "Quarterly",
+        "Semi-Annual",
+        "Annual",
+        "Custom"
+      ]
+    },
+    "frequency_days": {
+      "type": "number",
+      "title": "Custom Frequency (days)"
+    },
+    "assigned_technician": {
+      "type": "string",
+      "title": "Assigned Technician"
+    },
+    "next_due_date": {
+      "type": "string",
+      "title": "Next Due Date"
+    },
+    "last_completed_date": {
+      "type": "string",
+      "title": "Last Completed"
+    },
+    "estimated_hours": {
+      "type": "number",
+      "title": "Estimated Hours"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "Active",
+        "Paused",
+        "Completed",
+        "Overdue"
+      ],
+      "default": "Active"
+    },
+    "auto_create_ticket": {
+      "type": "boolean",
+      "title": "Auto-create Ticket on Due",
+      "default": true
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "title",
+    "maintenance_type",
+    "frequency"
+  ]
+}

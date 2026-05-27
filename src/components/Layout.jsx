@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Home, FileText, FolderKanban,
-  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2, BookOpen, TrendingUp, Crown, Clock, Package, DollarSign, Brain, Database, Building2, CreditCard, ListTodo, Wrench, Activity
+  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2, BookOpen, TrendingUp, Crown, Clock, Package, DollarSign, Brain, Database, Building2, CreditCard, ListTodo, Wrench, Activity, Bell, Zap
 } from 'lucide-react';
 
 import { base44 } from '@/api/base44Client';
@@ -47,6 +47,9 @@ const navItems = [
   { path: '/tasks', icon: ListTodo, label: 'Task' },
   { path: '/technician', icon: Wrench, label: 'Vista Tecnico' },
   { path: '/activity', icon: Activity, label: 'Activity Feed', roles: ['admin', 'company_admin', 'project_manager'] },
+  { path: '/notifications', icon: Bell, label: 'Notifiche' },
+  { path: '/maintenance', icon: Wrench, label: 'Manutenzioni Programmate' },
+  { path: '/operations', icon: Zap, label: 'Operations Dashboard', roles: ['admin', 'company_admin', 'project_manager'] },
 ];
 
 export default function Layout() {

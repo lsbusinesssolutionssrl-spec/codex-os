@@ -1,0 +1,74 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "message": {
+      "type": "string",
+      "title": "Message"
+    },
+    "type": {
+      "type": "string",
+      "title": "Type",
+      "enum": [
+        "estimate_accepted",
+        "estimate_rejected",
+        "project_delayed",
+        "checklist_overdue",
+        "ticket_assigned",
+        "ticket_urgent",
+        "project_delivered",
+        "payment_overdue",
+        "margin_below_target",
+        "document_uploaded",
+        "guardian_expiring",
+        "task_assigned",
+        "maintenance_due",
+        "comment_mention"
+      ]
+    },
+    "priority": {
+      "type": "string",
+      "title": "Priority",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Urgent"
+      ],
+      "default": "Medium"
+    },
+    "entity_type": {
+      "type": "string",
+      "title": "Entity Type"
+    },
+    "entity_id": {
+      "type": "string",
+      "title": "Entity ID"
+    },
+    "assigned_to": {
+      "type": "string",
+      "title": "Assigned To (email)"
+    },
+    "is_read": {
+      "type": "boolean",
+      "title": "Read",
+      "default": false
+    },
+    "action_url": {
+      "type": "string",
+      "title": "Action URL"
+    }
+  },
+  "required": [
+    "title",
+    "type"
+  ]
+}

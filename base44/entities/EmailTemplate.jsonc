@@ -1,0 +1,67 @@
+{
+  "name": "EmailTemplate",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "name": {
+      "type": "string",
+      "title": "Template Name"
+    },
+    "trigger_event": {
+      "type": "string",
+      "title": "Trigger Event",
+      "enum": [
+        "estimate_sent",
+        "estimate_accepted",
+        "estimate_rejected",
+        "project_scheduled",
+        "project_delivered",
+        "maintenance_reminder",
+        "guardian_renewal",
+        "ticket_created",
+        "ticket_resolved",
+        "payment_reminder"
+      ]
+    },
+    "subject": {
+      "type": "string",
+      "title": "Email Subject"
+    },
+    "body_html": {
+      "type": "string",
+      "title": "Body (HTML)"
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Available Variables",
+      "description": "e.g. {{client_name}}, {{project_title}}, {{due_date}}"
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    },
+    "send_to": {
+      "type": "string",
+      "title": "Send To",
+      "enum": [
+        "client",
+        "admin",
+        "project_manager",
+        "assigned_technician",
+        "all_team"
+      ]
+    }
+  },
+  "required": [
+    "name",
+    "trigger_event",
+    "subject"
+  ]
+}
