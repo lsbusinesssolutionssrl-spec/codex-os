@@ -57,6 +57,11 @@ export default function TenantOnboarding() {
 
   const handleFinish = async () => {
     setSaving(true);
+    
+    // Recupera i piani subscription per ottenere il plan_id
+    const plans = await base44.entities.SubscriptionPlan.list();
+    const selectedPlan = plans.find(p => p.name.toLowerCase() === form.subscription_plan.toLowerCase()) || plans[0];
+    
     const company = await base44.entities.Company.create({
       name: form.name,
       slug: form.slug || form.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
@@ -79,6 +84,7 @@ export default function TenantOnboarding() {
 
     await base44.entities.CompanySubscription.create({
       company_id: company.id,
+      plan_id: selectedPlan.id,
       status: 'trial',
       billing_cycle: 'monthly',
       trial_start: new Date().toISOString().split('T')[0],
