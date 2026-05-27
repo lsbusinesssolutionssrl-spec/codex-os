@@ -102,6 +102,7 @@ import AITrainingDataQuality from './pages/AITrainingDataQuality';
 import EnterpriseOperationalUX from './pages/EnterpriseOperationalUX';
 import LiveCommandCenter from './pages/LiveCommandCenter';
 import ExecutiveFocusDashboard from './pages/ExecutiveFocusDashboard';
+import EvolutionDashboard from './pages/EvolutionDashboard';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -152,6 +153,7 @@ const AuthenticatedApp = () => {
       <Route path="/enterprise-ux" element={<EnterpriseOperationalUX />} />
       <Route path="/dashboard" element={<LiveCommandCenter />} />
       <Route path="/executive-focus" element={<ExecutiveFocusDashboard />} />
+      <Route path="/evolution" element={<EvolutionDashboard />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/clients/:id" element={<ClientDetail />} />
         <Route path="/properties" element={<Properties />} />
