@@ -64,17 +64,17 @@ export default function ProductAnalytics() {
         if (companyEstimates > 3) score += 15;
         if (companyMemories > 0) score += 10;
 
-        let health = 'Inactive';
-        if (score >= 80) health = 'Healthy';
-        else if (score >= 60) health = 'Needs Attention';
-        else if (score >= 40) health = 'At Risk';
+        let health = 'Inattivo';
+        if (score >= 80) health = 'Sano';
+        else if (score >= 60) health = 'Da Monitorare';
+        else if (score >= 40) health = 'A Rischio';
 
         return {
           company_id: c.id,
           company_name: c.name,
           health,
           score,
-          status: sub?.status || 'No subscription',
+          status: sub?.status || 'Nessun abbonamento',
           projects: companyProjects,
           users: companyUsers,
           lastLogin: c.updated_date,
@@ -83,11 +83,11 @@ export default function ProductAnalytics() {
 
       // Feature usage
       const featureUsage = [
-        { feature: 'Logins', count: users.length, icon: Users },
-        { feature: 'Projects Created', count: projects.length, icon: Activity },
-        { feature: 'Estimates Created', count: estimates.length, icon: BarChart3 },
-        { feature: 'Tickets Closed', count: tickets.filter(t => t.status === 'Resolved').length, icon: CheckCircle },
-        { feature: 'AI Queries', count: memories.length, icon: Cpu },
+        { feature: 'Accessi', count: users.length, icon: Users },
+        { feature: 'Progetti Creati', count: projects.length, icon: Activity },
+        { feature: 'Preventivi Creati', count: estimates.length, icon: BarChart3 },
+        { feature: 'Ticket Chiusi', count: tickets.filter(t => t.status === 'Resolved').length, icon: CheckCircle },
+        { feature: 'Richieste AI', count: memories.length, icon: Cpu },
       ];
 
       // Storage (placeholder)
@@ -127,34 +127,34 @@ export default function ProductAnalytics() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Product Analytics</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Platform-wide usage and tenant health</p>
+          <h1 className="text-2xl font-bold text-gray-900">Analytics Platform</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Utilizzo piattaforma e salute tenant</p>
         </div>
       </div>
 
       {/* High-Level Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <MetricCard label="Total Tenants" value={analytics.totalTenants} icon={Database} color="#1147FF" />
-        <MetricCard label="Active" value={analytics.activeTenants} icon={CheckCircle} color="#10B981" />
-        <MetricCard label="Trials" value={analytics.trialTenants} icon={Clock} color="#3B82F6" />
-        <MetricCard label="Expired" value={analytics.expiredTrials} icon={AlertTriangle} color="#F59E0B" />
-        <MetricCard label="Suspended" value={analytics.suspendedTenants} icon={AlertTriangle} color="#EF4444" />
+        <MetricCard label="Tenant Totali" value={analytics.totalTenants} icon={Database} color="#1147FF" />
+        <MetricCard label="Attivi" value={analytics.activeTenants} icon={CheckCircle} color="#10B981" />
+        <MetricCard label="Trial" value={analytics.trialTenants} icon={Clock} color="#3B82F6" />
+        <MetricCard label="Scaduti" value={analytics.expiredTrials} icon={AlertTriangle} color="#F59E0B" />
+        <MetricCard label="Sospesi" value={analytics.suspendedTenants} icon={AlertTriangle} color="#EF4444" />
       </div>
 
       {/* Usage Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <MetricCard label="Total Users" value={analytics.totalUsers} icon={Users} color="#0B2341" />
-        <MetricCard label="Projects" value={analytics.totalProjects} icon={Activity} color="#10B981" />
-        <MetricCard label="Estimates" value={analytics.totalEstimates} icon={BarChart3} color="#8B5CF6" />
-        <MetricCard label="Tickets" value={analytics.totalTickets} icon={CheckCircle} color="#EF4444" />
-        <MetricCard label="AI Queries" value={analytics.aiQueries} icon={Cpu} color="#F59E0B" />
+        <MetricCard label="Utenti Totali" value={analytics.totalUsers} icon={Users} color="#0B2341" />
+        <MetricCard label="Progetti" value={analytics.totalProjects} icon={Activity} color="#10B981" />
+        <MetricCard label="Preventivi" value={analytics.totalEstimates} icon={BarChart3} color="#8B5CF6" />
+        <MetricCard label="Ticket" value={analytics.totalTickets} icon={CheckCircle} color="#EF4444" />
+        <MetricCard label="Richieste AI" value={analytics.aiQueries} icon={Cpu} color="#F59E0B" />
       </div>
 
       {/* Feature Usage */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-blue-500" />
-          Feature Usage
+          Utilizzo Funzionalità
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {analytics.featureUsage.map((item, idx) => (
@@ -171,18 +171,18 @@ export default function ProductAnalytics() {
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-green-500" />
-          Tenant Health Scores
+          Salute Tenant
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
                 <th className="text-left py-3 px-4 font-medium text-gray-600">Tenant</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-600">Health</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-600">Score</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-600">Status</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-600">Projects</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-600">Users</th>
+                <th className="text-center py-3 px-4 font-medium text-gray-600">Salute</th>
+                <th className="text-center py-3 px-4 font-medium text-gray-600">Punteggio</th>
+                <th className="text-center py-3 px-4 font-medium text-gray-600">Stato</th>
+                <th className="text-center py-3 px-4 font-medium text-gray-600">Progetti</th>
+                <th className="text-center py-3 px-4 font-medium text-gray-600">Utenti</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -191,9 +191,9 @@ export default function ProductAnalytics() {
                   <td className="py-3 px-4 font-medium text-gray-900">{tenant.company_name}</td>
                   <td className="text-center py-3 px-4">
                     <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                      tenant.health === 'Healthy' ? 'bg-green-100 text-green-700' :
-                      tenant.health === 'Needs Attention' ? 'bg-yellow-100 text-yellow-700' :
-                      tenant.health === 'At Risk' ? 'bg-orange-100 text-orange-700' :
+                      tenant.health === 'Sano' ? 'bg-green-100 text-green-700' :
+                      tenant.health === 'Da Monitorare' ? 'bg-yellow-100 text-yellow-700' :
+                      tenant.health === 'A Rischio' ? 'bg-orange-100 text-orange-700' :
                       'bg-gray-100 text-gray-600'
                     }`}>
                       {tenant.health}
@@ -216,7 +216,7 @@ export default function ProductAnalytics() {
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <HardDrive className="w-5 h-5 text-purple-500" />
-          Storage Usage
+          Utilizzo Storage
         </h3>
         <div className="flex items-center gap-4">
           <div className="text-3xl font-bold text-gray-900">{analytics.storageUsed.toFixed(2)} GB</div>
@@ -226,7 +226,7 @@ export default function ProductAnalytics() {
               style={{ width: `${Math.min(100, (analytics.storageUsed / 100) * 100)}%`, backgroundColor: '#1147FF' }}
             />
           </div>
-          <div className="text-sm text-gray-500">of 100 GB</div>
+          <div className="text-sm text-gray-500">di 100 GB</div>
         </div>
       </div>
     </div>
