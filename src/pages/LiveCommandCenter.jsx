@@ -97,25 +97,25 @@ export default function LiveCommandCenter() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Activity className="w-6 h-6 text-blue-600" />
-            {currentWorkspace === 'technician' ? 'Field Operations' :
-             currentWorkspace === 'sales' ? 'Sales Command' :
-             currentWorkspace === 'financial' ? 'Financial Operations' :
-             currentWorkspace === 'guardian' ? 'Guardian Intelligence' :
-             currentWorkspace === 'super_admin' ? 'Platform Command' :
-             'Live Command Center'}
+            {currentWorkspace === 'technician' ? 'Operazioni Field' :
+             currentWorkspace === 'sales' ? 'Comando Vendite' :
+             currentWorkspace === 'financial' ? 'Operazioni Finanziarie' :
+             currentWorkspace === 'guardian' ? 'Intelligence Guardian' :
+             currentWorkspace === 'super_admin' ? 'Comando Platform' :
+             'Command Center Live'}
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {currentWorkspace === 'technician' ? 'Your assigned tasks and projects' :
-             currentWorkspace === 'sales' ? 'Pipeline and estimates overview' :
-             currentWorkspace === 'financial' ? 'Profitability and cashflow' :
-             currentWorkspace === 'guardian' ? 'Predictive maintenance intelligence' :
-             currentWorkspace === 'super_admin' ? 'Enterprise system controls' :
+            {currentWorkspace === 'technician' ? 'Task e progetti assegnati' :
+             currentWorkspace === 'sales' ? 'Panoramica pipeline e preventivi' :
+             currentWorkspace === 'financial' ? 'Redditività e flusso di cassa' :
+             currentWorkspace === 'guardian' ? 'Intelligence manutenzione predittiva' :
+             currentWorkspace === 'super_admin' ? 'Controlli sistema enterprise' :
              'Panoramica operativa in tempo reale'}
           </p>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg">
           <AlertCircle className="w-4 h-4 text-red-600" />
-          <span className="text-sm font-semibold text-red-700">{totalIssues} issue attivi</span>
+          <span className="text-sm font-semibold text-red-700">{totalIssues} problemi attivi</span>
         </div>
       </div>
 
@@ -241,7 +241,7 @@ export default function LiveCommandCenter() {
         <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-5">
           <h2 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Zap className="w-4 h-4 text-purple-600" />
-            AI Alerts
+            Avvisi AI
           </h2>
           <div className="space-y-2">
             {ops.aiAlerts.map((alert, idx) => (
