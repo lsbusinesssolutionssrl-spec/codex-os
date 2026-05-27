@@ -4,8 +4,7 @@ import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import { WorkspaceProvider } from '@/components/workspace/WorkspaceContext';
-import { TenantProvider } from '@/components/tenant/TenantContext';
+import { GlobalContextProvider } from '@/lib/GlobalContextEngine';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
@@ -270,14 +269,12 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
-        <WorkspaceProvider>
-          <TenantProvider>
-            <Router>
-              <AuthenticatedApp />
-            </Router>
-          </TenantProvider>
+        <GlobalContextProvider>
+          <Router>
+            <AuthenticatedApp />
+          </Router>
           <Toaster />
-        </WorkspaceProvider>
+        </GlobalContextProvider>
       </QueryClientProvider>
     </AuthProvider>
   )

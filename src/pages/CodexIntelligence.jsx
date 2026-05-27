@@ -9,6 +9,8 @@ import {
   BookOpen, PieChart
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
+import { ContextGate } from '@/components/ContextGate';
 
 const INSIGHT_TYPE_CONFIG = {
   Profitability:         { icon: DollarSign,     color: '#10B981', bg: 'bg-emerald-50',  border: 'border-emerald-200', label: 'Redditività' },
@@ -276,6 +278,7 @@ function InsightCard({ insight, onMarkRead }) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function CodexIntelligence() {
   const navigate = useNavigate();
+  const globalContext = useGlobalContext();
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [aiInsights, setAiInsights] = useState([]);
@@ -284,7 +287,9 @@ export default function CodexIntelligence() {
   const [activeSeverity, setActiveSeverity] = useState('all');
   const [metrics, setMetrics] = useState({});
   const [lastGenerated, setLastGenerated] = useState(null);
-  const [isPlatformMode, setIsPlatformMode] = useState(false);
+  
+  // Use global context
+  const { isPlatformMode, activeTenant, isContextResolved } = globalContext;
 
   useEffect(() => { loadAll(); }, []);
 
@@ -294,8 +299,6 @@ export default function CodexIntelligence() {
     // Get user filters for tenant isolation
     const filtersRes = await base44.functions.invoke('getUserFilters', {});
     const company_id = filtersRes.data.filters?.Project?.company_id || filtersRes.data.filters?.company_id;
-    const isPlatformMode = filtersRes.data.is_platform_mode;
-    setIsPlatformMode(!!isPlatformMode);
     
     // Platform mode - show diagnostics only
     if (isPlatformMode && !company_id) {
@@ -422,9 +425,11 @@ export default function CodexIntelligence() {
 
   const FILTER_TYPES = ['all', ...Object.keys(INSIGHT_TYPE_CONFIG)];
 
+  // Wrap entire module in ContextGate
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
+    <ContextGate requiredContext="any" requiredModule="intelligence">
+      <div className="p-6 max-w-7xl mx-auto space-y-6">
+        {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm"
@@ -583,5 +588,6 @@ export default function CodexIntelligence() {
         </button>
       </div>
     </div>
+    </ContextGate>
   );
 }

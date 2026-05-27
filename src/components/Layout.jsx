@@ -13,7 +13,8 @@ import CommandPalette from './CommandPalette';
 import QuickCreate from './QuickCreate';
 import TenantSwitcher from './tenant/TenantSwitcher';
 import { useOfflineSync } from '../hooks/useOfflineSync';
-import { useTenant } from './tenant/TenantContext';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
+import SessionDebugPanel from './SessionDebugPanel';
 import ContextBanner from './tenant/ContextBanner';
 
 // Tenant navigation - modules enabled dynamically based on plan
@@ -60,7 +61,8 @@ export default function Layout() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const { isOnline, queueCount } = useOfflineSync();
-  const { activeTenant, isPlatformMode, loading: tenantLoading } = useTenant();
+  const globalContext = useGlobalContext();
+  const { activeTenant, isPlatformMode, loading: contextLoading } = globalContext;
   const [userRole, setUserRole] = useState(null);
 
   // All hooks must be called unconditionally at the top
@@ -97,8 +99,8 @@ export default function Layout() {
     if (!ok) navigate('/', { replace: true });
   }, [userRole, location.pathname]);
 
-  // Show loading while tenant context initializes
-  if (tenantLoading) {
+  // Show loading while context initializes
+  if (contextLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
@@ -249,6 +251,7 @@ export default function Layout() {
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
+        <SessionDebugPanel />
       </div>
     </div>
   );
