@@ -117,6 +117,7 @@ import TenantIsolationAudit from './pages/TenantIntegrityAudit';
 import TenantMembershipRepair from './pages/TenantMembershipRepair';
 import TenantMembershipDebug from './pages/TenantMembershipDebug';
 import RouteIntegrityTest from './pages/RouteIntegrityTest';
+import ProvisioningValidator from './pages/ProvisioningValidator';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -255,6 +256,7 @@ const AuthenticatedApp = () => {
       <Route path="/tenant-membership-repair" element={<TenantMembershipRepair />} />
       <Route path="/tenant-membership-debug" element={<TenantMembershipDebug />} />
       <Route path="/route-test" element={<RouteIntegrityTest />} />
+      <Route path="/provisioning-validator" element={<ProvisioningValidator />} />
 
       </Route>
       <Route element={<PortalLayout />}>
