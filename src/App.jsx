@@ -67,6 +67,7 @@ import AIMemoryManager from './pages/AIMemoryManager';
 import AITestConsole from './pages/AITestConsole';
 import AIFoundationDashboard from './pages/AIFoundationDashboard';
 import AIArchitectureReview from './pages/AIArchitectureReview';
+import AICopilotFeatures from './pages/AICopilotFeatures';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -154,6 +155,7 @@ const AuthenticatedApp = () => {
         <Route path="/ai-test" element={<AITestConsole />} />
         <Route path="/ai-foundation" element={<AIFoundationDashboard />} />
         <Route path="/ai-architecture" element={<AIArchitectureReview />} />
+      <Route path="/ai-copilot" element={<AICopilotFeatures />} />
 
       </Route>
       <Route element={<PortalLayout />}>

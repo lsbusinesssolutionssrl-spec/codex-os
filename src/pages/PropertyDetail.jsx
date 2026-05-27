@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Home, Zap, Droplets, Thermometer, Wifi, Shield, DoorOpen, Edit2, Save, X, Trash2, ExternalLink, Brain } from 'lucide-react';
+import { ArrowLeft, Home, Zap, Droplets, Thermometer, Wifi, Shield, DoorOpen, Edit2, Save, X, Trash2, ExternalLink, Brain, Activity, Clock } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ContextualAIPanel from '../components/ai/ContextualAIPanel';
+import PropertyHealthScore from '../components/ai/PropertyHealthScore';
+import OperationalTimeline from '../components/ai/OperationalTimeline';
 
 const NOTES_SECTIONS = [
   { key: 'electrical_notes', label: 'Impianto Elettrico', icon: Zap, color: '#F59E0B' },
@@ -23,6 +25,8 @@ export default function PropertyDetail() {
   const [interventions, setInterventions] = useState([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const [showHealthScore, setShowHealthScore] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -94,6 +98,43 @@ export default function PropertyDetail() {
           </div>
         )}
       </div>
+
+      {/* AI Features Toggle */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setShowHealthScore(!showHealthScore)}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+            showHealthScore ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Activity className="w-3.5 h-3.5" />
+          Property Health
+        </button>
+        <button
+          onClick={() => setShowTimeline(!showTimeline)}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+            showTimeline ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Clock className="w-3.5 h-3.5" />
+          Timeline AI
+        </button>
+        <button
+          onClick={() => setShowAIPanel(!showAIPanel)}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+            showAIPanel ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Brain className="w-3.5 h-3.5" />
+          AI Copilot
+        </button>
+      </div>
+
+      {/* Property Health Score */}
+      {showHealthScore && <PropertyHealthScore propertyId={id} clientId={property.client_id} />}
+
+      {/* Operational Timeline */}
+      {showTimeline && <OperationalTimeline entityType="property" entityId={id} />}
 
       {/* Identity Card */}
       <div className="bg-gradient-to-br from-gray-900 to-blue-950 rounded-2xl p-6 text-white overflow-hidden relative">

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Camera, BookOpen, Home, FileCheck, FileText, Download, TrendingUp, Brain } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Camera, BookOpen, Home, FileCheck, FileText, Download, TrendingUp, Brain, Activity, Clock, Users } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 import FinancialSummary from '../components/FinancialSummary';
@@ -9,6 +9,8 @@ import Breadcrumb from '../components/Breadcrumb';
 import { hasRole, canEditFinancialFields } from '../lib/roleUtils';
 import InternalComments from '../components/InternalComments';
 import ContextualAIPanel from '../components/ai/ContextualAIPanel';
+import OperationalTimeline from '../components/ai/OperationalTimeline';
+import TechnicianLoadAnalysis from '../components/ai/TechnicianLoadAnalysis';
 
 const STATUSES = ['Lead', 'Survey', 'Estimate', 'Approved', 'In Progress', 'Testing', 'Delivered', 'Guardian Active', 'Archived'];
 const SOP_CATEGORIES = ['Bathroom', 'Full Home', 'Electrical', 'Networking', 'Security', 'Roofing', 'Handover'];
@@ -40,6 +42,8 @@ export default function ProjectDetail() {
   const [userRole, setUserRole] = useState(null);
   const [canEditFinancial, setCanEditFinancial] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
+  const [showTechAnalysis, setShowTechAnalysis] = useState(false);
 
   useEffect(() => {
     Promise.all([hasRole(['admin', 'project_manager']), canEditFinancialFields()]).then(([hasRoleRes, canEdit]) => {
@@ -267,6 +271,43 @@ export default function ProjectDetail() {
         { label: 'Progetti', path: '/projects' },
         { label: project.title }
       ]} />
+
+      {/* AI Features Toggle */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setShowTimeline(!showTimeline)}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+            showTimeline ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Clock className="w-3.5 h-3.5" />
+          Timeline AI
+        </button>
+        <button
+          onClick={() => setShowTechAnalysis(!showTechAnalysis)}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+            showTechAnalysis ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Users className="w-3.5 h-3.5" />
+          Team Analysis
+        </button>
+        <button
+          onClick={() => setShowAIPanel(!showAIPanel)}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+            showAIPanel ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Brain className="w-3.5 h-3.5" />
+          AI Copilot
+        </button>
+      </div>
+
+      {/* Operational Timeline */}
+      {showTimeline && <OperationalTimeline entityType="project" entityId={id} />}
+
+      {/* Technician Load Analysis */}
+      {showTechAnalysis && <TechnicianLoadAnalysis projectId={id} />}
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
