@@ -12,16 +12,22 @@ Deno.serve(async (req) => {
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
-  // Support both direct call { project_id } and entity automation payload { event: { entity_id } }
+  // Support both direct call { project_id } and entity automation payload { event: { entity_id }, data: {...} }
   const project_id = body.project_id || body.event?.entity_id || body.data?.id;
   if (!project_id) return Response.json({ error: 'project_id required' }, { status: 400 });
+
+  // For entity automations: only process when status is Delivered or Archived
+  const triggerStatus = body.data?.status;
+  if (triggerStatus && !['Delivered', 'Archived'].includes(triggerStatus)) {
+    return Response.json({ skipped: true, reason: `Status ${triggerStatus} not a close event` });
+  }
 
   // Fetch project + related data
   const [project, costs, timesheets, tickets, checklists] = await Promise.all([
     base44.entities.Project.get(project_id),
     base44.entities.ProjectCost.filter({ project_id }),
     base44.entities.Timesheet.filter({ project_id }),
-    base44.entities.SupportTicket.filter({ property_id: '' }), // fetch open tickets
+    base44.entities.SupportTicket.filter({ property_id: project?.property_id || '' }, '-created_date', 20).catch(() => []),
     base44.entities.ChecklistItem.filter({ project_id }),
   ]);
 
@@ -100,8 +106,30 @@ Rispondi in JSON con questa struttura:
 
   const results = { kb_entry: null, memories: [], project_id };
 
+  // Save ProjectLearning entry
+  const margin = project.contract_value
+    ? Math.round(((project.contract_value - totalCosts) / project.contract_value) * 100)
+    : 0;
+  await base44.asServiceRole.entities.ProjectLearning.create({
+    company_id: project.company_id,
+    project_id,
+    project_type: project.estimate_type || 'Generic',
+    category: extracted.kb_category || 'Full Home',
+    square_meters: project.square_meters || null,
+    revenue: project.contract_value || 0,
+    estimated_costs: (project.material_costs || 0) + (project.labor_costs || 0) + (project.other_costs || 0),
+    actual_costs: totalCosts,
+    gross_margin: (project.contract_value || 0) - totalCosts,
+    gross_margin_pct: margin,
+    what_went_well: extracted.what_went_well || '',
+    what_went_wrong: extracted.what_went_wrong || '',
+    improvements: extracted.recommendations || '',
+    notes: extracted.lessons_learned || '',
+    team_members: project.team_members || [],
+  }).catch(() => {});
+
   // Save to KnowledgeBase
-  const kb = await base44.entities.KnowledgeBase.create({
+  const kb = await base44.asServiceRole.entities.KnowledgeBase.create({
     company_id: project.company_id,
     title: extracted.kb_title || `Lessons Learned: ${project.title}`,
     category: extracted.kb_category || 'Full Home',
@@ -111,7 +139,6 @@ Rispondi in JSON con questa struttura:
     solution: extracted.what_went_well || 'N/A',
     recommendations: extracted.recommendations || '',
     lessons_learned: extracted.lessons_learned || '',
-    source: 'ai_extracted',
     is_active: true,
   });
   results.kb_entry = kb.id;
@@ -123,7 +150,7 @@ Rispondi in JSON con questa struttura:
   }
 
   for (const insight of memoryInsights.slice(0, 5)) {
-    const mem = await base44.entities.AIMemory.create({
+    const mem = await base44.asServiceRole.entities.AIMemory.create({
       company_id: project.company_id,
       memory_type: insight.type || 'operational_lesson',
       linked_entity_type: 'project',
