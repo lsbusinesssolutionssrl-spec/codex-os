@@ -14,6 +14,7 @@ export default function ModuleEntitlementDebug() {
       if (!activeTenant) return;
 
       try {
+        // Load subscription with plan
         const sub = await base44.entities.CompanySubscription.filter(
           { company_id: activeTenant.id, status: 'active' },
           '-created_date',
@@ -26,10 +27,12 @@ export default function ModuleEntitlementDebug() {
           plan = plans[0] || null;
         }
 
+        // Load feature flags
         const flags = await base44.entities.TenantFeatureFlag.filter({
           company_id: activeTenant.id
         });
 
+        // Module entitlement check
         const modules = [
           { id: 'financial_control', name: 'Financial Control', route: '/financial-control' },
           { id: 'intelligence', name: 'Intelligence', route: '/intelligence' },
@@ -96,14 +99,14 @@ export default function ModuleEntitlementDebug() {
     loadDebug();
   }, [activeTenant, activeTenantRole, enabledModules]);
 
-  if (loading) return null;
-  if (!debug) return null;
+  if (loading) return <div className="p-4 text-sm text-gray-500">Loading debug data...</div>;
+  if (!debug) return <div className="p-4 text-sm text-red-600">No debug data available</div>;
 
   if (minimized) {
     return (
       <button
         onClick={() => setMinimized(false)}
-        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+        className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
       >
         <Zap className="w-4 h-4 text-blue-600" />
         <span className="text-xs font-semibold text-gray-700">Modules</span>
@@ -114,18 +117,22 @@ export default function ModuleEntitlementDebug() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-white rounded-lg shadow-lg border border-gray-200 max-w-md max-h-96 overflow-auto">
-      <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-        <span className="text-xs font-semibold text-gray-700">🔧 Module Entitlement Debug</span>
-        <button
-          onClick={() => setMinimized(true)}
-          className="p-1 hover:bg-gray-200 rounded transition-colors"
-        >
-          <Minimize2 className="w-3.5 h-3.5 text-gray-500" />
-        </button>
-      </div>
-      
-      <div className="p-4 space-y-4 text-xs">
+    <div className="fixed bottom-4 right-4 z-50">
+      <div className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-md max-h-96 overflow-auto p-4 space-y-4 text-xs">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-bold text-gray-900 flex items-center gap-2">
+            <Database className="w-4 h-4" />
+            Module Entitlement Debug
+          </h3>
+          <button
+            onClick={() => setMinimized(true)}
+            className="p-1 hover:bg-gray-200 rounded transition-colors"
+          >
+            <Minimize2 className="w-3.5 h-3.5 text-gray-500" />
+          </button>
+        </div>
+
+        {/* Tenant Info */}
         <div className="grid grid-cols-2 gap-2">
           <InfoCard label="Tenant" value={debug.tenant?.name} icon={Building2} />
           <InfoCard label="Role" value={debug.tenantRole} icon={User} />
@@ -133,6 +140,7 @@ export default function ModuleEntitlementDebug() {
           <InfoCard label="Status" value={debug.subscription?.status || 'No subscription'} icon={Shield} />
         </div>
 
+        {/* Enabled Modules */}
         <div>
           <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
             <Zap className="w-3 h-3" />
@@ -147,6 +155,7 @@ export default function ModuleEntitlementDebug() {
           </div>
         </div>
 
+        {/* Feature Flags */}
         <div>
           <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
             <FileText className="w-3 h-3" />
@@ -168,6 +177,7 @@ export default function ModuleEntitlementDebug() {
           </div>
         </div>
 
+        {/* Module Entitlements */}
         <div>
           <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
             <Shield className="w-3 h-3" />

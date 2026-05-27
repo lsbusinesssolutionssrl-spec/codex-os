@@ -35,162 +35,165 @@ export default function RBACDebugPanel() {
 
   if (!user) return null;
 
+  if (minimized) {
+    return (
+      <button
+        onClick={() => setMinimized(false)}
+        className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+      >
+        <Shield className="w-4 h-4 text-blue-600" />
+        <span className="text-xs font-semibold text-gray-700">RBAC</span>
+        <span className="text-xs text-gray-500">{permissions.length} perms</span>
+        <Maximize2 className="w-3 h-3 text-gray-400" />
+      </button>
+    );
+  }
+
   return (
     <div className="fixed bottom-4 left-4 z-50">
-      {minimized ? (
-        <button
-          onClick={() => setMinimized(false)}
-          className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-        >
-          <Shield className="w-4 h-4 text-blue-600" />
-          <span className="text-xs font-semibold text-gray-700">RBAC</span>
-          <span className="text-xs text-gray-500">{permissions.length} perms</span>
-          <Maximize2 className="w-3 h-3 text-gray-400" />
-        </button>
-      ) : (
-        <div className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-md max-h-96 overflow-auto text-xs">
-          <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between sticky top-0">
-            <div className="flex items-center gap-2">
-              <Shield className="w-3.5 h-3.5 text-blue-600" />
-              <span className="font-semibold text-gray-700">RBAC Debug Panel</span>
-            </div>
-            <button
-              onClick={() => setMinimized(true)}
-              className="p-1 hover:bg-gray-200 rounded transition-colors"
-            >
-              <Minimize2 className="w-3.5 h-3.5 text-gray-500" />
-            </button>
+      <div className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-md max-h-96 overflow-auto text-xs">
+        <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between sticky top-0">
+          <div className="flex items-center gap-2">
+            <Shield className="w-3.5 h-3.5 text-blue-600" />
+            <span className="font-semibold text-gray-700">RBAC Debug Panel</span>
           </div>
-      
-      <div className="p-3 space-y-3">
-        {/* Context IDs - CRITICAL */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
-          <p className="text-[10px] font-semibold text-blue-700 uppercase mb-1">Global Context IDs (Must Match Across All Pages)</p>
-          <div className="space-y-0.5 font-mono text-[10px] text-blue-800">
-            <div className="flex justify-between">
-              <span>Context ID:</span>
-              <span className="truncate max-w-[150px]">{contextId}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>RBAC ID:</span>
-              <span className="truncate max-w-[150px]">{rbacContextId}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Module Registry:</span>
-              <span className="truncate max-w-[150px]">{moduleRegistryId}</span>
-            </div>
-          </div>
+          <button
+            onClick={() => setMinimized(true)}
+            className="p-1 hover:bg-gray-200 rounded transition-colors"
+          >
+            <Minimize2 className="w-3.5 h-3.5 text-gray-500" />
+          </button>
         </div>
-
-        {/* User Context */}
-        <div>
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <UserCheck className="w-3 h-3 text-gray-400" />
-            <span className="font-medium text-gray-600">User Context</span>
-          </div>
-          <div className="space-y-0.5 ml-4">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Email:</span>
-              <span className="text-gray-700 truncate max-w-[200px]">{user.email}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Platform Role:</span>
-              <span className="text-gray-700">{user.role}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Tenant Role:</span>
-              <span className="text-gray-700">{activeTenantRole || 'N/A'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Context:</span>
-              <span className="text-gray-700">{contextType}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Enabled Modules */}
-        {enabledModules && enabledModules.length > 0 && (
-          <div>
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <Zap className="w-3 h-3 text-blue-500" />
-              <span className="font-medium text-gray-600">Enabled Modules ({enabledModules.length})</span>
-            </div>
-            <div className="flex flex-wrap gap-1 ml-4">
-              {enabledModules.map(m => (
-                <span key={m} className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded">
-                  {m}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Permission Summary */}
-        {debugInfo && (
-          <div>
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <Key className="w-3 h-3 text-gray-400" />
-              <span className="font-medium text-gray-600">Permission Summary</span>
-            </div>
-            <div className="space-y-1 ml-4">
+    
+        <div className="p-3 space-y-3">
+          {/* Context IDs - CRITICAL */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
+            <p className="text-[10px] font-semibold text-blue-700 uppercase mb-1">Global Context IDs (Must Match Across All Pages)</p>
+            <div className="space-y-0.5 font-mono text-[10px] text-blue-800">
               <div className="flex justify-between">
-                <span className="text-gray-500">Total Permissions:</span>
-                <span className="font-semibold text-gray-700">{debugInfo.totalPermissions}</span>
+                <span>Context ID:</span>
+                <span className="truncate max-w-[150px]">{contextId}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">From Role:</span>
-                <span className="text-gray-700">{debugInfo.basePermissions.count}</span>
+                <span>RBAC ID:</span>
+                <span className="truncate max-w-[150px]">{rbacContextId}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">From Modules:</span>
-                <span className="text-gray-700">{debugInfo.modulePermissions.count}</span>
+                <span>Module Registry:</span>
+                <span className="truncate max-w-[150px]">{moduleRegistryId}</span>
               </div>
             </div>
           </div>
-        )}
 
-        {/* Permission Categories */}
-        {debugInfo && (
+          {/* User Context */}
           <div>
             <div className="flex items-center gap-1.5 mb-1.5">
-              <AlertCircle className="w-3 h-3 text-gray-400" />
-              <span className="font-medium text-gray-600">Categories</span>
+              <UserCheck className="w-3 h-3 text-gray-400" />
+              <span className="font-medium text-gray-600">User Context</span>
             </div>
-            <div className="ml-4 space-y-0.5">
-              {Object.entries(debugInfo.breakdown).slice(0, 8).map(([cat, perms]) => (
-                <div key={cat} className="flex items-center justify-between text-[10px]">
-                  <span className="text-gray-600 font-medium">{cat}</span>
-                  <span className="text-gray-500">{perms.length} perms</span>
+            <div className="space-y-0.5 ml-4">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Email:</span>
+                <span className="text-gray-700 truncate max-w-[200px]">{user.email}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Platform Role:</span>
+                <span className="text-gray-700">{user.role}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Tenant Role:</span>
+                <span className="text-gray-700">{activeTenantRole || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Context:</span>
+                <span className="text-gray-700">{contextType}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Enabled Modules */}
+          {enabledModules && enabledModules.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Zap className="w-3 h-3 text-blue-500" />
+                <span className="font-medium text-gray-600">Enabled Modules ({enabledModules.length})</span>
+              </div>
+              <div className="flex flex-wrap gap-1 ml-4">
+                {enabledModules.map(m => (
+                  <span key={m} className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded">
+                    {m}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Permission Summary */}
+          {debugInfo && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Key className="w-3 h-3 text-gray-400" />
+                <span className="font-medium text-gray-600">Permission Summary</span>
+              </div>
+              <div className="space-y-1 ml-4">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Total Permissions:</span>
+                  <span className="font-semibold text-gray-700">{debugInfo.totalPermissions}</span>
                 </div>
-              ))}
+                <div className="flex justify-between">
+                  <span className="text-gray-500">From Role:</span>
+                  <span className="text-gray-700">{debugInfo.basePermissions.count}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">From Modules:</span>
+                  <span className="text-gray-700">{debugInfo.modulePermissions.count}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Permission Categories */}
+          {debugInfo && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <AlertCircle className="w-3 h-3 text-gray-400" />
+                <span className="font-medium text-gray-600">Categories</span>
+              </div>
+              <div className="ml-4 space-y-0.5">
+                {Object.entries(debugInfo.breakdown).slice(0, 8).map(([cat, perms]) => (
+                  <div key={cat} className="flex items-center justify-between text-[10px]">
+                    <span className="text-gray-600 font-medium">{cat}</span>
+                    <span className="text-gray-500">{perms.length} perms</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Test Specific Permission */}
+          <div className="pt-2 border-t border-gray-100">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <CheckCircle2 className="w-3 h-3 text-gray-400" />
+              <span className="font-medium text-gray-600">Test Permission</span>
+            </div>
+            <div className="ml-4 space-y-1">
+              <PermissionTest 
+                permission="financials:read" 
+                permissions={permissions}
+                label="Financial Control Access"
+              />
+              <PermissionTest 
+                permission="projects:write" 
+                permissions={permissions}
+                label="Project Write Access"
+              />
+              <PermissionTest 
+                permission="intelligence:read" 
+                permissions={permissions}
+                label="Intelligence Access"
+              />
             </div>
           </div>
-        )}
-
-        {/* Test Specific Permission */}
-        <div className="pt-2 border-t border-gray-100">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <CheckCircle2 className="w-3 h-3 text-gray-400" />
-            <span className="font-medium text-gray-600">Test Permission</span>
-          </div>
-          <div className="ml-4 space-y-1">
-            <PermissionTest 
-              permission="financials:read" 
-              permissions={permissions}
-              label="Financial Control Access"
-            />
-            <PermissionTest 
-              permission="projects:write" 
-              permissions={permissions}
-              label="Project Write Access"
-            />
-            <PermissionTest 
-              permission="intelligence:read" 
-              permissions={permissions}
-              label="Intelligence Access"
-            />
-          </div>
-        </div>
         </div>
       </div>
     </div>
