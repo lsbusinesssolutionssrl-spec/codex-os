@@ -85,13 +85,15 @@ export default function ArchitectureReview() {
     permissionIssues.push({
       severity: 'Medium',
       issue: 'Clienti possono vedere tutti i progetti?',
-      recommendation: 'Implementare RLS (Row Level Security) per client portal',
+      recommendation: 'RLS implementato: Layout redirect + getClientPortalData server-side filtrato per client_id',
+      status: 'resolved',
     });
 
     permissionIssues.push({
       severity: 'High',
       issue: 'Technician possono modificare margini?',
-      recommendation: 'Limitare edit campi finanziari a admin/PM',
+      recommendation: 'Campi finanziari limitati a admin + project_manager via canEditFinancialFields()',
+      status: 'resolved',
     });
 
     // 6. NAVIGATION ISSUES

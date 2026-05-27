@@ -24,7 +24,7 @@ export async function hasRole(requiredRoles) {
  * Verifica se l'utente può modificare campi finanziari
  */
 export async function canEditFinancialFields() {
-  return hasRole(['admin']);
+  return hasRole(['admin', 'project_manager']);
 }
 
 /**
