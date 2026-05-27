@@ -36,16 +36,25 @@ export default function PlatformIntelligenceScore() {
 
   useEffect(() => {
     const loadCounts = async () => {
-      const results = await Promise.allSettled(
-        DATA_SOURCES.map(async (src) => {
-          const items = await base44.entities[src.entity]?.list('-created_date', 200).catch(() => []);
-          return { key: src.key, count: (items || []).length };
-        })
-      );
-      const c = {};
-      results.forEach(r => { if (r.status === 'fulfilled') c[r.value.key] = r.value.count; });
-      setCounts(c);
-      setLoading(false);
+      try {
+        const user = await base44.auth.me().catch(() => null);
+        const companyId = user?.company_id;
+        
+        const results = await Promise.allSettled(
+          DATA_SOURCES.map(async (src) => {
+            if (!companyId) return { key: src.key, count: 0 };
+            const items = await base44.entities[src.entity]?.filter({ company_id: companyId }, '-created_date', 200).catch(() => []);
+            return { key: src.key, count: (items || []).length };
+          })
+        );
+        const c = {};
+        results.forEach(r => { if (r.status === 'fulfilled') c[r.value.key] = r.value.count; });
+        setCounts(c);
+      } catch (error) {
+        console.error('Error loading intelligence counts:', error);
+      } finally {
+        setLoading(false);
+      }
     };
     loadCounts();
   }, []);

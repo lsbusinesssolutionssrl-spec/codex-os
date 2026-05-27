@@ -74,10 +74,10 @@ Deno.serve(async (req) => {
   if (hintPropertyId) memoryFilters.push({ is_active: true, property_id: hintPropertyId });
 
   const [projects, tickets, estimates, clients, ...memoryBatches] = await Promise.all([
-    base44.entities.Project.list('-updated_date', 10),
-    base44.entities.SupportTicket.filter({ status: 'Open' }, '-created_date', 10),
-    base44.entities.Estimate.list('-updated_date', 8),
-    base44.entities.Client.list('-updated_date', 10),
+    base44.entities.Project.filter({ company_id: user.company_id }, '-updated_date', 10),
+    base44.entities.SupportTicket.filter({ status: 'Open', company_id: user.company_id }, '-created_date', 10),
+    base44.entities.Estimate.filter({ company_id: user.company_id }, '-updated_date', 8),
+    base44.entities.Client.filter({ company_id: user.company_id }, '-updated_date', 10),
     ...memoryFilters.map(f =>
       base44.asServiceRole.entities.AIMemory.filter(f, '-relevance_score', 15).catch(() => [])
     ),
@@ -93,24 +93,24 @@ Deno.serve(async (req) => {
     .slice(0, 25);
 
   const [tasks, maintenance, knowledge, properties, suppliers] = await Promise.all([
-    base44.entities.Task.filter({ status: 'In Progress' }, '-updated_date', 5).catch(() => []),
-    base44.entities.MaintenanceSchedule.list('-next_due_date', 5).catch(() => []),
-    base44.entities.KnowledgeBase.list('-created_date', 10).catch(() => []),
-    base44.entities.Property.list('-updated_date', 10).catch(() => []),
-    base44.entities.Supplier.list('-updated_date', 8).catch(() => []),
+    base44.entities.Task.filter({ status: 'In Progress', company_id: user.company_id }, '-updated_date', 5).catch(() => []),
+    base44.entities.MaintenanceSchedule.filter({ company_id: user.company_id }, '-next_due_date', 5).catch(() => []),
+    base44.entities.KnowledgeBase.filter({ company_id: user.company_id }, '-created_date', 10).catch(() => []),
+    base44.entities.Property.filter({ company_id: user.company_id }, '-updated_date', 10).catch(() => []),
+    base44.entities.Supplier.filter({ company_id: user.company_id }, '-updated_date', 8).catch(() => []),
   ]);
 
   const forbidden = ROLE_FORBIDDEN_CONTEXT[role] || [];
   const canSee = (key) => !forbidden.includes(key);
 
   const [guardians, checklists, documents, timesheets, financialAlerts, intelligenceInsights, projectCostsRecent] = await Promise.all([
-    base44.entities.GuardianSubscription.filter({ status: 'Active' }, '-created_date', 5).catch(() => []),
-    base44.entities.ChecklistItem.filter({ status: 'Blocked' }, '-updated_date', 5).catch(() => []),
-    base44.entities.Document.list('-created_date', 8).catch(() => []),
-    canSee('timesheets') ? base44.entities.Timesheet.list('-date', 5).catch(() => []) : Promise.resolve([]),
-    canSee('financialAlerts') ? base44.entities.FinancialAlert.filter({ resolved: false }, '-created_date', 5).catch(() => []) : Promise.resolve([]),
-    canSee('intelligenceInsights') ? base44.entities.IntelligenceInsight.filter({ is_read: false }, '-created_date', 5).catch(() => []) : Promise.resolve([]),
-    canSee('projectCostsRecent') ? base44.entities.ProjectCost.list('-date', 5).catch(() => []) : Promise.resolve([]),
+    base44.entities.GuardianSubscription.filter({ status: 'Active', company_id: user.company_id }, '-created_date', 5).catch(() => []),
+    base44.entities.ChecklistItem.filter({ status: 'Blocked', company_id: user.company_id }, '-updated_date', 5).catch(() => []),
+    base44.entities.Document.filter({ company_id: user.company_id }, '-created_date', 8).catch(() => []),
+    canSee('timesheets') ? base44.entities.Timesheet.filter({ company_id: user.company_id }, '-date', 5).catch(() => []) : Promise.resolve([]),
+    canSee('financialAlerts') ? base44.entities.FinancialAlert.filter({ resolved: false, company_id: user.company_id }, '-created_date', 5).catch(() => []) : Promise.resolve([]),
+    canSee('intelligenceInsights') ? base44.entities.IntelligenceInsight.filter({ is_read: false, company_id: user.company_id }, '-created_date', 5).catch(() => []) : Promise.resolve([]),
+    canSee('projectCostsRecent') ? base44.entities.ProjectCost.filter({ company_id: user.company_id }, '-date', 5).catch(() => []) : Promise.resolve([]),
   ]);
 
   // ── CONTEXT ENGINE — Phase 2: Deep Entity Graph (when focus hint provided) ──

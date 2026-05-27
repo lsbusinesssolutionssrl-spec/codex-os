@@ -20,16 +20,19 @@ export default function AIReadinessState() {
   useEffect(() => {
     const checkReadiness = async () => {
       try {
-        // Query all relevant entities
+        const user = await base44.auth.me().catch(() => null);
+        const companyId = user?.company_id;
+        
+        // Query all relevant entities with tenant filter
         const [projects, clients, estimates, tickets, knowledge, memories, learnings, documents] = await Promise.all([
-          base44.entities.Project.list('-created_date', 1).catch(() => []),
-          base44.entities.Client.list('-created_date', 1).catch(() => []),
-          base44.entities.Estimate.list('-created_date', 1).catch(() => []),
-          base44.entities.SupportTicket?.list('-created_date', 1).catch(() => []) || [],
-          base44.entities.KnowledgeBase.list('-created_date', 1).catch(() => []),
-          base44.entities.AIMemory.list('-created_date', 1).catch(() => []),
-          base44.entities.ProjectLearning.list('-created_date', 1).catch(() => []),
-          base44.entities.RAGDocument?.list('-created_date', 1).catch(() => []) || [],
+          companyId ? base44.entities.Project.filter({ company_id: companyId }, '-created_date', 1).catch(() => []) : [],
+          companyId ? base44.entities.Client.filter({ company_id: companyId }, '-created_date', 1).catch(() => []) : [],
+          companyId ? base44.entities.Estimate.filter({ company_id: companyId }, '-created_date', 1).catch(() => []) : [],
+          companyId ? base44.entities.SupportTicket?.filter({ company_id: companyId }, '-created_date', 1).catch(() => []) || [] : [],
+          companyId ? base44.entities.KnowledgeBase.filter({ company_id: companyId }, '-created_date', 1).catch(() => []) : [],
+          companyId ? base44.entities.AIMemory.filter({ company_id: companyId }, '-created_date', 1).catch(() => []) : [],
+          companyId ? base44.entities.ProjectLearning.filter({ company_id: companyId }, '-created_date', 1).catch(() => []) : [],
+          companyId ? base44.entities.RAGDocument?.filter({ company_id: companyId }, '-created_date', 1).catch(() => []) || [] : [],
         ]);
 
         const counts = {
