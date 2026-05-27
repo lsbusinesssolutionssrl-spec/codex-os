@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Upload, ExternalLink, X, Trash2, Clock, Download } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-const TYPES = ['Contract', 'Estimate', 'Invoice', 'Certification', 'Warranty', 'Floor Plan', 'Photo', 'Other'];
+const TYPES = ['Contratto', 'Preventivo', 'Fattura', 'Certificazione', 'Garanzia', 'Planimetria', 'Foto', 'Altro'];
 
 export default function DocumentDetail() {
   const { id } = useParams();
