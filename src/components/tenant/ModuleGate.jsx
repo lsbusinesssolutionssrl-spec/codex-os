@@ -1,4 +1,4 @@
-import { useTenant } from './TenantContext';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
 
 /**
  * Module Gate Component
@@ -11,7 +11,7 @@ import { useTenant } from './TenantContext';
  * </ModuleGate>
  */
 export default function ModuleGate({ module, children, fallback = null }) {
-  const { enabledModules, isPlatformMode } = useTenant();
+  const { enabledModules, isPlatformMode } = useGlobalContext();
 
   // Platform users see everything
   if (isPlatformMode) {
@@ -39,7 +39,7 @@ export default function ModuleGate({ module, children, fallback = null }) {
  * const { isEnabled } = useModule('guardian');
  */
 export function useModule(moduleName) {
-  const { enabledModules, isPlatformMode } = useTenant();
+  const { enabledModules, isPlatformMode } = useGlobalContext();
 
   const isEnabled = isPlatformMode || 
     ['core', 'projects', 'clients', 'documents', 'estimates', 'properties'].includes(moduleName) ||

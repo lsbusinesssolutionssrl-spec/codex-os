@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, Clock, CheckCircle, TrendingUp, AlertCircle, Activity, Users, FileText, Calendar, Zap } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { useWorkspace } from '@/components/workspace/WorkspaceContext';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
 
 export default function LiveCommandCenter() {
   const navigate = useNavigate();
-  const { currentWorkspace } = useWorkspace();
+  const { workspaceType: currentWorkspace } = useGlobalContext();
   const [loading, setLoading] = useState(true);
   const [ops, setOps] = useState({
     delayedProjects: [],

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useTenant } from './TenantContext';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
 import { Building2, Shield, Check } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import {
@@ -11,24 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export default function TenantSwitcher() {
-  const { activeTenant, isPlatformMode, switchToTenant, userRole } = useTenant();
-
-  // Only platform users can switch tenants
-  if (!isPlatformMode) {
-    return null;
-  }
-
-  return (
-    <TenantSwitcherContent 
-      activeTenant={activeTenant} 
-      switchToTenant={switchToTenant} 
-      userRole={userRole}
-      isPlatformMode={isPlatformMode}
-    />
-  );
-}
-
-function TenantSwitcherContent({ activeTenant, switchToTenant, userRole, isPlatformMode }) {
+  const { activeTenant, isPlatformMode, switchTenant, userRole } = useGlobalContext();
   const [tenants, setTenants] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -37,6 +20,11 @@ function TenantSwitcherContent({ activeTenant, switchToTenant, userRole, isPlatf
       base44.entities.Company.list().then(setTenants);
     }
   }, [isPlatformMode]);
+
+  // Only platform users can switch tenants
+  if (!isPlatformMode) {
+    return null;
+  }
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -100,7 +88,11 @@ function TenantSwitcherContent({ activeTenant, switchToTenant, userRole, isPlatf
           {tenants.map(tenant => (
             <DropdownMenuItem
               key={tenant.id}
-              onClick={() => switchToTenant(tenant.id)}
+              onClick={() => {
+                // Find membership for this tenant and switch
+                localStorage.setItem('impersonate_tenant_id', tenant.id);
+                window.location.reload();
+              }}
               className={`flex items-center gap-3 px-3 py-2 cursor-pointer ${
                 activeTenant?.id === tenant.id ? 'bg-blue-50' : ''
               }`}
