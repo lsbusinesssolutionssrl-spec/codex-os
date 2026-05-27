@@ -7,12 +7,12 @@ import {
 import { base44 } from '@/api/base44Client';
 
 const STEPS = [
-  { id: 1, label: 'Company Info', icon: Building2 },
+  { id: 1, label: 'Dati Azienda', icon: Building2 },
   { id: 2, label: 'Logo + Brand', icon: Palette },
-  { id: 3, label: 'Admin User', icon: User },
-  { id: 4, label: 'Numbering', icon: Hash },
-  { id: 5, label: 'Invite Team', icon: Users },
-  { id: 6, label: 'Review', icon: Check },
+  { id: 3, label: 'Utente Admin', icon: User },
+  { id: 4, label: 'Numerazione', icon: Hash },
+  { id: 5, label: 'Invita Team', icon: Users },
+  { id: 6, label: 'Riepilogo', icon: Check },
 ];
 
 export default function TenantOnboarding() {
@@ -27,7 +27,7 @@ export default function TenantOnboarding() {
     phone: '',
     address: '',
     vat_number: '',
-    country: 'Italy',
+    country: 'Italia',
     timezone: 'Europe/Rome',
     currency: 'EUR',
     logo_url: '',
@@ -97,8 +97,8 @@ export default function TenantOnboarding() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">New Tenant Onboarding</h1>
-          <p className="text-sm text-gray-500 mt-1">Set up a new company on the platform</p>
+          <h1 className="text-2xl font-bold text-gray-900">Onboarding Nuovo Tenant</h1>
+          <p className="text-sm text-gray-500 mt-1">Configura una nuova azienda sulla piattaforma</p>
         </div>
 
         {/* Step Indicator */}
@@ -126,18 +126,18 @@ export default function TenantOnboarding() {
         <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
           {step === 1 && (
             <div className="space-y-4">
-              <h2 className="font-semibold text-gray-900 mb-4">Company Information</h2>
-              <FormField label="Company Name *" value={form.name} onChange={v => update('name', v)} placeholder="Codex Solution Srl" />
-              <FormField label="Company Email *" value={form.email} onChange={v => update('email', v)} placeholder="info@company.com" type="email" />
-              <FormField label="Phone" value={form.phone} onChange={v => update('phone', v)} placeholder="+39 02 1234567" />
-              <FormField label="Address" value={form.address} onChange={v => update('address', v)} placeholder="Via Roma 1, Milano" />
+              <h2 className="font-semibold text-gray-900 mb-4">Informazioni Azienda</h2>
+              <FormField label="Ragione Sociale *" value={form.name} onChange={v => update('name', v)} placeholder="Codex Solution Srl" />
+              <FormField label="Email Aziendale *" value={form.email} onChange={v => update('email', v)} placeholder="info@azienda.it" type="email" />
+              <FormField label="Telefono" value={form.phone} onChange={v => update('phone', v)} placeholder="+39 02 1234567" />
+              <FormField label="Indirizzo" value={form.address} onChange={v => update('address', v)} placeholder="Via Roma 1, Milano" />
               <div className="grid grid-cols-2 gap-4">
-                <FormField label="VAT Number" value={form.vat_number} onChange={v => update('vat_number', v)} placeholder="IT12345678901" />
-                <FormField label="Country" value={form.country} onChange={v => update('country', v)} placeholder="Italy" />
+                <FormField label="Partita IVA" value={form.vat_number} onChange={v => update('vat_number', v)} placeholder="IT12345678901" />
+                <FormField label="Paese" value={form.country} onChange={v => update('country', v)} placeholder="Italia" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Timezone</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Fuso Orario</label>
                   <select value={form.timezone} onChange={e => update('timezone', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white">
                     <option value="Europe/Rome">Europe/Rome (CET)</option>
                     <option value="Europe/London">Europe/London (GMT)</option>
@@ -146,11 +146,11 @@ export default function TenantOnboarding() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Currency</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Valuta</label>
                   <select value={form.currency} onChange={e => update('currency', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white">
                     <option value="EUR">EUR (euro)</option>
-                    <option value="USD">USD (dollar)</option>
-                    <option value="GBP">GBP (pound)</option>
+                    <option value="USD">USD (dollaro)</option>
+                    <option value="GBP">GBP (sterlina)</option>
                     <option value="AED">AED (dirham)</option>
                   </select>
                 </div>
@@ -160,9 +160,9 @@ export default function TenantOnboarding() {
 
           {step === 2 && (
             <div className="space-y-5">
-              <h2 className="font-semibold text-gray-900 mb-4">Logo and Branding</h2>
+              <h2 className="font-semibold text-gray-900 mb-4">Logo e Branding</h2>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-2">Company Logo</label>
+                <label className="block text-xs font-medium text-gray-500 mb-2">Logo Aziendale</label>
                 <div className="flex items-center gap-4">
                   {form.logo_url ? (
                     <img src={form.logo_url} alt="Logo" className="w-16 h-16 rounded-xl object-cover border border-gray-200" />
@@ -173,21 +173,21 @@ export default function TenantOnboarding() {
                   )}
                   <label className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                     {uploadingLogo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                    {uploadingLogo ? 'Uploading...' : 'Upload Logo'}
+                    {uploadingLogo ? 'Caricamento...' : 'Carica Logo'}
                     <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={uploadingLogo} />
                   </label>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Primary Color</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Colore Primario</label>
                   <div className="flex items-center gap-2">
                     <input type="color" value={form.brand_color_primary} onChange={e => update('brand_color_primary', e.target.value)} className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer" />
                     <span className="text-sm font-mono text-gray-600">{form.brand_color_primary}</span>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Secondary Color</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Colore Secondario</label>
                   <div className="flex items-center gap-2">
                     <input type="color" value={form.brand_color_secondary} onChange={e => update('brand_color_secondary', e.target.value)} className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer" />
                     <span className="text-sm font-mono text-gray-600">{form.brand_color_secondary}</span>
@@ -195,14 +195,14 @@ export default function TenantOnboarding() {
                 </div>
               </div>
               <div className="mt-4 p-4 rounded-xl border border-gray-100 bg-gray-50">
-                <p className="text-xs text-gray-400 mb-3">Brand Preview</p>
+                <p className="text-xs text-gray-400 mb-3">Anteprima Brand</p>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold" style={{ backgroundColor: form.brand_color_primary }}>
                     {form.name?.[0] || 'C'}
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">{form.name || 'Company Name'}</p>
-                    <p className="text-xs" style={{ color: form.brand_color_secondary }}>{form.email || 'email@company.com'}</p>
+                    <p className="font-semibold text-gray-900">{form.name || 'Nome Azienda'}</p>
+                    <p className="text-xs" style={{ color: form.brand_color_secondary }}>{form.email || 'email@azienda.it'}</p>
                   </div>
                 </div>
               </div>
@@ -211,12 +211,12 @@ export default function TenantOnboarding() {
 
           {step === 3 && (
             <div className="space-y-4">
-              <h2 className="font-semibold text-gray-900 mb-4">Tenant Admin User</h2>
-              <p className="text-sm text-gray-500">This user will be the primary administrator for this tenant.</p>
-              <FormField label="Admin Email *" value={form.admin_email} onChange={v => update('admin_email', v)} placeholder="admin@company.com" type="email" />
-              <FormField label="Admin Full Name" value={form.admin_name} onChange={v => update('admin_name', v)} placeholder="Mario Rossi" />
+              <h2 className="font-semibold text-gray-900 mb-4">Utente Amministratore Tenant</h2>
+              <p className="text-sm text-gray-500">Questo utente sarà l'amministratore principale per questo tenant.</p>
+              <FormField label="Email Admin *" value={form.admin_email} onChange={v => update('admin_email', v)} placeholder="admin@azienda.it" type="email" />
+              <FormField label="Nome Completo Admin" value={form.admin_name} onChange={v => update('admin_name', v)} placeholder="Mario Rossi" />
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Subscription Plan</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Piano Abbonamento</label>
                 <select value={form.subscription_plan} onChange={e => update('subscription_plan', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white">
                   <option value="starter">Starter (Trial)</option>
                   <option value="professional">Professional</option>
@@ -228,59 +228,59 @@ export default function TenantOnboarding() {
 
           {step === 4 && (
             <div className="space-y-4">
-              <h2 className="font-semibold text-gray-900 mb-4">Document Numbering</h2>
-              <p className="text-sm text-gray-500">Configure how estimates and projects will be numbered.</p>
+              <h2 className="font-semibold text-gray-900 mb-4">Numerazione Documenti</h2>
+              <p className="text-sm text-gray-500">Configura come verranno numerati preventivi e progetti.</p>
               <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Estimates</p>
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Preventivi</p>
                 <div className="grid grid-cols-2 gap-3">
-                  <FormField label="Prefix" value={form.estimate_prefix} onChange={v => update('estimate_prefix', v)} placeholder="EST" />
-                  <FormField label="Start Number" value={form.estimate_start} onChange={v => update('estimate_start', v)} placeholder="001" />
+                  <FormField label="Prefisso" value={form.estimate_prefix} onChange={v => update('estimate_prefix', v)} placeholder="EST" />
+                  <FormField label="Numero Iniziale" value={form.estimate_start} onChange={v => update('estimate_start', v)} placeholder="001" />
                 </div>
-                <p className="text-xs text-gray-400">Example: <strong>{form.estimate_prefix}-{form.estimate_start}</strong></p>
+                <p className="text-xs text-gray-400">Esempio: <strong>{form.estimate_prefix}-{form.estimate_start}</strong></p>
               </div>
               <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Projects</p>
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Progetti</p>
                 <div className="grid grid-cols-2 gap-3">
-                  <FormField label="Prefix" value={form.project_prefix} onChange={v => update('project_prefix', v)} placeholder="PRJ" />
-                  <FormField label="Start Number" value={form.project_start} onChange={v => update('project_start', v)} placeholder="001" />
+                  <FormField label="Prefisso" value={form.project_prefix} onChange={v => update('project_prefix', v)} placeholder="PRJ" />
+                  <FormField label="Numero Iniziale" value={form.project_start} onChange={v => update('project_start', v)} placeholder="001" />
                 </div>
-                <p className="text-xs text-gray-400">Example: <strong>{form.project_prefix}-{form.project_start}</strong></p>
+                <p className="text-xs text-gray-400">Esempio: <strong>{form.project_prefix}-{form.project_start}</strong></p>
               </div>
             </div>
           )}
 
           {step === 5 && (
             <div className="space-y-4">
-              <h2 className="font-semibold text-gray-900 mb-4">Invite Team (Optional)</h2>
-              <p className="text-sm text-gray-500">Add team member emails. One per line.</p>
+              <h2 className="font-semibold text-gray-900 mb-4">Invita Team (Opzionale)</h2>
+              <p className="text-sm text-gray-500">Inserisci le email dei membri del team. Una per riga.</p>
               <textarea
                 value={form.team_emails}
                 onChange={e => update('team_emails', e.target.value)}
                 rows={6}
-                placeholder={"team@company.com\nsales@company.com\ntech@company.com"}
+                placeholder={"team@azienda.it\ncommerciale@azienda.it\ntecnico@azienda.it"}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg resize-none"
               />
-              <p className="text-xs text-gray-400">Invitation emails will be sent when the tenant is created.</p>
+              <p className="text-xs text-gray-400">Le email di invito verranno inviate alla creazione del tenant.</p>
             </div>
           )}
 
           {step === 6 && (
             <div className="space-y-4">
-              <h2 className="font-semibold text-gray-900 mb-4">Review and Create</h2>
+              <h2 className="font-semibold text-gray-900 mb-4">Riepilogo e Creazione</h2>
               <div className="space-y-3">
-                <ReviewRow label="Company" value={form.name} />
+                <ReviewRow label="Azienda" value={form.name} />
                 <ReviewRow label="Email" value={form.email} />
-                <ReviewRow label="Country" value={form.country} />
-                <ReviewRow label="Currency" value={form.currency} />
-                <ReviewRow label="Timezone" value={form.timezone} />
+                <ReviewRow label="Paese" value={form.country} />
+                <ReviewRow label="Valuta" value={form.currency} />
+                <ReviewRow label="Fuso Orario" value={form.timezone} />
                 <ReviewRow label="Admin" value={form.admin_email} />
-                <ReviewRow label="Plan" value={form.subscription_plan} />
-                <ReviewRow label="Estimate Format" value={`${form.estimate_prefix}-${form.estimate_start}`} />
-                <ReviewRow label="Project Format" value={`${form.project_prefix}-${form.project_start}`} />
+                <ReviewRow label="Piano" value={form.subscription_plan} />
+                <ReviewRow label="Formato Preventivi" value={`${form.estimate_prefix}-${form.estimate_start}`} />
+                <ReviewRow label="Formato Progetti" value={`${form.project_prefix}-${form.project_start}`} />
               </div>
               {form.team_emails && (
                 <div className="bg-blue-50 rounded-lg p-3">
-                  <p className="text-xs font-medium text-blue-700">Team invites:</p>
+                  <p className="text-xs font-medium text-blue-700">Inviti team:</p>
                   <p className="text-xs text-blue-600 mt-1">{form.team_emails.split('\n').filter(Boolean).join(', ')}</p>
                 </div>
               )}
@@ -296,7 +296,7 @@ export default function TenantOnboarding() {
             className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
-            Back
+            Indietro
           </button>
           {step < STEPS.length ? (
             <button
@@ -305,7 +305,7 @@ export default function TenantOnboarding() {
               className="flex items-center gap-2 px-5 py-2 text-sm text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
               style={{ backgroundColor: '#1147FF' }}
             >
-              Next
+              Continua
               <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
@@ -316,7 +316,7 @@ export default function TenantOnboarding() {
               style={{ backgroundColor: '#10B981' }}
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-              {saving ? 'Creating...' : 'Create Tenant'}
+              {saving ? 'Creazione in corso...' : 'Crea Tenant'}
             </button>
           )}
         </div>
