@@ -51,6 +51,7 @@ const navItems = [
   { path: '/maintenance', icon: Wrench, label: 'Manutenzioni Programmate' },
   { path: '/operations', icon: Zap, label: 'Operations Dashboard', roles: ['admin', 'company_admin', 'project_manager'] },
   { path: '/schedule', icon: CalendarDays, label: 'Scheduling' },
+  { path: '/codex-ai', icon: Bot, label: 'Codex AI Core' },
 ];
 
 export default function Layout() {

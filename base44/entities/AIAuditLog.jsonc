@@ -1,0 +1,70 @@
+{
+  "name": "AIAuditLog",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "user_email": {
+      "type": "string",
+      "title": "Utente"
+    },
+    "user_role": {
+      "type": "string",
+      "title": "Ruolo"
+    },
+    "session_id": {
+      "type": "string",
+      "title": "Sessione"
+    },
+    "prompt": {
+      "type": "string",
+      "title": "Prompt"
+    },
+    "context_used": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Contesto Usato"
+    },
+    "response_summary": {
+      "type": "string",
+      "title": "Risposta (sintesi)"
+    },
+    "actions_suggested": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "title": "Azioni Suggerite"
+    },
+    "actions_executed": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "title": "Azioni Eseguite"
+    },
+    "tokens_used": {
+      "type": "number",
+      "title": "Token Usati"
+    },
+    "latency_ms": {
+      "type": "number",
+      "title": "Latenza (ms)"
+    },
+    "context_entities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Entit\u00e0 nel Contesto"
+    }
+  },
+  "required": [
+    "prompt",
+    "user_email"
+  ]
+}

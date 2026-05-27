@@ -1,0 +1,84 @@
+{
+  "name": "AIMemory",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "memory_type": {
+      "type": "string",
+      "title": "Tipo Memoria",
+      "enum": [
+        "customer_preference",
+        "project_history",
+        "recurring_issue",
+        "supplier_history",
+        "operational_lesson",
+        "estimate_outcome",
+        "project_delay",
+        "successful_solution",
+        "recurring_failure",
+        "pricing_pattern"
+      ]
+    },
+    "linked_entity_type": {
+      "type": "string",
+      "title": "Entit\u00e0 Collegata",
+      "enum": [
+        "client",
+        "property",
+        "project",
+        "supplier",
+        "estimate",
+        "ticket"
+      ]
+    },
+    "linked_entity_id": {
+      "type": "string",
+      "title": "ID Entit\u00e0"
+    },
+    "title": {
+      "type": "string",
+      "title": "Titolo"
+    },
+    "content": {
+      "type": "string",
+      "title": "Contenuto"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Tags"
+    },
+    "relevance_score": {
+      "type": "number",
+      "title": "Rilevanza (0-1)",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "source": {
+      "type": "string",
+      "title": "Fonte",
+      "enum": [
+        "manual",
+        "ai_extracted",
+        "project_close",
+        "ticket_resolved",
+        "estimate_accepted",
+        "estimate_rejected"
+      ]
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Attivo",
+      "default": true
+    }
+  },
+  "required": [
+    "memory_type",
+    "content"
+  ]
+}
