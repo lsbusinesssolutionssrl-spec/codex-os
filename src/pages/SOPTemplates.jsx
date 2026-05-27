@@ -20,7 +20,12 @@ export default function SOPTemplates() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    base44.entities.SOPTemplate.list().then(t => { setTemplates(t); setLoading(false); });
+    base44.entities.SOPTemplate.list()
+      .then(t => { setTemplates(t); setLoading(false); })
+      .catch(err => {
+        console.error('Error loading SOP templates:', err);
+        setLoading(false);
+      });
   }, []);
 
   const createTemplate = async (category) => {

@@ -1,0 +1,102 @@
+{
+  "name": "SOPTemplate",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "title": {
+      "type": "string",
+      "title": "Titolo"
+    },
+    "category": {
+      "type": "string",
+      "title": "Categoria",
+      "enum": [
+        "Bathroom",
+        "Full Home",
+        "Electrical",
+        "Networking",
+        "Security",
+        "Roofing",
+        "Handover",
+        "Other"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "title": "Descrizione"
+    },
+    "items": {
+      "type": "array",
+      "title": "Elementi Procedura",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Titolo"
+          },
+          "description": {
+            "type": "string",
+            "title": "Descrizione"
+          },
+          "category": {
+            "type": "string",
+            "title": "Categoria"
+          },
+          "order": {
+            "type": "number",
+            "title": "Ordine"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Obbligatorio",
+            "default": false
+          },
+          "estimated_duration_minutes": {
+            "type": "number",
+            "title": "Durata Stimata (min)"
+          }
+        }
+      }
+    },
+    "version": {
+      "type": "string",
+      "title": "Versione",
+      "default": "1.0"
+    },
+    "is_official": {
+      "type": "boolean",
+      "title": "Ufficiale",
+      "default": false
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Attivo",
+      "default": true
+    },
+    "usage_count": {
+      "type": "number",
+      "title": "Utilizzi",
+      "default": 0
+    },
+    "last_used": {
+      "type": "string",
+      "title": "Ultimo Utilizzo"
+    },
+    "created_by": {
+      "type": "string",
+      "title": "Creato da"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Note"
+    }
+  },
+  "required": [
+    "title",
+    "category"
+  ]
+}
