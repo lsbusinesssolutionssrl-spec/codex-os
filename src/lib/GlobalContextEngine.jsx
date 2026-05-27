@@ -96,34 +96,58 @@ export function GlobalContextProvider({ children }) {
         const role = authenticatedUser.role || 'user';
         setPlatformRole(role);
 
+        // CRITICAL: Define platform roles that can access Platform Mode
+        const PLATFORM_ROLES = ['admin', 'developer'];
+        const isPlatformUser = PLATFORM_ROLES.includes(role);
+
         // STEP 3: Load tenant memberships
         let memberships = [];
-        if (['admin', 'developer'].includes(role)) {
-          // Platform users can have memberships too
-          memberships = await base44.entities.TenantMembership.filter({
-            user_id: authenticatedUser.id,
-            status: 'active',
-          });
-        } else if (role === 'client') {
-          // Client portal context
+        
+        if (role === 'client') {
+          // Client portal context - no membership needed
           setContextType(CONTEXT_TYPE.CLIENT_PORTAL);
           setWorkspaceType('client');
           setSessionValid(true);
           setLoading(false);
           return;
-        } else {
-          // Tenant users MUST have membership
-          memberships = await base44.entities.TenantMembership.filter({
-            user_id: authenticatedUser.id,
-            status: 'active',
-          });
         }
-
+        
+        // Load memberships for ALL users (platform and tenant)
+        memberships = await base44.entities.TenantMembership.filter({
+          user_id: authenticatedUser.id,
+          status: 'active',
+        });
         setTenantMemberships(memberships);
 
-        // STEP 4: Resolve active context
-        if (['admin', 'developer'].includes(role)) {
-          // Platform context - check if impersonating a tenant
+        // STEP 4: Resolve active context with strict priority
+        // PRIORITY 1: Tenant users (even if they have platform role, tenant membership takes precedence)
+        if (memberships.length > 0) {
+          // User has active tenant membership - use tenant context
+          const primaryMembership = memberships.find(m => m.is_primary) || memberships[0];
+          setActiveMembership(primaryMembership);
+          setActiveTenantRole(primaryMembership.tenant_role);
+
+          // Load tenant company
+          const tenant = await base44.entities.Company.get(primaryMembership.tenant_id);
+          if (!tenant) {
+            failedChecksList.push({
+              check: 'tenant_exists',
+              message: `Tenant ${primaryMembership.tenant_id} not found`,
+              critical: true,
+            });
+            setFailedChecks(failedChecksList);
+            setContextType(CONTEXT_TYPE.UNRESOLVED);
+            setLoading(false);
+            return;
+          }
+
+          await resolveTenantContext(primaryMembership, tenant);
+          return;
+        }
+
+        // PRIORITY 2: Platform users WITHOUT tenant membership
+        if (isPlatformUser) {
+          // Check if impersonating a tenant
           const impersonateId = localStorage.getItem('impersonate_tenant_id');
           if (impersonateId) {
             const impersonatedMembership = memberships.find(m => m.tenant_id === impersonateId);
@@ -144,7 +168,7 @@ export function GlobalContextProvider({ children }) {
             }
           }
           
-          // Pure platform context
+          // Pure platform context (no tenant membership)
           setContextType(CONTEXT_TYPE.PLATFORM);
           setWorkspaceType('super_admin');
           setEnabledModules([]);
@@ -152,6 +176,28 @@ export function GlobalContextProvider({ children }) {
           setLoading(false);
           return;
         }
+
+        // PRIORITY 3: Tenant users without membership (error state)
+        failedChecksList.push({
+          check: 'tenant_membership',
+          message: 'No active TenantMembership found',
+          critical: true,
+        });
+        setFailedChecks(failedChecksList);
+        
+        // Check if user has old company_id binding
+        if (authenticatedUser.company_id) {
+          failedChecksList.push({
+            check: 'legacy_binding',
+            message: 'User has legacy company_id but no TenantMembership',
+            critical: true,
+            repairable: true,
+          });
+        }
+        
+        setContextType(CONTEXT_TYPE.UNRESOLVED);
+        setLoading(false);
+        return;
 
         // Tenant user context
         if (memberships.length === 0) {

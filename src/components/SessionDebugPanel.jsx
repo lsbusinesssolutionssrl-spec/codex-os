@@ -157,6 +157,14 @@ export default function SessionDebugPanel() {
               </span>
             </div>
             <div className="flex items-center justify-between">
+              <span className="text-gray-500">Tenant Role</span>
+              <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                activeTenantRole ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+              }`}>
+                {activeTenantRole || '—'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
               <span className="text-gray-500">Context Type</span>
               <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                 contextType === CONTEXT_TYPE.PLATFORM ? 'bg-purple-100 text-purple-700' :
@@ -170,6 +178,13 @@ export default function SessionDebugPanel() {
             <div className="flex items-center justify-between">
               <span className="text-gray-500">Workspace</span>
               <span className="font-mono text-gray-900">{workspaceType || '—'}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-500">Reason</span>
+              <span className="text-gray-700 text-right">
+                {tenantMemberships.length > 0 ? 'Has TenantMembership' : 
+                 platformRole === 'admin' || platformRole === 'developer' ? 'Platform role' : 'No context'}
+              </span>
             </div>
           </div>
         </DebugSection>
