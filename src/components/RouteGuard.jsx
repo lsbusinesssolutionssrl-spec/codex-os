@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, Lock, Shield } from 'lucide-react';
+import { AlertCircle, Lock, Shield, CheckCircle2, XCircle, Key } from 'lucide-react';
 import { useGlobalContext } from '@/lib/GlobalContextEngine';
+import { RBACResolver } from '@/lib/RBACResolver';
 
 /**
  * Route Guard Component
@@ -39,6 +40,7 @@ export default function RouteGuard({
     const checks = [];
     let accessDenied = false;
     let errorMessage = null;
+    let debugInfo = null;
 
     // Check 1: Context must be resolved
     if (!isContextResolved) {
@@ -62,9 +64,23 @@ export default function RouteGuard({
       };
     }
 
-    // Check 3: Required permissions
+    // Check 3: Required permissions - USE CENTRALIZED RBAC ONLY
     if (!accessDenied && requiredPermissions.length > 0) {
+      // Debug: Check permission resolution
+      const permissionDebug = RBACResolver.getPermissionDebug(activeTenantRole, enabledModules);
+      const hasAllRequired = requiredPermissions.every(perm => permissions.includes(perm));
       const missingPermissions = requiredPermissions.filter(perm => !permissions.includes(perm));
+      
+      debugInfo = {
+        requiredPermissions,
+        hasPermission: hasAllRequired,
+        totalPermissions: permissions.length,
+        permissionSource: 'RBACResolver (role + modules)',
+        roleUsed: activeTenantRole,
+        modulesUsed: enabledModules,
+        breakdown: permissionDebug.breakdown,
+      };
+
       if (missingPermissions.length > 0) {
         accessDenied = true;
         errorMessage = {
@@ -72,6 +88,7 @@ export default function RouteGuard({
           title: 'Permesso Negato',
           message: 'Non hai i permessi necessari per accedere a questa sezione.',
           details: `Permesso richiesto: ${missingPermissions.join(', ')}`,
+          debugInfo,
         };
       }
     }
@@ -140,18 +157,118 @@ export default function RouteGuard({
           </div>
         </div>
         
-        {/* Developer debug info */}
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase mb-2">Debug Info (Developer Only)</h3>
-          <div className="grid grid-cols-2 gap-2 text-xs font-mono text-gray-600">
-            <div>Context: {contextType}</div>
-            <div>Tenant: {activeTenant?.name || 'N/A'}</div>
-            <div>Role: {activeTenantRole || 'N/A'}</div>
-            <div>Modules: {enabledModules.join(', ') || 'None'}</div>
-            <div>Required Module: {requiredModule || 'None'}</div>
-            <div>Required Permissions: {requiredPermissions.join(', ') || 'None'}</div>
+        {/* Enhanced Developer Debug Panel */}
+        {error?.debugInfo && (
+          <div className="mt-4 bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
+              <h3 className="text-xs font-semibold text-gray-700 flex items-center gap-2">
+                <Key className="w-3 h-3" />
+                RBAC Permission Debug (Developer Only)
+              </h3>
+            </div>
+            <div className="p-4 space-y-3">
+              {/* Permission Check Result */}
+              <div className="flex items-center gap-2">
+                {error.debugInfo.hasPermission ? (
+                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                ) : (
+                  <XCircle className="w-4 h-4 text-red-600" />
+                )}
+                <span className="text-xs font-medium">
+                  Permission Check: <span className={error.debugInfo.hasPermission ? 'text-green-600' : 'text-red-600'}>
+                    {error.debugInfo.hasPermission ? 'PASSED' : 'FAILED'}
+                  </span>
+                </span>
+              </div>
+
+              {/* Required Permissions */}
+              <div>
+                <p className="text-[10px] font-semibold text-gray-500 uppercase mb-1">Required Permissions</p>
+                <div className="flex flex-wrap gap-1">
+                  {error.debugInfo.requiredPermissions.map(perm => (
+                    <span key={perm} className="text-[10px] px-1.5 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded font-mono">
+                      {perm}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Permission Source */}
+              <div>
+                <p className="text-[10px] font-semibold text-gray-500 uppercase mb-1">Permission Source</p>
+                <div className="text-xs text-gray-700 bg-blue-50 border border-blue-200 rounded p-2">
+                  {error.debugInfo.permissionSource}
+                </div>
+              </div>
+
+              {/* Role & Modules Used */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-500 uppercase mb-1">Role Used</p>
+                  <div className="text-xs bg-gray-50 border border-gray-200 rounded p-1.5 font-mono">
+                    {error.debugInfo.roleUsed || 'N/A'}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-500 uppercase mb-1">Total Permissions</p>
+                  <div className="text-xs bg-gray-50 border border-gray-200 rounded p-1.5 font-mono">
+                    {error.debugInfo.totalPermissions}
+                  </div>
+                </div>
+              </div>
+
+              {/* Enabled Modules */}
+              {error.debugInfo.modulesUsed.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-500 uppercase mb-1">Enabled Modules</p>
+                  <div className="flex flex-wrap gap-1">
+                    {error.debugInfo.modulesUsed.map(m => (
+                      <span key={m} className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded font-mono">
+                        {m}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Guard Decision */}
+              <div className="pt-2 border-t border-gray-200">
+                <p className="text-[10px] font-semibold text-gray-500 uppercase mb-1">Guard Decision</p>
+                <div className="text-xs bg-red-50 border border-red-200 rounded p-2 text-red-700">
+                  <strong>ACCESS DENIED</strong> - Missing required permissions
+                </div>
+              </div>
+
+              {/* Permission Categories */}
+              <div>
+                <p className="text-[10px] font-semibold text-gray-500 uppercase mb-1">Permission Categories</p>
+                <div className="grid grid-cols-2 gap-1">
+                  {Object.entries(error.debugInfo.breakdown).slice(0, 6).map(([cat, perms]) => (
+                    <div key={cat} className="text-[10px] flex justify-between bg-gray-50 border border-gray-200 rounded px-2 py-1">
+                      <span className="font-medium text-gray-600">{cat}</span>
+                      <span className="text-gray-500">{perms.length} perms</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Basic debug info (fallback) */}
+        {!error?.debugInfo && (
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase mb-2">Debug Info (Developer Only)</h3>
+            <div className="grid grid-cols-2 gap-2 text-xs font-mono text-gray-600">
+              <div>Context: {contextType}</div>
+              <div>Tenant: {activeTenant?.name || 'N/A'}</div>
+              <div>Role: {activeTenantRole || 'N/A'}</div>
+              <div>Modules: {enabledModules.join(', ') || 'None'}</div>
+              <div>Required Module: {requiredModule || 'None'}</div>
+              <div>Required Permissions: {requiredPermissions.join(', ') || 'None'}</div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
