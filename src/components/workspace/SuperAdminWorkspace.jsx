@@ -1,19 +1,19 @@
 import { useNavigate } from 'react-router-dom';
-import { Shield, Building2, Users, Activity, Brain, Zap, BarChart2, Globe, Database, Key, Webhook, Cpu, CreditCard, Palette } from 'lucide-react';
+import { Shield, Building2, Users, Activity, Brain, Zap, BarChart2, Globe, Database, Key, Cpu, CreditCard, Palette } from 'lucide-react';
 import { useWorkspace } from './WorkspaceContext';
 
 const quickActions = [
-  { label: 'Tenant Management', icon: Building2, path: '/super-admin' },
-  { label: 'Platform Settings', icon: Shield, path: '/platform-settings' },
-  { label: 'Platform Analytics', icon: BarChart2, path: '/product-analytics' },
-  { label: 'SaaS Plans', icon: CreditCard, path: '/subscription-plans' },
-  { label: 'AI Systems', icon: Brain, path: '/ai-foundation' },
+  { label: 'Gestione Tenant', icon: Building2, path: '/super-admin' },
+  { label: 'Impostazioni Platform', icon: Shield, path: '/platform-settings' },
+  { label: 'Analytics Platform', icon: BarChart2, path: '/product-analytics' },
+  { label: 'Piani SaaS', icon: CreditCard, path: '/subscription-plans' },
+  { label: 'Sistemi AI', icon: Brain, path: '/ai-foundation' },
   { label: 'Workflow Engine', icon: Zap, path: '/workflows' },
-  { label: 'Integrations', icon: Globe, path: '/integrations' },
+  { label: 'Integrazioni', icon: Globe, path: '/integrations' },
   { label: 'White Label', icon: Palette, path: '/brand-approval' },
-  { label: 'Developer Settings', icon: Database, path: '/developer' },
+  { label: 'Developer', icon: Database, path: '/developer' },
   { label: 'API Keys', icon: Key, path: '/api-keys' },
-  { label: 'System Health', icon: Cpu, path: '/system-status' },
+  { label: 'Stato Sistema', icon: Cpu, path: '/system-status' },
 ];
 
 export default function SuperAdminWorkspace() {
@@ -30,24 +30,24 @@ export default function SuperAdminWorkspace() {
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Platform Command Center</h1>
-              <p className="text-purple-200 text-sm">Enterprise system controls and observability</p>
+              <h1 className="text-2xl font-bold">Centro di Controllo Platform</h1>
+              <p className="text-purple-200 text-sm">Supervisione enterprise e controllo infrastruttura</p>
             </div>
           </div>
           
           {/* Quick Stats */}
           <div className="grid grid-cols-4 gap-4 mt-8">
-            <Stat label="Active Tenants" value="—" />
-            <Stat label="Platform MRR" value="—" />
-            <Stat label="AI Operations" value="—" />
-            <Stat label="System Health" value="98%" />
+            <Stat label="Tenant Attivi" value="—" />
+            <Stat label="MRR Platform" value="—" />
+            <Stat label="Operazioni AI" value="—" />
+            <Stat label="Salute Sistema" value="98%" />
           </div>
         </div>
       </div>
 
       {/* Quick Actions Grid */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <h2 className="text-sm font-semibold text-gray-900 mb-4">System Controls</h2>
+        <h2 className="text-sm font-semibold text-gray-900 mb-4">Controlli di Sistema</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           {quickActions.map((action, i) => (
             <button
@@ -64,20 +64,20 @@ export default function SuperAdminWorkspace() {
         {/* System Modules */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
           <ModuleCard
-            title="Tenant Management"
-            description="Multi-tenant architecture, company onboarding, subscription management"
+            title="Gestione Tenant"
+            description="Architettura multi-tenant, onboarding aziende, gestione abbonamenti"
             icon={Building2}
             color="#7C3AED"
           />
           <ModuleCard
-            title="AI Observability"
-            description="Monitor AI operations, memory systems, orchestration quality"
+            title="Osservabilità AI"
+            description="Monitoraggio operazioni AI, sistemi di memoria, qualità orchestrazione"
             icon={Brain}
             color="#F59E0B"
           />
           <ModuleCard
-            title="Platform Analytics"
-            description="Usage metrics, feature adoption, health scores"
+            title="Analytics Platform"
+            description="Metriche utilizzo, adozione funzionalità, punteggi di salute"
             icon={BarChart2}
             color="#1147FF"
           />

@@ -70,9 +70,9 @@ export default function Guardian() {
         </div>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none">
           <option value="">Tutti gli stati</option>
-          <option value="Active">Active</option>
-          <option value="Paused">Paused</option>
-          <option value="Cancelled">Cancelled</option>
+          <option value="Active">Attivo</option>
+          <option value="Paused">In Pausa</option>
+          <option value="Cancelled">Cancellato</option>
         </select>
       </div>
 

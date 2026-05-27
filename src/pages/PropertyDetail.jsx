@@ -117,7 +117,7 @@ export default function PropertyDetail() {
           }`}
         >
           <Activity className="w-3.5 h-3.5" />
-          Property Health
+          Salute Immobile
         </button>
         <button
           onClick={() => setShowHealthScore(!showHealthScore)}
@@ -126,7 +126,7 @@ export default function PropertyDetail() {
           }`}
         >
           <Brain className="w-3.5 h-3.5" />
-          Predictive AI
+          AI Predittiva
         </button>
         <button
           onClick={() => setShowWarranties(!showWarranties)}
@@ -144,7 +144,7 @@ export default function PropertyDetail() {
           }`}
         >
           <Clock className="w-3.5 h-3.5" />
-          Timeline AI
+          Cronologia AI
         </button>
         <button
           onClick={() => setShowLifecycle(!showLifecycle)}
@@ -153,7 +153,7 @@ export default function PropertyDetail() {
           }`}
         >
           <Clock className="w-3.5 h-3.5" />
-          Lifecycle
+          Ciclo di Vita
         </button>
         <button
           onClick={() => setShowGuardian(!showGuardian)}
@@ -171,7 +171,7 @@ export default function PropertyDetail() {
           }`}
         >
           <Mail className="w-3.5 h-3.5" />
-          Email AI
+          Comunicazione AI
         </button>
         <button
           onClick={() => setShowAIPanel(!showAIPanel)}
@@ -213,7 +213,7 @@ export default function PropertyDetail() {
             {typeEmoji[property.type] || '🏠'}
           </div>
           <div>
-            <div className="text-xs text-white/50 font-medium uppercase tracking-wider mb-1">Home Passport</div>
+            <div className="text-xs text-white/50 font-medium uppercase tracking-wider mb-1">Fascicolo Digitale Immobile</div>
             <h2 className="text-xl font-bold">{property.property_name}</h2>
             <p className="text-white/70 text-sm mt-0.5">{property.address}</p>
           </div>

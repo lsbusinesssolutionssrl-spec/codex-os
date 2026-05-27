@@ -3,12 +3,12 @@ import { TrendingUp, Users, FileText, Phone, Mail, Calendar, DollarSign, Target 
 import { useWorkspace } from './WorkspaceContext';
 
 const quickActions = [
-  { label: 'Leads', icon: Target, path: '/clients' },
-  { label: 'Estimates', icon: FileText, path: '/estimates' },
-  { label: 'Clients', icon: Users, path: '/clients' },
-  { label: 'Follow-ups', icon: Phone, path: '/clients' },
-  { label: 'Emails', icon: Mail, path: '/clients' },
-  { label: 'Calendar', icon: Calendar, path: '/calendar' },
+  { label: 'Lead', icon: Target, path: '/clients' },
+  { label: 'Preventivi', icon: FileText, path: '/estimates' },
+  { label: 'Clienti', icon: Users, path: '/clients' },
+  { label: 'Follow-up', icon: Phone, path: '/clients' },
+  { label: 'Email', icon: Mail, path: '/clients' },
+  { label: 'Calendario', icon: Calendar, path: '/calendar' },
   { label: 'AI Estimator', icon: DollarSign, path: '/ai-estimator' },
   { label: 'Pipeline', icon: TrendingUp, path: '/estimates' },
 ];
@@ -27,24 +27,24 @@ export default function SalesWorkspace() {
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Sales Command Center</h1>
-              <p className="text-orange-100 text-sm">Commercial pipeline and estimate management</p>
+              <h1 className="text-2xl font-bold">Centro Commerciale</h1>
+              <p className="text-orange-100 text-sm">Pipeline commerciale e gestione preventivi</p>
             </div>
           </div>
           
           {/* Quick Stats */}
           <div className="grid grid-cols-4 gap-4 mt-8">
-            <Stat label="Active Leads" value="—" />
-            <Stat label="Pending Estimates" value="—" />
-            <Stat label="Conversion Rate" value="—" />
-            <Stat label="Monthly Revenue" value="—" />
+            <Stat label="Lead Attivi" value="—" />
+            <Stat label="Preventivi in Attesa" value="—" />
+            <Stat label="Tasso Conversione" value="—" />
+            <Stat label="Ricavi Mensili" value="—" />
           </div>
         </div>
       </div>
 
       {/* Quick Actions Grid */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <h2 className="text-sm font-semibold text-gray-900 mb-4">Sales Tools</h2>
+        <h2 className="text-sm font-semibold text-gray-900 mb-4">Strumenti Commerciali</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
           {quickActions.map((action, i) => (
             <button
@@ -61,20 +61,20 @@ export default function SalesWorkspace() {
         {/* Sales Modules */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
           <ModuleCard
-            title="Pipeline Management"
-            description="Lead tracking, estimate pipeline, follow-up scheduling, conversion analytics"
+            title="Gestione Pipeline"
+            description="Tracciamento lead, pipeline preventivi, pianificazione follow-up, analytics conversione"
             icon={TrendingUp}
             color="#F58020"
           />
           <ModuleCard
-            title="AI Estimate Assistant"
-            description="Generate estimates, optimize pricing, suggest upsells, prepare proposals"
+            title="Assistente AI Preventivi"
+            description="Genera preventivi, ottimizza prezzi, suggerisci upsell, prepara proposte commerciali"
             icon={FileText}
             color="#1147FF"
           />
           <ModuleCard
-            title="Customer Relations"
-            description="Client communications, follow-up automation, Guardian opportunities"
+            title="Relazioni Clienti"
+            description="Comunicazioni clienti, automazione follow-up, opportunità Guardian"
             icon={Users}
             color="#10B981"
           />

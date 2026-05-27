@@ -78,28 +78,28 @@ export default function SystemStatus() {
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
           <CheckCircle2 className="w-4 h-4 text-green-600" />
-          <span className="text-sm font-medium text-green-700">All Systems Operational</span>
+          <span className="text-sm font-medium text-green-700">Tutti i Sistemi Operativi</span>
         </div>
       </div>
 
       {/* Health Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <HealthCard label="API" status={health.api} icon={Globe} />
-        <HealthCard label="Webhooks" status={health.webhooks} icon={Zap} />
-        <HealthCard label="Integrations" status={health.integrations} icon={Server} />
-        <HealthCard label="Workflows" status={health.workflows} icon={Activity} />
-        <HealthCard label="AI Services" status={health.ai} icon={Database} />
+        <HealthCard label="Webhook" status={health.webhooks} icon={Zap} />
+        <HealthCard label="Integrazioni" status={health.integrations} icon={Server} />
+        <HealthCard label="Workflow" status={health.workflows} icon={Activity} />
+        <HealthCard label="Servizi AI" status={health.ai} icon={Database} />
         <HealthCard label="Database" status={health.database} icon={Shield} />
       </div>
 
       {/* Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <MetricCard label="API Calls (24h)" value={stats.apiCalls.toLocaleString()} trend="+12%" positive icon={Globe} />
-        <MetricCard label="Webhook Deliveries" value={stats.webhookDeliveries.toLocaleString()} trend="+5%" positive icon={Zap} />
-        <MetricCard label="Active Integrations" value={stats.activeIntegrations} trend="+2" positive icon={Server} />
-        <MetricCard label="Installed Extensions" value={stats.installedExtensions} trend="0" positive icon={Database} />
-        <MetricCard label="Workflow Executions" value={stats.workflowExecutions.toLocaleString()} trend="+18%" positive icon={Activity} />
-        <MetricCard label="AI Queries (24h)" value={stats.aiQueries.toLocaleString()} trend="+25%" positive icon={Shield} />
+        <MetricCard label="Chiamate API (24h)" value={stats.apiCalls.toLocaleString()} trend="+12%" positive icon={Globe} />
+        <MetricCard label="Consegne Webhook" value={stats.webhookDeliveries.toLocaleString()} trend="+5%" positive icon={Zap} />
+        <MetricCard label="Integrazioni Attive" value={stats.activeIntegrations} trend="+2" positive icon={Server} />
+        <MetricCard label="Estensioni Installate" value={stats.installedExtensions} trend="0" positive icon={Database} />
+        <MetricCard label="Esecuzioni Workflow" value={stats.workflowExecutions.toLocaleString()} trend="+18%" positive icon={Activity} />
+        <MetricCard label="Richieste AI (24h)" value={stats.aiQueries.toLocaleString()} trend="+25%" positive icon={Shield} />
       </div>
 
       {/* Recent Events */}
@@ -153,19 +153,19 @@ export default function SystemStatus() {
             <p className="text-blue-100 text-sm mb-4">Enterprise-grade modular platform</p>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <div className="text-blue-200 text-xs">API Version</div>
+                <div className="text-blue-200 text-xs">Versione API</div>
                 <div className="font-semibold">v1.0.0</div>
               </div>
               <div>
-                <div className="text-blue-200 text-xs">Platform Version</div>
+                <div className="text-blue-200 text-xs">Versione Platform</div>
                 <div className="font-semibold">5.0.0</div>
               </div>
               <div>
-                <div className="text-blue-200 text-xs">Uptime</div>
+                <div className="text-blue-200 text-xs">Disponibilità</div>
                 <div className="font-semibold">99.9%</div>
               </div>
               <div>
-                <div className="text-blue-200 text-xs">Last Update</div>
+                <div className="text-blue-200 text-xs">Ultimo Aggiornamento</div>
                 <div className="font-semibold">2026-05-27</div>
               </div>
             </div>
@@ -179,10 +179,10 @@ export default function SystemStatus() {
 
 function HealthCard({ label, status, icon: Icon }) {
   const statusConfig = {
-    operational: { color: '#10B981', bg: 'bg-green-50', text: 'Operational' },
-    degraded: { color: '#F59E0B', bg: 'bg-amber-50', text: 'Degraded' },
-    error: { color: '#EF4444', bg: 'bg-red-50', text: 'Error' },
-  }[status] || { color: '#10B981', bg: 'bg-green-50', text: 'Operational' };
+    operational: { color: '#10B981', bg: 'bg-green-50', text: 'Operativo' },
+    degraded: { color: '#F59E0B', bg: 'bg-amber-50', text: 'Degradato' },
+    error: { color: '#EF4444', bg: 'bg-red-50', text: 'Errore' },
+  }[status] || { color: '#10B981', bg: 'bg-green-50', text: 'Operativo' };
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4">

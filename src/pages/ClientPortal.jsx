@@ -347,8 +347,8 @@ export default function ClientPortal() {
     { id: 'projects', label: 'Progetti', icon: FolderKanban, badge: projects.length },
     { id: 'estimates', label: 'Preventivi', icon: FileText, badge: pendingEstimates.length || null, badgeColor: 'bg-blue-500' },
     { id: 'documents', label: 'Documenti', icon: Archive, badge: documents.length },
-    { id: 'tickets', label: 'Ticket', icon: Ticket, badge: openTickets || null, badgeColor: 'bg-red-500' },
-    { id: 'properties', label: 'Proprietà', icon: Home, badge: properties.length },
+    { id: 'tickets', label: 'Assistenza', icon: Ticket, badge: openTickets || null, badgeColor: 'bg-red-500' },
+    { id: 'properties', label: 'Immobili', icon: Home, badge: properties.length },
   ];
 
   const typeIcon = { Contract: '📄', Estimate: '📋', Invoice: '💰', Certification: '🏆', Warranty: '🛡️', 'Floor Plan': '📐', Photo: '📷', Other: '📁' };
@@ -546,13 +546,25 @@ export default function ClientPortal() {
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Tipo</label>
                 <select value={ticketForm.issue_type} onChange={e => setTicketForm(f => ({ ...f, issue_type: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white">
-                  {['Water Leak','Electrical','Network','Security','Maintenance','Other'].map(t => <option key={t}>{t}</option>)}
+                  {[
+                  ['Water Leak', 'Perdita Acqua'],
+                  ['Electrical', 'Elettrico'],
+                  ['Network', 'Rete/Connettività'],
+                  ['Security', 'Sicurezza'],
+                  ['Maintenance', 'Manutenzione'],
+                  ['Other', 'Altro']
+                ].map(([val, label]) => <option key={val} value={val}>{label}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Priorità</label>
                 <select value={ticketForm.priority} onChange={e => setTicketForm(f => ({ ...f, priority: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white">
-                  {['Low','Medium','High','Urgent'].map(p => <option key={p}>{p}</option>)}
+                  {[
+                  ['Low', 'Bassa'],
+                  ['Medium', 'Media'],
+                  ['High', 'Alta'],
+                  ['Urgent', 'Urgente']
+                ].map(([val, label]) => <option key={val} value={val}>{label}</option>)}
                 </select>
               </div>
             </div>

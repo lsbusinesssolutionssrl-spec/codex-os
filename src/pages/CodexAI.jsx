@@ -39,7 +39,7 @@ const SOURCE_LABELS = {
   knowledge_base: 'Knowledge Base', ai_memory: 'Memoria AI',
   project_financials: 'Finanze', rag_documents: 'Documenti',
   focused_project: 'Progetto', focused_client: 'Cliente',
-  focused_property_homepassport: 'Home Passport', focused_estimate: 'Preventivo',
+  focused_property_homepassport: 'Fascicolo Immobile', focused_estimate: 'Preventivo',
   timesheets: 'Timesheet', financial_alerts: 'Alert', intelligence: 'Insights',
 };
 
@@ -545,7 +545,7 @@ export default function CodexAI() {
               safeMode ? 'bg-amber-50 text-amber-700 border-amber-200' : 'text-slate-500 hover:bg-slate-100 border-transparent'
             }`}>
             <Lock className="w-3 h-3" />
-            {safeMode ? 'Safe Mode ON' : 'Safe Mode'}
+            {safeMode ? 'Modalità Sicura ON' : 'Modalità Sicura'}
           </button>
           <button onClick={() => setShowSources(v => !v)}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${

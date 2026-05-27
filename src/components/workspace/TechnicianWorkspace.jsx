@@ -3,14 +3,14 @@ import { Wrench, ClipboardCheck, MapPin, Camera, Mic, BookOpen, CheckCircle, Pho
 import { useWorkspace } from './WorkspaceContext';
 
 const quickActions = [
-  { label: 'My Projects', icon: Wrench, path: '/technician' },
-  { label: "Today's Tasks", icon: ClipboardCheck, path: '/tasks' },
-  { label: 'Navigation', icon: MapPin, path: '/technician' },
-  { label: 'Photo Upload', icon: Camera, path: '/technician' },
-  { label: 'Voice Notes', icon: Mic, path: '/technician' },
-  { label: 'SOPs', icon: BookOpen, path: '/sop' },
-  { label: 'Checklists', icon: CheckCircle, path: '/checklists' },
-  { label: 'Support', icon: Phone, path: '/tickets' },
+  { label: 'I Miei Lavori', icon: Wrench, path: '/technician' },
+  { label: 'Attività Oggi', icon: ClipboardCheck, path: '/tasks' },
+  { label: 'Navigazione', icon: MapPin, path: '/technician' },
+  { label: 'Carica Foto', icon: Camera, path: '/technician' },
+  { label: 'Note Vocali', icon: Mic, path: '/technician' },
+  { label: 'Procedure', icon: BookOpen, path: '/sop' },
+  { label: 'Checklist', icon: CheckCircle, path: '/checklists' },
+  { label: 'Assistenza', icon: Phone, path: '/tickets' },
 ];
 
 export default function TechnicianWorkspace() {
@@ -27,23 +27,23 @@ export default function TechnicianWorkspace() {
               <Wrench className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Field Operations</h1>
-              <p className="text-emerald-100 text-sm">Mobile-first field workspace</p>
+              <h1 className="text-2xl font-bold">Operazioni sul Campo</h1>
+              <p className="text-emerald-100 text-sm">Area di lavoro mobile per tecnici</p>
             </div>
           </div>
           
           {/* Quick Stats */}
           <div className="grid grid-cols-3 gap-4 mt-8">
-            <Stat label="Today's Tasks" value="—" />
-            <Stat label="Active Projects" value="—" />
-            <Stat label="Pending Uploads" value="—" />
+            <Stat label="Attività Oggi" value="—" />
+            <Stat label="Progetti Attivi" value="—" />
+            <Stat label="Upload in Attesa" value="—" />
           </div>
         </div>
       </div>
 
       {/* Quick Actions Grid - Large touch-friendly buttons */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <h2 className="text-sm font-semibold text-gray-900 mb-4">Field Tools</h2>
+        <h2 className="text-sm font-semibold text-gray-900 mb-4">Strumenti di Cantiere</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {quickActions.map((action, i) => (
             <button
@@ -62,14 +62,14 @@ export default function TechnicianWorkspace() {
         {/* Mobile-First Features */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           <ModuleCard
-            title="Assigned Work"
-            description="View your projects, complete checklists, upload photos, log hours"
+            title="Lavori Assegnati"
+            description="Visualizza i tuoi progetti, completa checklist, carica foto, registra ore lavorate"
             icon={ClipboardCheck}
             color="#10B981"
           />
           <ModuleCard
-            title="Field Assistant"
-            description="AI-powered SOP retrieval, troubleshooting guidance, quick documentation"
+            title="Assistente Tecnico"
+            description="Recupero procedure SOP con AI, guida alla risoluzione problemi, documentazione rapida"
             icon={BookOpen}
             color="#F59E0B"
           />
@@ -78,15 +78,15 @@ export default function TechnicianWorkspace() {
         {/* Mobile CTA */}
         <div className="mt-8 p-6 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl text-white text-center">
           <Wrench className="w-8 h-8 mx-auto mb-3" />
-          <h3 className="text-lg font-bold mb-2">Optimized for Mobile</h3>
+          <h3 className="text-lg font-bold mb-2">Ottimizzato per Mobile</h3>
           <p className="text-emerald-100 text-sm mb-4">
-            Access this workspace from your phone for the best field experience
+            Accedi a questo workspace dal tuo smartphone per la migliore esperienza sul campo
           </p>
           <button 
             onClick={() => navigate('/technician')}
             className="px-6 py-3 bg-white text-emerald-600 rounded-lg font-semibold text-sm"
           >
-            Open Mobile View
+            Apri Vista Mobile
           </button>
         </div>
       </div>

@@ -3,12 +3,12 @@ import { Crown, TrendingUp, DollarSign, AlertTriangle, Activity, Users, Shield, 
 import { useWorkspace } from './WorkspaceContext';
 
 const quickActions = [
-  { label: 'Executive Insights', icon: TrendingUp, path: '/executive-insights' },
-  { label: 'Financial Control', icon: DollarSign, path: '/financial-control' },
-  { label: 'CEO Dashboard', icon: Crown, path: '/ceo-dashboard' },
+  { label: 'Insight Strategici', icon: TrendingUp, path: '/executive-insights' },
+  { label: 'Controllo Finanziario', icon: DollarSign, path: '/financial-control' },
+  { label: 'Dashboard Direzionale', icon: Crown, path: '/ceo-dashboard' },
   { label: 'Intelligence', icon: Activity, path: '/intelligence' },
-  { label: 'Team Performance', icon: Users, path: '/team-accountability' },
-  { label: 'Project Portfolio', icon: Briefcase, path: '/projects' },
+  { label: 'Performance Team', icon: Users, path: '/team-accountability' },
+  { label: 'Portfolio Progetti', icon: Briefcase, path: '/projects' },
 ];
 
 export default function ExecutiveWorkspace() {
@@ -25,16 +25,16 @@ export default function ExecutiveWorkspace() {
               <Crown className="w-6 h-6 text-yellow-300" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Executive Cockpit</h1>
-              <p className="text-amber-100 text-sm">Strategic oversight and decision intelligence</p>
+              <h1 className="text-2xl font-bold">Cockpit Direzionale</h1>
+              <p className="text-amber-100 text-sm">Supervisione strategica e intelligence decisionale</p>
             </div>
           </div>
           
           {/* Quick Stats */}
           <div className="grid grid-cols-4 gap-4 mt-8">
-            <Stat label="Active Projects" value="—" />
-            <Stat label="Monthly Revenue" value="—" />
-            <Stat label="Team Size" value="—" />
+            <Stat label="Progetti Attivi" value="—" />
+            <Stat label="Ricavi Mensili" value="—" />
+            <Stat label="Dimensione Team" value="—" />
             <Stat label="Guardian MRR" value="—" />
           </div>
         </div>
@@ -42,7 +42,7 @@ export default function ExecutiveWorkspace() {
 
       {/* Quick Actions Grid */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <h2 className="text-sm font-semibold text-gray-900 mb-4">Executive Tools</h2>
+        <h2 className="text-sm font-semibold text-gray-900 mb-4">Strumenti Direzionali</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {quickActions.map((action, i) => (
             <button
@@ -60,19 +60,19 @@ export default function ExecutiveWorkspace() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
           <ModuleCard
             title="Business Intelligence"
-            description="Revenue trends, profitability analysis, margin intelligence, financial forecasting"
+            description="Andamento ricavi, analisi redditività, intelligence sui margini, previsioni finanziarie"
             icon={TrendingUp}
             color="#F59E0B"
           />
           <ModuleCard
-            title="Risk Monitoring"
-            description="Predictive risks, project health alerts, customer satisfaction, churn prediction"
+            title="Monitoraggio Rischi"
+            description="Rischi predittivi, alert salute progetti, soddisfazione clienti, previsione churn"
             icon={AlertTriangle}
             color="#EF4444"
           />
           <ModuleCard
-            title="Team Performance"
-            description="Workload analysis, productivity metrics, accountability tracking"
+            title="Performance Team"
+            description="Analisi carichi di lavoro, metriche produttività, accountability operativa"
             icon={Users}
             color="#1147FF"
           />

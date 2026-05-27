@@ -41,7 +41,7 @@ export default function WorkspaceSwitcher() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <div className="px-2 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-          Workspace
+          Area di Lavoro
         </div>
         {availableWorkspaces.map((wsId) => {
           const ws = getWorkspaceConfig(wsId);

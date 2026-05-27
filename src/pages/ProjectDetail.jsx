@@ -287,7 +287,7 @@ export default function ProjectDetail() {
           }`}
         >
           <Clock className="w-3.5 h-3.5" />
-          Timeline AI
+          Cronologia AI
         </button>
         <button
           onClick={() => setShowWarranties(!showWarranties)}
@@ -305,7 +305,7 @@ export default function ProjectDetail() {
           }`}
         >
           <Users className="w-3.5 h-3.5" />
-          Team Analysis
+          Analisi Team
         </button>
         <button
           onClick={() => setShowCommunication(!showCommunication)}
@@ -314,7 +314,7 @@ export default function ProjectDetail() {
           }`}
         >
           <Mail className="w-3.5 h-3.5" />
-          Email AI
+          Comunicazione AI
         </button>
         <button
           onClick={() => setShowWorkflowSuggestions(!showWorkflowSuggestions)}
@@ -323,7 +323,7 @@ export default function ProjectDetail() {
           }`}
         >
           <Zap className="w-3.5 h-3.5" />
-          Workflow AI
+          Workflow Operativo
         </button>
         <button
           onClick={() => setShowAIPanel(!showAIPanel)}
@@ -380,7 +380,7 @@ export default function ProjectDetail() {
               </button>
               {project.status === 'Delivered' && property && (
                 <button onClick={generateHomePassport} className="flex items-center gap-2 px-3 py-1.5 text-sm text-white rounded-lg" style={{ backgroundColor: '#0B2341' }}>
-                  <Home className="w-3.5 h-3.5" /> Home Passport
+                  <Home className="w-3.5 h-3.5" /> Fascicolo Immobile
                 </button>
               )}
               <button onClick={() => setConfirmDelete(true)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600">
