@@ -43,13 +43,31 @@ Deno.serve(async (req) => {
   const contextEntityList = [];
 
   // ── CONTEXT ENGINE — Phase 1: Global Platform Snapshot ───────────────
-  const [projects, tickets, estimates, clients, memories] = await Promise.all([
+  // Memory retrieval — multi-link: collect memories scoped to this conversation's context
+  const memoryFilters = [{ is_active: true, company_id: user.company_id }];
+  // Add focused-entity filters
+  if (hintProjectId)  memoryFilters.push({ is_active: true, project_id: hintProjectId });
+  if (hintClientId)   memoryFilters.push({ is_active: true, client_id: hintClientId });
+  if (hintPropertyId) memoryFilters.push({ is_active: true, property_id: hintPropertyId });
+
+  const [projects, tickets, estimates, clients, ...memoryBatches] = await Promise.all([
     base44.entities.Project.list('-updated_date', 10),
     base44.entities.SupportTicket.filter({ status: 'Open' }, '-created_date', 10),
     base44.entities.Estimate.list('-updated_date', 8),
     base44.entities.Client.list('-updated_date', 10),
-    base44.asServiceRole.entities.AIMemory.filter({ is_active: true }, '-created_date', 20),
+    ...memoryFilters.map(f =>
+      base44.asServiceRole.entities.AIMemory.filter(f, '-relevance_score', 15).catch(() => [])
+    ),
   ]);
+
+  // Deduplicate and sort memories by relevance
+  const memoryMap = new Map();
+  for (const batch of memoryBatches) {
+    for (const m of batch) memoryMap.set(m.id, m);
+  }
+  const memories = [...memoryMap.values()]
+    .sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0))
+    .slice(0, 25);
 
   const [tasks, maintenance, knowledge, properties, suppliers] = await Promise.all([
     base44.entities.Task.filter({ status: 'In Progress' }, '-updated_date', 5).catch(() => []),
@@ -148,7 +166,6 @@ Deno.serve(async (req) => {
   if (suppliers.length) contextEntityList.push('suppliers');
   if (knowledge.length) contextEntityList.push('knowledge_base');
   if (focusedProject) contextEntityList.push('focused_project');
-  if (focusedProject) contextEntityList.push('focused_project');
   if (focusedCosts.length) contextEntityList.push('project_financials');
   if (focusedTimesheets.length) contextEntityList.push('project_timesheets');
   if (focusedProjectDocs.length) contextEntityList.push('project_documents');
@@ -166,6 +183,17 @@ Deno.serve(async (req) => {
 
   // ── Build System Prompt ─────────────────────────────────────────
   const today = new Date().toLocaleDateString('it-IT');
+
+  // Update access_count for used memories (fire-and-forget)
+  if (memories.length > 0) {
+    const topMemoryIds = memories.slice(0, 5).map(m => m.id);
+    Promise.all(
+      topMemoryIds.map(id => base44.asServiceRole.entities.AIMemory.update(id, {
+        access_count: (memories.find(m => m.id === id)?.access_count || 0) + 1,
+        last_accessed: new Date().toISOString(),
+      }).catch(() => {}))
+    );
+  }
 
   // Build context graph summary for system prompt
   const hasDeepContext = focusedProject || focusedClient || focusedProperty || focusedEstimate;
@@ -271,8 +299,11 @@ ${intelligenceInsights.map(i => `• [${i.severity}] ${i.insight_type}: ${i.titl
 MANUTENZIONI PROGRAMMATE:
 ${maintenance.map(m => `• ${m.title} — Scadenza: ${m.next_due_date || '—'} — Tecnico: ${m.assigned_technician || '—'}`).join('\n') || 'Nessuna manutenzione.'}
 
-MEMORIA OPERATIVA AI (${memories.length}):
-${memories.map(m => `• [${m.memory_type}] ${m.title}: ${truncate(m.content, 150)}`).join('\n') || 'Nessuna memoria.'}
+AI MEMORY (${memories.length} memorie — scoped a questo contesto):
+${memories.length > 0 ? memories.map(m => {
+  const links = [m.client_id && 'cli:'+m.client_id.slice(-6), m.project_id && 'prj:'+m.project_id.slice(-6), m.property_id && 'prop:'+m.property_id.slice(-6)].filter(Boolean).join('|');
+  return `• [${m.memory_type}${links ? ' → '+links : ''}] ${m.title}: ${truncate(m.content, 200)}`;
+}).join('\n') : 'Nessuna memoria per questo contesto.'}
 
 KNOWLEDGE BASE (${knowledge.length} articoli):
 ${knowledge.map(k => `• [${k.category}] ${k.title}: Prob: ${truncate(k.problem, 80)} → Sol: ${truncate(k.solution, 80)}`).join('\n') || 'Nessun articolo KB.'}
@@ -285,6 +316,11 @@ Rispondi SEMPRE in italiano, in modo preciso, operativo e conciso.
 Quando suggerisci azioni, elencale chiaramente come azioni confermate dall'utente.
 Cita le fonti dai dati interni quando pertinente (es. "Dal progetto X...", "Secondo il ticket Y...").
 Se non hai dati sufficienti, dillo chiaramente invece di inventare.
+
+USO MEMORIA:
+- Le memorie sono ordinate per rilevanza e scoped al contesto attuale.
+- Se noti nuove informazioni utili da memorizzare (preferenza, lezione, pattern), integralo nella risposta.
+- Usa le memorie storiche per personalizzare le risposte (es. preferenze note del cliente, problemi ricorrenti).
 
 AZIONI DISPONIBILI (suggeriscile quando appropriato, richiederanno conferma):
 - create_estimate_draft: Crea bozza preventivo
@@ -321,6 +357,48 @@ Quando suggerisci un'azione, includi alla fine della risposta un blocco JSON cos
   }
 
   const latencyMs = Date.now() - startMs;
+
+  // ── Auto-extract and save new memories (fire-and-forget) ────────
+  if (role !== 'client' && textResponse && textResponse.length > 100) {
+    (async () => {
+      try {
+        const extractionPrompt = `Analizza questo scambio e identifica SOLO informazioni NUOVE da memorizzare (preferenze cliente, lezioni, pattern, soluzioni, problemi ricorrenti). Se non ci sono, rispondi con memories:[].
+Domanda: ${message}
+Risposta: ${truncate(textResponse, 400)}`;
+        const extracted = await base44.integrations.Core.InvokeLLM({
+          prompt: extractionPrompt,
+          response_json_schema: {
+            type: 'object',
+            properties: {
+              memories: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    memory_type: { type: 'string' },
+                    title: { type: 'string' },
+                    content: { type: 'string' },
+                    tags: { type: 'array', items: { type: 'string' } },
+                    relevance_score: { type: 'number' },
+                  }
+                }
+              }
+            }
+          },
+        });
+        for (const mem of (extracted?.memories || []).slice(0, 3)) {
+          if (!mem.title || !mem.content) continue;
+          const existing = await base44.asServiceRole.entities.AIMemory.filter({ company_id: user.company_id, memory_type: mem.memory_type }, '-created_date', 5).catch(() => []);
+          const dup = existing.find(m => m.title?.toLowerCase() === mem.title?.toLowerCase());
+          if (dup) {
+            base44.asServiceRole.entities.AIMemory.update(dup.id, { content: mem.content, relevance_score: Math.min(1, (dup.relevance_score||0.7)+0.05), access_count: (dup.access_count||0)+1, last_accessed: new Date().toISOString() }).catch(() => {});
+          } else {
+            base44.asServiceRole.entities.AIMemory.create({ company_id: user.company_id, memory_type: mem.memory_type||'operational_lesson', title: mem.title, content: mem.content, client_id: hintClientId||null, property_id: hintPropertyId||null, project_id: hintProjectId||null, linked_entity_type: hintProjectId?'project':hintClientId?'client':hintPropertyId?'property':'tenant', linked_entity_id: hintProjectId||hintClientId||hintPropertyId||user.company_id||'', tags: mem.tags||[], relevance_score: mem.relevance_score||0.75, confidence: 0.8, source: 'ai_chat', access_count: 0, last_accessed: new Date().toISOString(), is_active: true }).catch(() => {});
+          }
+        }
+      } catch {}
+    })();
+  }
 
   // ── Audit Log ───────────────────────────────────────────────────
   base44.asServiceRole.entities.AIAuditLog.create({
