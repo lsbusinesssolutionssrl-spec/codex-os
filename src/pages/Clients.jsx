@@ -5,8 +5,8 @@ import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import StatusBadge from '../components/StatusBadge';
 
-const TYPE_OPTS = ['', 'Private', 'Business', 'Public Administration', 'Partner'];
-const SOURCE_OPTS = ['', 'Referral', 'Google', 'Social', 'Partner', 'Existing Client'];
+const TYPE_OPTS = ['', 'Privato', 'Azienda', 'Pubblica Amministrazione', 'Partner'];
+const SOURCE_OPTS = ['', 'Referral', 'Google', 'Social', 'Partner', 'Cliente Esistente'];
 
 export default function Clients() {
   const [clients, setClients] = useState([]);
