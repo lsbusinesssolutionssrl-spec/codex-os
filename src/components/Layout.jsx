@@ -62,7 +62,7 @@ export default function Layout() {
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const { isOnline, queueCount } = useOfflineSync();
   const globalContext = useGlobalContext();
-  const { activeTenant, isPlatformMode, loading: contextLoading } = globalContext;
+  const { activeTenant, isPlatformMode, loading: contextLoading, enabledModules } = globalContext;
   const [userRole, setUserRole] = useState(null);
 
   // All hooks must be called unconditionally at the top
@@ -112,10 +112,12 @@ export default function Layout() {
   
   // Determine which navigation to use
   const visibleNav = isPlatformMode ? PLATFORM_NAV_ITEMS : TENANT_NAV_ITEMS.filter(item => {
-    if (item.module && item.module !== 'core') {
-      // Module-based items only appear if enabled
+    // Module-based items only appear if enabled
+    if (item.module && item.module !== 'core' && !enabledModules.includes(item.module)) {
+      return false;
     }
     
+    // Role-based filtering
     if (allowedPaths && !allowedPaths.includes(item.path)) {
       return false;
     }

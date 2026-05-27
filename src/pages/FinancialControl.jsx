@@ -3,10 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import { TrendingUp, AlertCircle, CheckCircle2, DollarSign, Calendar, Users, BarChart3, FileText, Download, Package, Sparkles } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
-import { hasRole } from '../lib/roleUtils';
 import AIMeetingReportGenerator from '../components/ai/AIMeetingReportGenerator';
+import RouteGuard from '../components/RouteGuard';
 
 export default function FinancialControl() {
+  return (
+    <RouteGuard 
+      requiredModule="financial_control"
+      requiredPermissions={['financials:read']}
+      allowedRoles={['tenant_admin', 'project_manager']}
+    >
+      <FinancialControlContent />
+    </RouteGuard>
+  );
+}
+
+function FinancialControlContent() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [costs, setCosts] = useState([]);
@@ -20,23 +32,9 @@ export default function FinancialControl() {
     projectsInLoss: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
-    // SECURITY: Only admins can access financial control
-    hasRole(['admin']).then(auth => {
-      if (!auth) {
-        navigate('/');
-        return;
-      }
-      setIsAuthorized(true);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!isAuthorized) return;
-    
     const load = async () => {
       try {
         const user = await base44.auth.me();
@@ -85,7 +83,6 @@ export default function FinancialControl() {
     load();
   }, []);
 
-  if (!isAuthorized) return null;
   if (loading) return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
 
   return (
