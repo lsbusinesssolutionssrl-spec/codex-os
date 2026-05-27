@@ -82,7 +82,7 @@ export default function Layout() {
     // If item has role restriction, only show for those roles
     if (i.roles && !i.roles.includes(userRole)) return false;
     // If user role has path restrictions, filter by allowed paths
-    if (allowedPaths !== null && !allowedPaths.includes(i.path)) return false;
+    if (allowedPaths && !allowedPaths.includes(i.path)) return false;
     return true;
   });
 
