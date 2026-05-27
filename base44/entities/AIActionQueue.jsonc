@@ -1,0 +1,89 @@
+{
+  "name": "AIActionQueue",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "action_type": {
+      "type": "string",
+      "title": "Tipo Azione"
+    },
+    "action_label": {
+      "type": "string",
+      "title": "Descrizione Azione"
+    },
+    "proposed_params": {
+      "type": "object",
+      "title": "Parametri Proposti"
+    },
+    "requested_by_user_email": {
+      "type": "string",
+      "title": "Richiesto da"
+    },
+    "requested_in_session": {
+      "type": "string",
+      "title": "Sessione AI"
+    },
+    "linked_entity_type": {
+      "type": "string",
+      "title": "Tipo Entit\u00e0"
+    },
+    "linked_entity_id": {
+      "type": "string",
+      "title": "ID Entit\u00e0"
+    },
+    "risk_level": {
+      "type": "string",
+      "title": "Livello Rischio",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "default": "Medium"
+    },
+    "required_role_to_approve": {
+      "type": "string",
+      "title": "Ruolo Richiesto per Approvazione"
+    },
+    "status": {
+      "type": "string",
+      "title": "Stato",
+      "enum": [
+        "Pending",
+        "Approved",
+        "Rejected",
+        "Executed"
+      ],
+      "default": "Pending"
+    },
+    "approved_by": {
+      "type": "string",
+      "title": "Approvato da"
+    },
+    "approved_at": {
+      "type": "string",
+      "title": "Data Approvazione"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "title": "Motivo Rifiuto"
+    },
+    "execution_result": {
+      "type": "string",
+      "title": "Risultato Esecuzione"
+    },
+    "ai_context_summary": {
+      "type": "string",
+      "title": "Contesto AI"
+    }
+  },
+  "required": [
+    "action_type",
+    "action_label",
+    "requested_by_user_email"
+  ]
+}

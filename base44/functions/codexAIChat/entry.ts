@@ -446,6 +446,45 @@ Quando suggerisci un'azione, includi alla fine della risposta un blocco JSON cos
 
   const latencyMs = Date.now() - startMs;
 
+  // ── Confidence Level ──────────────────────────────────────────────
+  const highSignals = [
+    ragChunks.length >= 3,
+    !!focusedProject,
+    !!focusedClient,
+    !!focusedProperty,
+    memories.length >= 5,
+  ].filter(Boolean).length;
+  const mediumSignals = [
+    ragChunks.length >= 1,
+    projects.length >= 3,
+    memories.length >= 1,
+    knowledge.length >= 2,
+  ].filter(Boolean).length;
+  let confidence_level = 'Low';
+  let confidence_reason = 'Dati insufficienti nel contesto — risposta basata su ragionamento generale. Aggiungi più dati alla piattaforma per migliorare la precisione.';
+  if (highSignals >= 2) {
+    confidence_level = 'High';
+    confidence_reason = `Risposta basata su ${ragChunks.length} documenti RAG e dati operativi specifici (${contextEntityList.length} sorgenti attive).`;
+  } else if (mediumSignals >= 2 || highSignals >= 1) {
+    confidence_level = 'Medium';
+    confidence_reason = `Risposta basata su dati parziali (${contextEntityList.length} sorgenti). Verifica consigliata per decisioni critiche.`;
+  }
+
+  // ── Citations ─────────────────────────────────────────────────────
+  const citations = [];
+  if (focusedProject) citations.push({ type: 'project',  title: focusedProject.title,           id: hintProjectId,  confidence: 0.95 });
+  if (focusedClient)  citations.push({ type: 'client',   title: focusedClient.name,             id: hintClientId,   confidence: 0.95 });
+  if (focusedProperty) citations.push({ type: 'home_passport', title: focusedProperty.property_name, id: hintPropertyId, confidence: 0.95 });
+  if (focusedEstimate) citations.push({ type: 'estimate', title: focusedEstimate.title,          id: hintEstimateId, confidence: 0.90 });
+  ragChunks.slice(0, 5).forEach(c => citations.push({
+    type: c.source_type,
+    title: c.source_title,
+    id: c.source_id,
+    chunk_preview: c.chunk_text?.slice(0, 150),
+    score: c.score,
+  }));
+
+
   // ── Auto-extract and save new memories (fire-and-forget) ────────
   if (role !== 'client' && textResponse && textResponse.length > 100) {
     (async () => {
@@ -507,5 +546,8 @@ Risposta: ${truncate(textResponse, 400)}`;
     suggested_actions: suggestedActions,
     context_used: contextEntityList,
     latency_ms: latencyMs,
+    confidence_level,
+    confidence_reason,
+    citations,
   });
 });

@@ -56,11 +56,11 @@
       "items": {
         "type": "string"
       },
-      "title": "Parole Chiave (per keyword search)"
+      "title": "Parole Chiave"
     },
     "embedding_vector": {
       "type": "string",
-      "title": "Embedding Vector (placeholder \u2014 JSON serialized float[])"
+      "title": "Embedding Vector (placeholder)"
     },
     "embedding_model": {
       "type": "string",
@@ -99,6 +99,15 @@
     "index_date": {
       "type": "string",
       "title": "Data Indicizzazione"
+    },
+    "source_updated_at": {
+      "type": "string",
+      "title": "Ultima Modifica Sorgente"
+    },
+    "is_stale": {
+      "type": "boolean",
+      "title": "Chunk Obsoleto",
+      "default": false
     },
     "metadata": {
       "type": "object",

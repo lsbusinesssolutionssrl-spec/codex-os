@@ -64,6 +64,8 @@ import ProjectSchedule from './pages/ProjectSchedule';
 import CodexAI from './pages/CodexAI';
 import AIAuditLog from './pages/AIAuditLog';
 import AIMemoryManager from './pages/AIMemoryManager';
+import AITestConsole from './pages/AITestConsole';
+import AIFoundationDashboard from './pages/AIFoundationDashboard';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -148,6 +150,8 @@ const AuthenticatedApp = () => {
         <Route path="/schedule" element={<ProjectSchedule />} />
         <Route path="/ai-audit" element={<AIAuditLog />} />
         <Route path="/ai-memory" element={<AIMemoryManager />} />
+        <Route path="/ai-test" element={<AITestConsole />} />
+        <Route path="/ai-foundation" element={<AIFoundationDashboard />} />
 
       </Route>
       <Route element={<PortalLayout />}>

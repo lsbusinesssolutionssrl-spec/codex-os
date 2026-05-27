@@ -184,6 +184,15 @@ Rispondi con JSON: {"ranking": [indice_più_rilevante, ..., indice_meno_rilevant
     total_candidates: allChunks.length,
     query_keywords: queryKeywords,
     rag_context: ragContext,
+    debug: {
+      tenant_isolated: true,
+      company_id_filter: companyId,
+      scoped_filters: { project_id: project_id || null, client_id: client_id || null, property_id: property_id || null },
+      applied_min_score: min_score,
+      applied_top_k: top_k,
+      retrieval_method: 'keyword_tfidf_v1',
+      upgrade_path: 'Phase 2: cosine_similarity on text-embedding-3-small',
+    },
     upgrade_note: 'Phase 2: replace keyword scoring with cosine_similarity on text-embedding-3-small vectors',
   });
 });

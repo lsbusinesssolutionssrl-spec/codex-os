@@ -219,12 +219,14 @@ Deno.serve(async (req) => {
       chunk_total: chunks.length,
       chunk_text: chunk,
       keywords,
-      embedding_vector: null,      // Phase 2: populate with text-embedding-3-small
-      embedding_model: 'none',     // Phase 2: 'text-embedding-3-small'
+      embedding_vector: null,
+      embedding_model: 'none',
       client_id: client_id || body.client_id || null,
       property_id: property_id || body.property_id || null,
       project_id: project_id || body.project_id || null,
       language: 'it',
+      source_updated_at: new Date().toISOString(),
+      is_stale: false,
       relevance_boost: config.boostFactor,
       is_indexed: true,
       index_date: indexDate,

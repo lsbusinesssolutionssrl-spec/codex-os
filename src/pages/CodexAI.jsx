@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Send, Bot, Sparkles, Loader2, User, Copy, CheckCircle2, X,
+  Send, Bot, Sparkles, Loader2, User, Copy, CheckCircle2, X, Lock,
   Plus, ChevronRight, Database, Shield, Brain, Lightbulb,
   FileText, FolderKanban, Ticket, TrendingUp, Wrench,
   MessageSquare, Clock, Paperclip, Search, Trash2,
@@ -136,8 +136,35 @@ function MessageBubble({ msg, onActionConfirm }) {
           </div>
         )}
 
+        {/* Citations */}
+        {!isUser && msg.citations?.length > 0 && (
+          <div className="max-w-[88%] space-y-1">
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-0.5">Fonti</p>
+            <div className="flex flex-wrap gap-1">
+              {msg.citations.map((c, i) => (
+                <span key={i} className="inline-flex items-center gap-1 text-[11px] bg-slate-50 border border-slate-200 text-slate-600 px-2 py-0.5 rounded-md hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors cursor-default"
+                  title={c.chunk_preview || c.title}>
+                  <span className="opacity-60 capitalize">{c.type?.replace('_',' ')}</span>
+                  <span className="text-slate-400">·</span>
+                  <span className="truncate max-w-24">{c.title}</span>
+                  {c.score !== undefined && <span className="opacity-40">{Math.round(c.score * 100)}%</span>}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Footer meta */}
         <div className={`flex items-center gap-3 px-0.5 ${isUser ? 'flex-row-reverse' : ''}`}>
+          {!isUser && msg.confidence_level && (
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium flex-shrink-0 ${
+              msg.confidence_level === 'High' ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+              : msg.confidence_level === 'Medium' ? 'bg-amber-50 text-amber-600 border-amber-200'
+              : 'bg-red-50 text-red-600 border-red-200'
+            }`} title={msg.confidence_reason}>
+              {msg.confidence_level}
+            </span>
+          )}
           <span className="text-[11px] text-slate-300">{fmtTime(msg.timestamp)}</span>
           {!isUser && msg.context_used?.length > 0 && (
             <span className="text-[11px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
@@ -249,6 +276,28 @@ export default function CodexAI() {
   const [searchConv, setSearchConv] = useState('');
   const [attachments, setAttachments] = useState([]);
   const [contextFocus, setContextFocus] = useState(null);
+  const [safeMode, setSafeMode] = useState(() => localStorage.getItem('codex_ai_safe_mode') === 'true');
+
+  const toggleSafeMode = () => setSafeMode(v => {
+    const next = !v;
+    localStorage.setItem('codex_ai_safe_mode', next);
+    return next;
+  });
+
+  const queueAction = async (action) => {
+    await base44.entities.AIActionQueue.create({
+      action_type: action.type,
+      action_label: action.label,
+      proposed_params: action.params || {},
+      requested_by_user_email: user?.email,
+      requested_in_session: activeConvId,
+      risk_level: ['assign_technician','create_estimate_draft','suggest_pricing','update_homepassport'].includes(action.type) ? 'High' : 'Medium',
+      required_role_to_approve: ['create_estimate_draft','suggest_pricing'].includes(action.type) ? 'admin' : 'project_manager',
+      status: 'Pending',
+      company_id: user?.company_id,
+    });
+    setFeedback({ text: `"${action.label}" aggiunta alla coda approvazione (Safe Mode attivo)`, type: 'success' });
+  };
   const [uploadingFile, setUploadingFile] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
@@ -352,6 +401,9 @@ export default function CodexAI() {
         actions: d.suggested_actions || [],
         context_used: d.context_used || [],
         latency_ms: d.latency_ms,
+        confidence_level: d.confidence_level,
+        confidence_reason: d.confidence_reason,
+        citations: d.citations || [],
       });
     } catch (e) {
       addMessage(convId, { id: genId(), role: 'assistant', content: `⚠️ ${e.message}`, timestamp: Date.now(), actions: [], context_used: [] });
@@ -488,6 +540,13 @@ export default function CodexAI() {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-slate-800 truncate">{activeConv?.title || 'Nuova conversazione'}</p>
           </div>
+          <button onClick={toggleSafeMode}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all border ${
+              safeMode ? 'bg-amber-50 text-amber-700 border-amber-200' : 'text-slate-500 hover:bg-slate-100 border-transparent'
+            }`}>
+            <Lock className="w-3 h-3" />
+            {safeMode ? 'Safe Mode ON' : 'Safe Mode'}
+          </button>
           <button onClick={() => setShowSources(v => !v)}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
               showSources ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-100'
@@ -532,7 +591,7 @@ export default function CodexAI() {
             </div>
           ) : (
             messages.map(msg => (
-              <MessageBubble key={msg.id} msg={msg} onActionConfirm={a => setPendingAction(a)} />
+              <MessageBubble key={msg.id} msg={msg} onActionConfirm={a => safeMode ? queueAction(a) : setPendingAction(a)} />
             ))
           )}
 
