@@ -1,41 +1,44 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Send, Bot, Sparkles, Loader2, User, Copy, CheckCircle2, X,
-  Plus, ChevronRight, Database, Shield, History, Brain, Lightbulb,
-  Settings, FileText, FolderKanban, Ticket, TrendingUp, Wrench,
-  MessageSquare, Clock, Paperclip, Search, ChevronDown, Tag,
-  AlertCircle, BarChart2, Users, Home, ExternalLink, Trash2,
-  BookOpen, DollarSign, Zap
+  Plus, ChevronRight, Database, Shield, Brain, Lightbulb,
+  FileText, FolderKanban, Ticket, TrendingUp, Wrench,
+  MessageSquare, Clock, Paperclip, Search, Trash2,
+  AlertCircle, BarChart2, Users, Home, Zap, BookOpen, DollarSign,
+  ChevronDown, Eye, EyeOff, Circle
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ReactMarkdown from 'react-markdown';
 import { useQueryClient } from '@tanstack/react-query';
 import ActionConfirmModal from '../components/ai/ActionConfirmModal';
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-const SESSION_STORAGE_KEY = 'codex_ai_conversations';
+// ── Constants ──────────────────────────────────────────────────────────────────
+const SESSION_KEY = 'codex_ai_v2_conversations';
 
 const SUGGESTED_PROMPTS = [
-  { icon: FileText, label: 'Genera preventivo', prompt: 'Aiutami a creare una bozza di preventivo. Cosa mi serve sapere?', color: 'text-blue-500', bg: 'bg-blue-50' },
-  { icon: FolderKanban, label: 'Riassumi progetto', prompt: 'Dammi un riepilogo operativo di tutti i progetti attivi con ritardi e priorità.', color: 'text-purple-500', bg: 'bg-purple-50' },
-  { icon: TrendingUp, label: 'Spiega calo margini', prompt: 'Analizza i margini dei progetti recenti. Ci sono anomalie o progetti sotto target? Spiega le cause.', color: 'text-red-500', bg: 'bg-red-50' },
-  { icon: Wrench, label: 'Checklist manutenzione', prompt: 'Crea una checklist completa di manutenzione preventiva per un sistema HVAC residenziale.', color: 'text-orange-500', bg: 'bg-orange-50' },
-  { icon: Users, label: 'Update cliente', prompt: 'Genera un aggiornamento professionale da inviare al cliente sullo stato del progetto.', color: 'text-green-500', bg: 'bg-green-50' },
-  { icon: BarChart2, label: 'Analisi redditività', prompt: 'Analizza la redditività per tipo di progetto. Quali tipologie sono più profittevoli?', color: 'text-teal-500', bg: 'bg-teal-50' },
+  { icon: FolderKanban, label: 'Stato progetti',      prompt: 'Dammi un briefing operativo completo: progetti attivi, ritardi, priorità urgenti.', tag: 'Operativo' },
+  { icon: TrendingUp,   label: 'Analisi margini',     prompt: 'Analizza i margini dei progetti recenti. Ci sono anomalie o progetti sotto target?', tag: 'Finanza' },
+  { icon: FileText,     label: 'Bozza preventivo',    prompt: 'Aiutami a strutturare un nuovo preventivo. Da dove cominciamo?', tag: 'Commerciale' },
+  { icon: Wrench,       label: 'Checklist tecnica',   prompt: 'Crea una checklist di manutenzione preventiva per impianti HVAC residenziali.', tag: 'Tecnico' },
+  { icon: Users,        label: 'Update cliente',      prompt: 'Genera un aggiornamento professionale per il cliente sullo stato del progetto.', tag: 'Clienti' },
+  { icon: BarChart2,    label: 'Redditività tipo',    prompt: 'Quali tipologie di progetto generano i margini più alti? Analisi con dati storici.', tag: 'Insights' },
 ];
 
 const QUICK_ACTIONS = [
-  { icon: FileText, label: 'Nuovo preventivo', prompt: 'Crea una bozza di preventivo vuota. Che tipo di lavoro devo configurare?' },
-  { icon: Ticket, label: 'Apri ticket', prompt: 'Voglio aprire un nuovo ticket di supporto. Guidami.' },
-  { icon: Wrench, label: 'Checklist rapida', prompt: 'Crea una checklist operativa rapida per il progetto corrente.' },
-  { icon: Sparkles, label: 'Briefing del giorno', prompt: 'Briefing operativo completo: progetti, scadenze, ticket urgenti e manutenzioni di oggi.' },
+  { icon: Sparkles,      label: 'Briefing del giorno', prompt: 'Briefing completo: progetti, scadenze, ticket urgenti e manutenzioni di oggi.' },
+  { icon: FileText,      label: 'Nuovo preventivo',    prompt: 'Crea una bozza di preventivo. Che tipo di lavoro configuro?' },
+  { icon: Ticket,        label: 'Apri ticket',         prompt: 'Voglio aprire un ticket di supporto. Guidami.' },
+  { icon: Brain,         label: 'Cosa ho imparato?',   prompt: 'Quali lessons learned sono state estratte dai progetti recenti? Sintesi intelligente.' },
 ];
 
-const ENTITY_ICONS = {
-  projects: FolderKanban, tickets: Ticket, estimates: FileText, clients: Users,
-  properties: Home, guardian: Shield, knowledge_base: BookOpen, ai_memory: Brain,
-  project_financials: DollarSign, rag_documents: Database, focused_project: FolderKanban,
-  focused_client: Users, focused_property_homepassport: Home, focused_estimate: FileText,
+const SOURCE_LABELS = {
+  projects: 'Progetti', tickets: 'Ticket', estimates: 'Preventivi',
+  clients: 'Clienti', properties: 'Immobili', guardian: 'Guardian',
+  knowledge_base: 'Knowledge Base', ai_memory: 'Memoria AI',
+  project_financials: 'Finanze', rag_documents: 'Documenti',
+  focused_project: 'Progetto', focused_client: 'Cliente',
+  focused_property_homepassport: 'Home Passport', focused_estimate: 'Preventivo',
+  timesheets: 'Timesheet', financial_alerts: 'Alert', intelligence: 'Insights',
 };
 
 const ACTION_ICONS = {
@@ -45,19 +48,18 @@ const ACTION_ICONS = {
   update_homepassport: '🏠', generate_meeting_notes: '📋',
 };
 
-function generateId() { return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`; }
-function generateConvId() { return `conv_${Date.now()}`; }
-function formatTime(ts) { return new Date(ts).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }); }
-function formatDate(ts) {
-  const d = new Date(ts);
-  const today = new Date();
-  if (d.toDateString() === today.toDateString()) return 'Oggi';
-  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
-  if (d.toDateString() === yesterday.toDateString()) return 'Ieri';
+function genId() { return `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`; }
+function genConvId() { return `c_${Date.now()}`; }
+function fmtTime(ts) { return new Date(ts).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }); }
+function fmtDate(ts) {
+  const d = new Date(ts); const t = new Date();
+  if (d.toDateString() === t.toDateString()) return 'Oggi';
+  const y = new Date(t); y.setDate(t.getDate() - 1);
+  if (d.toDateString() === y.toDateString()) return 'Ieri';
   return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' });
 }
 
-// ── Message Bubble ────────────────────────────────────────────────────────────
+// ── Message Bubble ─────────────────────────────────────────────────────────────
 function MessageBubble({ msg, onActionConfirm }) {
   const [copied, setCopied] = useState(false);
   const isUser = msg.role === 'user';
@@ -68,54 +70,45 @@ function MessageBubble({ msg, onActionConfirm }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Parse citations from response content: [Fonte: type - title]
-  const citations = [];
-  const citationRegex = /\[Fonte:\s*([^\]]+)\]/g;
-  let match;
-  let content = msg.content || '';
-  while ((match = citationRegex.exec(content)) !== null) {
-    citations.push(match[1]);
-  }
-
   return (
-    <div className={`flex gap-3 group ${isUser ? 'flex-row-reverse' : ''}`}>
+    <div className={`group flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
       {/* Avatar */}
-      <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-1 ${
-        isUser ? 'bg-gray-200' : ''
-      }`} style={!isUser ? { background: 'linear-gradient(135deg, #1147FF 0%, #0B2341 100%)' } : {}}>
+      <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
+        isUser ? 'bg-[#1a1a2e] text-white/80' : 'bg-[#0B2341]'
+      }`}>
         {isUser
-          ? <User className="w-4 h-4 text-gray-600" />
-          : <Bot className="w-4 h-4 text-white" />
+          ? <User className="w-3.5 h-3.5" />
+          : <Bot className="w-3.5 h-3.5 text-white" />
         }
       </div>
 
-      <div className={`flex-1 min-w-0 ${isUser ? 'flex flex-col items-end' : ''}`}>
+      <div className={`flex-1 min-w-0 space-y-1 ${isUser ? 'items-end flex flex-col' : ''}`}>
         {/* Bubble */}
-        <div className={`rounded-2xl px-4 py-3 text-sm max-w-[85%] shadow-sm ${
+        <div className={`inline-block max-w-[88%] rounded-2xl text-sm leading-relaxed ${
           isUser
-            ? 'bg-gray-900 text-white rounded-tr-sm'
-            : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm'
+            ? 'bg-[#0f172a] text-slate-100 px-4 py-2.5 rounded-tr-sm'
+            : 'bg-white border border-slate-100 text-slate-800 px-4 py-3 rounded-tl-sm shadow-sm'
         }`}>
           {isUser ? (
-            <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+            <p className="whitespace-pre-wrap">{msg.content}</p>
           ) : (
             <ReactMarkdown
-              className="prose prose-sm prose-gray max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+              className="prose prose-sm prose-slate max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
               components={{
                 code: ({ inline, children }) => inline
-                  ? <code className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono text-pink-600">{children}</code>
-                  : <pre className="bg-gray-900 text-green-400 p-3 rounded-xl text-xs overflow-x-auto my-2 border border-gray-800"><code>{children}</code></pre>,
-                p: ({ children }) => <p className="my-1.5 leading-relaxed">{children}</p>,
-                ul: ({ children }) => <ul className="my-2 ml-4 space-y-0.5 list-disc">{children}</ul>,
-                ol: ({ children }) => <ol className="my-2 ml-4 space-y-0.5 list-decimal">{children}</ol>,
-                li: ({ children }) => <li className="leading-relaxed">{children}</li>,
-                strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
-                h2: ({ children }) => <h2 className="font-bold text-gray-900 text-base mt-3 mb-1.5 border-b border-gray-100 pb-1">{children}</h2>,
-                h3: ({ children }) => <h3 className="font-semibold text-gray-900 mt-2 mb-1">{children}</h3>,
-                blockquote: ({ children }) => <blockquote className="border-l-3 border-blue-400 pl-3 text-gray-600 italic my-2 bg-blue-50 rounded-r py-1">{children}</blockquote>,
-                table: ({ children }) => <div className="overflow-x-auto my-2"><table className="text-xs border-collapse w-full">{children}</table></div>,
-                th: ({ children }) => <th className="bg-gray-100 border border-gray-200 px-2 py-1 text-left font-semibold">{children}</th>,
-                td: ({ children }) => <td className="border border-gray-200 px-2 py-1">{children}</td>,
+                  ? <code className="font-mono text-xs bg-slate-100 text-violet-600 px-1.5 py-0.5 rounded">{children}</code>
+                  : <pre className="bg-[#0f172a] text-emerald-400 p-3 rounded-xl text-xs overflow-x-auto my-2 border border-slate-800"><code>{children}</code></pre>,
+                p: ({ children }) => <p className="my-1.5 leading-relaxed text-slate-700">{children}</p>,
+                ul: ({ children }) => <ul className="my-2 ml-4 space-y-0.5 list-disc marker:text-slate-400">{children}</ul>,
+                ol: ({ children }) => <ol className="my-2 ml-4 space-y-0.5 list-decimal marker:text-slate-400">{children}</ol>,
+                li: ({ children }) => <li className="leading-relaxed text-slate-700">{children}</li>,
+                strong: ({ children }) => <strong className="font-semibold text-slate-900">{children}</strong>,
+                h2: ({ children }) => <h2 className="font-semibold text-slate-900 text-sm mt-4 mb-1.5">{children}</h2>,
+                h3: ({ children }) => <h3 className="font-medium text-slate-900 text-sm mt-3 mb-1">{children}</h3>,
+                blockquote: ({ children }) => <blockquote className="border-l-2 border-blue-300 pl-3 text-slate-600 italic my-2">{children}</blockquote>,
+                table: ({ children }) => <div className="overflow-x-auto my-2 rounded-lg border border-slate-200"><table className="text-xs border-collapse w-full">{children}</table></div>,
+                th: ({ children }) => <th className="bg-slate-50 border-b border-slate-200 px-3 py-2 text-left font-medium text-slate-600">{children}</th>,
+                td: ({ children }) => <td className="border-b border-slate-100 px-3 py-1.5 text-slate-700">{children}</td>,
               }}
             >
               {msg.content}
@@ -123,133 +116,124 @@ function MessageBubble({ msg, onActionConfirm }) {
           )}
         </div>
 
-        {/* Citations */}
-        {!isUser && citations.length > 0 && (
-          <div className="mt-1.5 max-w-[85%] flex flex-wrap gap-1">
-            {citations.map((c, i) => (
-              <span key={i} className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
-                <Database className="w-2.5 h-2.5" />{c}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Actions */}
+        {/* Suggested Actions */}
         {!isUser && msg.actions?.length > 0 && (
-          <div className="mt-2 max-w-[85%]">
-            <p className="text-xs text-gray-400 mb-1.5 ml-0.5 flex items-center gap-1">
-              <Zap className="w-3 h-3" /> Azioni suggerite — richiede conferma:
+          <div className="max-w-[88%] space-y-1.5 pt-1">
+            <p className="text-[11px] text-slate-400 font-medium tracking-wide uppercase flex items-center gap-1.5 px-0.5">
+              <Zap className="w-2.5 h-2.5" /> Azioni disponibili
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {msg.actions.map((action, idx) => (
                 <button key={idx} onClick={() => onActionConfirm(action)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white border border-blue-200 text-blue-700 rounded-xl hover:bg-blue-50 hover:border-blue-300 transition-all shadow-sm">
-                  <span>{ACTION_ICONS[action.type] || '⚡'}</span>
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 transition-all shadow-sm">
+                  <span className="text-[13px]">{ACTION_ICONS[action.type] || '⚡'}</span>
                   {action.label}
-                  <ChevronRight className="w-3 h-3" />
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Metadata */}
-        {!isUser && (
-          <div className="flex items-center gap-3 mt-1.5 ml-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            {msg.context_used?.length > 0 && (
-              <span className="flex items-center gap-1 text-xs text-gray-400">
-                <Database className="w-3 h-3" />
-                {msg.context_used.slice(0, 3).join(', ')}{msg.context_used.length > 3 ? ` +${msg.context_used.length - 3}` : ''}
-              </span>
-            )}
-            {msg.latency_ms && <span className="text-xs text-gray-300">{msg.latency_ms}ms</span>}
-            <button onClick={handleCopy} className="text-gray-300 hover:text-gray-600 transition-colors">
-              {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+        {/* Footer meta */}
+        <div className={`flex items-center gap-3 px-0.5 ${isUser ? 'flex-row-reverse' : ''}`}>
+          <span className="text-[11px] text-slate-300">{fmtTime(msg.timestamp)}</span>
+          {!isUser && msg.context_used?.length > 0 && (
+            <span className="text-[11px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+              <Database className="w-2.5 h-2.5" />
+              {msg.context_used.slice(0, 2).map(c => SOURCE_LABELS[c] || c).join(', ')}
+              {msg.context_used.length > 2 && ` +${msg.context_used.length - 2}`}
+            </span>
+          )}
+          {!isUser && (
+            <button onClick={handleCopy}
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-slate-600">
+              {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
-          </div>
-        )}
-        <span className="text-xs text-gray-300 mt-0.5 mx-0.5">{formatTime(msg.timestamp)}</span>
+          )}
+          {!isUser && msg.latency_ms && (
+            <span className="text-[11px] text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">
+              {msg.latency_ms}ms
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-// ── Context Panel ─────────────────────────────────────────────────────────────
-function ContextPanel({ lastMessage }) {
-  if (!lastMessage || lastMessage.role !== 'assistant') {
+// ── Sources Panel ──────────────────────────────────────────────────────────────
+function SourcesPanel({ lastMsg }) {
+  if (!lastMsg || lastMsg.role !== 'assistant' || !lastMsg.context_used?.length) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center p-6">
-        <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
-          <Database className="w-5 h-5 text-gray-400" />
+      <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+        <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center mb-3">
+          <Database className="w-4 h-4 text-slate-400" />
         </div>
-        <p className="text-sm font-medium text-gray-500">Contesto AI</p>
-        <p className="text-xs text-gray-400 mt-1">Le fonti usate dalla risposta appariranno qui</p>
+        <p className="text-xs font-medium text-slate-500">Fonti di contesto</p>
+        <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+          Appariranno qui dopo la prima risposta
+        </p>
       </div>
     );
   }
 
-  const ctx = lastMessage.context_used || [];
-  const groups = {
-    'Dati Operativi': ctx.filter(c => ['projects', 'tickets', 'estimates', 'clients', 'properties', 'guardian'].includes(c)),
-    'Focus Entity': ctx.filter(c => c.startsWith('focused_')),
-    'Conoscenza': ctx.filter(c => ['rag_documents', 'knowledge_base', 'ai_memory'].includes(c)),
-    'Finanza': ctx.filter(c => ['project_financials', 'project_timesheets', 'financial_alerts', 'intelligence'].includes(c)),
-  };
+  const ctx = lastMsg.context_used;
+
+  // Group sources
+  const groups = [
+    { label: 'Entità operativa', keys: ['projects', 'tickets', 'estimates', 'clients', 'properties', 'guardian', 'timesheets'] },
+    { label: 'Entità focus', keys: ctx.filter(c => c.startsWith('focused_') || c.startsWith('client_') || c.startsWith('project_') || c.startsWith('property_')) },
+    { label: 'Intelligence', keys: ['financial_alerts', 'intelligence', 'ai_memory', 'knowledge_base'] },
+    { label: 'Documenti', keys: ['rag_documents'] },
+  ];
 
   return (
-    <div className="p-4 space-y-4 overflow-y-auto h-full">
-      <div className="flex items-center gap-2 mb-2">
-        <Database className="w-4 h-4 text-gray-500" />
-        <h3 className="text-sm font-semibold text-gray-700">Contesto recuperato</h3>
-        <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{ctx.length} fonti</span>
+    <div className="p-4 space-y-4 h-full overflow-y-auto">
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Contesto recuperato</p>
+        <span className="text-[11px] text-slate-400 bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded-md">{ctx.length}</span>
       </div>
 
-      {lastMessage.latency_ms && (
-        <div className="flex items-center gap-2 text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
-          <Clock className="w-3 h-3" /> Latenza: {lastMessage.latency_ms}ms
+      {lastMsg.latency_ms && (
+        <div className="flex items-center gap-2 text-[11px] text-slate-400">
+          <Clock className="w-3 h-3" /> {lastMsg.latency_ms}ms · <Shield className="w-3 h-3 text-emerald-500" /><span className="text-emerald-600">RBAC ✓</span>
         </div>
       )}
 
-      {Object.entries(groups).map(([group, items]) => items.length > 0 && (
-        <div key={group}>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">{group}</p>
-          <div className="space-y-1">
-            {items.map(item => {
-              const Icon = ENTITY_ICONS[item] || Database;
-              return (
-                <div key={item} className="flex items-center gap-2 px-2.5 py-1.5 bg-white border border-gray-100 rounded-lg text-xs text-gray-600">
-                  <Icon className="w-3 h-3 text-blue-500 flex-shrink-0" />
-                  {item.replace(/_/g, ' ')}
-                  <CheckCircle2 className="w-3 h-3 text-green-500 ml-auto" />
+      {groups.map(group => {
+        const items = Array.isArray(group.keys) ? group.keys.filter(k => ctx.includes(k)) : group.keys;
+        if (!items.length) return null;
+        return (
+          <div key={group.label}>
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">{group.label}</p>
+            <div className="space-y-1">
+              {items.map(item => (
+                <div key={item} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white border border-slate-100 text-[11px] text-slate-600 hover:border-slate-200 transition-colors">
+                  <Circle className="w-1.5 h-1.5 text-blue-400 fill-blue-400 flex-shrink-0" />
+                  <span className="flex-1 truncate">{SOURCE_LABELS[item] || item}</span>
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400 flex-shrink-0" />
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
-      {lastMessage.actions?.length > 0 && (
+      {lastMsg.actions?.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Azioni suggerite</p>
-          {lastMessage.actions.map((a, i) => (
-            <div key={i} className="flex items-center gap-2 px-2.5 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-700 mb-1">
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Azioni suggerite</p>
+          {lastMsg.actions.map((a, i) => (
+            <div key={i} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-blue-50 border border-blue-100 text-[11px] text-blue-700 mb-1">
               <span>{ACTION_ICONS[a.type] || '⚡'}</span> {a.label}
             </div>
           ))}
         </div>
       )}
-
-      <div className="pt-2 border-t border-gray-100">
-        <div className="flex items-center gap-1.5 text-xs text-gray-400">
-          <Shield className="w-3 h-3 text-green-500" />
-          RBAC attivo · Audit log registrato
-        </div>
-      </div>
     </div>
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// ── Main Page ──────────────────────────────────────────────────────────────────
 export default function CodexAI() {
   const [user, setUser] = useState(null);
   const [conversations, setConversations] = useState([]);
@@ -257,9 +241,9 @@ export default function CodexAI() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
-  const [actionFeedback, setActionFeedback] = useState(null);
+  const [feedback, setFeedback] = useState(null);
   const [showSidebar, setShowSidebar] = useState(true);
-  const [showContext, setShowContext] = useState(true);
+  const [showSources, setShowSources] = useState(true);
   const [searchConv, setSearchConv] = useState('');
   const [attachments, setAttachments] = useState([]);
   const [uploadingFile, setUploadingFile] = useState(false);
@@ -271,52 +255,33 @@ export default function CodexAI() {
   const activeConv = conversations.find(c => c.id === activeConvId);
   const messages = activeConv?.messages || [];
   const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant');
+  const isEmpty = messages.length === 0;
 
-  // Load user
   useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
 
-  // Load conversations from localStorage
   useEffect(() => {
     try {
-      const stored = JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY) || '[]');
-      if (stored.length > 0) {
-        setConversations(stored);
-        setActiveConvId(stored[0].id);
-      } else {
-        createNewConversation();
-      }
-    } catch {
-      createNewConversation();
-    }
+      const stored = JSON.parse(localStorage.getItem(SESSION_KEY) || '[]');
+      if (stored.length > 0) { setConversations(stored); setActiveConvId(stored[0].id); }
+      else createNewConversation();
+    } catch { createNewConversation(); }
   }, []);
 
-  // Save conversations to localStorage
   useEffect(() => {
     if (conversations.length > 0) {
-      // Keep only last 20 conversations, trim messages to last 50 each
-      const trimmed = conversations.slice(0, 20).map(c => ({
-        ...c,
-        messages: c.messages.slice(-50),
-      }));
-      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(trimmed));
+      const trimmed = conversations.slice(0, 20).map(c => ({ ...c, messages: c.messages.slice(-50) }));
+      localStorage.setItem(SESSION_KEY, JSON.stringify(trimmed));
     }
   }, [conversations]);
 
-  // Scroll to bottom
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
 
   const createNewConversation = useCallback(() => {
-    const id = generateConvId();
-    const conv = {
-      id,
-      title: 'Nuova conversazione',
-      createdAt: Date.now(),
-      messages: [],
-    };
+    const id = genConvId();
+    const conv = { id, title: 'Nuova conversazione', createdAt: Date.now(), messages: [] };
     setConversations(prev => [conv, ...prev]);
     setActiveConvId(id);
-    setInput('');
-    setAttachments([]);
+    setInput(''); setAttachments([]);
     return id;
   }, []);
 
@@ -324,15 +289,10 @@ export default function CodexAI() {
     e.stopPropagation();
     setConversations(prev => prev.filter(c => c.id !== convId));
     if (activeConvId === convId) {
-      const remaining = conversations.filter(c => c.id !== convId);
-      if (remaining.length > 0) setActiveConvId(remaining[0].id);
+      const rest = conversations.filter(c => c.id !== convId);
+      if (rest.length > 0) setActiveConvId(rest[0].id);
       else createNewConversation();
     }
-  };
-
-  const updateConvTitle = (convId, firstMessage) => {
-    const title = firstMessage.slice(0, 45) + (firstMessage.length > 45 ? '…' : '');
-    setConversations(prev => prev.map(c => c.id === convId ? { ...c, title } : c));
   };
 
   const addMessage = (convId, msg) => {
@@ -342,15 +302,13 @@ export default function CodexAI() {
   };
 
   const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]; if (!file) return;
     setUploadingFile(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setAttachments(prev => [...prev, { name: file.name, url: file_url }]);
     } catch {}
-    setUploadingFile(false);
-    e.target.value = '';
+    setUploadingFile(false); e.target.value = '';
   };
 
   const send = async (text) => {
@@ -359,42 +317,33 @@ export default function CodexAI() {
     setInput('');
 
     let convId = activeConvId;
-    if (!convId || !conversations.find(c => c.id === convId)) {
-      convId = createNewConversation();
-    }
+    if (!convId || !conversations.find(c => c.id === convId)) convId = createNewConversation();
 
-    const isFirstMsg = (conversations.find(c => c.id === convId)?.messages || []).length === 0;
-
-    const userMsg = { id: generateId(), role: 'user', content: msg, timestamp: Date.now(), attachments: [...attachments] };
+    const isFirst = (conversations.find(c => c.id === convId)?.messages || []).length === 0;
+    const userMsg = { id: genId(), role: 'user', content: msg, timestamp: Date.now(), attachments: [...attachments] };
     addMessage(convId, userMsg);
     setAttachments([]);
-
-    if (isFirstMsg) updateConvTitle(convId, msg);
+    if (isFirst) {
+      const title = msg.slice(0, 48) + (msg.length > 48 ? '…' : '');
+      setConversations(prev => prev.map(c => c.id === convId ? { ...c, title } : c));
+    }
 
     setLoading(true);
     try {
       const payload = { message: msg, session_id: convId };
       if (attachments.length > 0) payload.file_urls = attachments.map(a => a.url);
-
       const res = await base44.functions.invoke('codexAIChat', payload);
       const d = res.data;
-
-      const aiMsg = {
-        id: generateId(),
-        role: 'assistant',
+      addMessage(convId, {
+        id: genId(), role: 'assistant',
         content: d.response || 'Errore nella risposta AI.',
         timestamp: Date.now(),
         actions: d.suggested_actions || [],
         context_used: d.context_used || [],
         latency_ms: d.latency_ms,
-      };
-      addMessage(convId, aiMsg);
-    } catch (e) {
-      addMessage(convId, {
-        id: generateId(), role: 'assistant',
-        content: `⚠️ Errore: ${e.message}`,
-        timestamp: Date.now(), actions: [], context_used: [],
       });
+    } catch (e) {
+      addMessage(convId, { id: genId(), role: 'assistant', content: `⚠️ ${e.message}`, timestamp: Date.now(), actions: [], context_used: [] });
     }
     setLoading(false);
   };
@@ -409,178 +358,159 @@ export default function CodexAI() {
       });
       const data = res.data;
       if (data.error) throw new Error(data.error);
-      setActionFeedback({ text: `✅ ${finalAction.label} completata!`, type: 'success' });
+      setFeedback({ text: `${finalAction.label} completata`, type: 'success' });
       if (data.result?.summary) {
-        addMessage(activeConvId, {
-          id: generateId(), role: 'assistant',
-          content: data.result.summary,
-          timestamp: Date.now(), actions: [], context_used: ['ai_action'],
-        });
+        addMessage(activeConvId, { id: genId(), role: 'assistant', content: data.result.summary, timestamp: Date.now(), actions: [], context_used: ['ai_action'] });
       }
       qc.invalidateQueries({ queryKey: ['tasks'] });
       qc.invalidateQueries({ queryKey: ['tickets'] });
     } catch (e) {
-      setActionFeedback({ text: `⚠️ ${finalAction.label}: ${e.message}`, type: 'error' });
+      setFeedback({ text: `${finalAction.label}: ${e.message}`, type: 'error' });
     }
-    setTimeout(() => setActionFeedback(null), 5000);
+    setTimeout(() => setFeedback(null), 4000);
   };
 
-  // Group conversations by date
-  const groupedConvs = conversations
-    .filter(c => !searchConv || c.title.toLowerCase().includes(searchConv.toLowerCase()))
-    .reduce((acc, conv) => {
-      const label = formatDate(conv.createdAt);
-      if (!acc[label]) acc[label] = [];
-      acc[label].push(conv);
-      return acc;
-    }, {});
-
-  const isEmpty = messages.length === 0;
+  // Group conversations
+  const filtered = conversations.filter(c => !searchConv || c.title.toLowerCase().includes(searchConv.toLowerCase()));
+  const grouped = filtered.reduce((acc, c) => {
+    const d = fmtDate(c.createdAt);
+    if (!acc[d]) acc[d] = [];
+    acc[d].push(c);
+    return acc;
+  }, {});
 
   return (
-    <div className="flex h-full bg-gray-50 overflow-hidden">
+    <div className="flex h-full bg-[#f8f9fb] overflow-hidden" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
 
-      {/* ── Left Sidebar: Conversations ─────────────────────────────────────── */}
+      {/* ── LEFT SIDEBAR ────────────────────────────────────────────────────── */}
       {showSidebar && (
-        <aside className="w-64 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col">
-          {/* Header */}
-          <div className="p-4 border-b border-gray-100">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+        <aside className="w-[220px] flex-shrink-0 flex flex-col border-r border-slate-200 bg-white">
+          {/* Wordmark */}
+          <div className="px-4 pt-4 pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-md flex items-center justify-center"
                 style={{ background: 'linear-gradient(135deg, #1147FF 0%, #0B2341 100%)' }}>
-                <Bot className="w-4 h-4 text-white" />
+                <Bot className="w-3.5 h-3.5 text-white" />
               </div>
-              <div>
-                <h1 className="font-bold text-gray-900 text-sm">Codex AI</h1>
-                <div className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                  <span className="text-xs text-gray-400">Operational Intelligence</span>
-                </div>
-              </div>
+              <span className="text-sm font-semibold text-slate-800 tracking-tight">Codex AI</span>
+              <span className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
             </div>
             <button onClick={createNewConversation}
-              className="w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-white rounded-xl transition-all hover:opacity-90"
+              className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium text-white rounded-lg transition-opacity hover:opacity-90"
               style={{ background: 'linear-gradient(135deg, #1147FF 0%, #0B2341 100%)' }}>
-              <Plus className="w-4 h-4" /> Nuova chat
+              <Plus className="w-3.5 h-3.5" /> Nuova chat
             </button>
           </div>
 
           {/* Search */}
-          <div className="px-3 pt-3">
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
-              <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+          <div className="px-3 pt-2.5">
+            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
+              <Search className="w-3 h-3 text-slate-400 flex-shrink-0" />
               <input value={searchConv} onChange={e => setSearchConv(e.target.value)}
-                placeholder="Cerca conversazioni..."
-                className="flex-1 text-xs bg-transparent outline-none text-gray-700 placeholder-gray-400" />
+                placeholder="Cerca..." className="flex-1 text-xs bg-transparent outline-none text-slate-600 placeholder-slate-400" />
             </div>
           </div>
 
-          {/* Conversations List */}
-          <div className="flex-1 overflow-y-auto px-2 py-2 space-y-4">
-            {Object.entries(groupedConvs).map(([date, convs]) => (
-              <div key={date}>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-2 mb-1">{date}</p>
+          {/* Conversations */}
+          <div className="flex-1 overflow-y-auto px-2 py-2">
+            {Object.entries(grouped).map(([date, convs]) => (
+              <div key={date} className="mb-3">
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-2 mb-1">{date}</p>
                 {convs.map(conv => (
-                  <button key={conv.id}
-                    onClick={() => setActiveConvId(conv.id)}
-                    className={`w-full group flex items-center gap-2 px-2.5 py-2 rounded-xl text-left transition-all ${
-                      activeConvId === conv.id ? 'bg-blue-50 border border-blue-200' : 'hover:bg-gray-50'
+                  <button key={conv.id} onClick={() => setActiveConvId(conv.id)}
+                    className={`w-full group flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left transition-all ${
+                      activeConvId === conv.id
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }`}>
-                    <MessageSquare className={`w-3.5 h-3.5 flex-shrink-0 ${activeConvId === conv.id ? 'text-blue-500' : 'text-gray-400'}`} />
-                    <span className={`flex-1 text-xs truncate ${activeConvId === conv.id ? 'text-blue-700 font-medium' : 'text-gray-600'}`}>
-                      {conv.title}
-                    </span>
+                    <MessageSquare className="w-3 h-3 flex-shrink-0 opacity-50" />
+                    <span className="flex-1 text-xs truncate">{conv.title}</span>
                     <button onClick={(e) => deleteConversation(conv.id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 text-gray-300 hover:text-red-500 transition-all">
-                      <Trash2 className="w-3 h-3" />
+                      className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-300 hover:text-red-400 transition-all flex-shrink-0">
+                      <Trash2 className="w-2.5 h-2.5" />
                     </button>
                   </button>
                 ))}
               </div>
             ))}
-            {Object.keys(groupedConvs).length === 0 && (
-              <div className="text-center py-8 text-gray-400 text-xs">Nessuna conversazione trovata</div>
+            {Object.keys(grouped).length === 0 && (
+              <p className="text-center py-6 text-xs text-slate-400">Nessuna conversazione</p>
             )}
           </div>
 
           {/* Quick Actions */}
-          <div className="p-3 border-t border-gray-100">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 px-1">Azioni rapide</p>
+          <div className="px-3 pb-2 border-t border-slate-100 pt-2">
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Azioni rapide</p>
             {QUICK_ACTIONS.map((qa, i) => (
               <button key={i} onClick={() => send(qa.prompt)}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left hover:bg-gray-50 transition-colors group">
-                <qa.icon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 group-hover:text-blue-500 transition-colors" />
-                <span className="text-xs text-gray-600 group-hover:text-gray-900">{qa.label}</span>
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left hover:bg-slate-50 transition-colors group">
+                <qa.icon className="w-3 h-3 text-slate-400 group-hover:text-blue-500 flex-shrink-0 transition-colors" />
+                <span className="text-xs text-slate-500 group-hover:text-slate-800 transition-colors truncate">{qa.label}</span>
               </button>
             ))}
           </div>
 
           {/* User */}
           {user && (
-            <div className="px-3 pb-3 flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                <User className="w-3.5 h-3.5 text-gray-500" />
+            <div className="px-3 pb-3 pt-1 border-t border-slate-100 flex items-center gap-2">
+              <div className="w-6 h-6 rounded-md bg-slate-100 flex items-center justify-center flex-shrink-0">
+                <User className="w-3 h-3 text-slate-500" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-medium text-gray-900 truncate">{user.full_name}</p>
-                <p className="text-xs text-gray-400 capitalize">{user.role || 'user'}</p>
+                <p className="text-xs font-medium text-slate-700 truncate">{user.full_name}</p>
+                <p className="text-[10px] text-slate-400 capitalize">{user.role}</p>
               </div>
             </div>
           )}
         </aside>
       )}
 
-      {/* ── Center: Chat ──────────────────────────────────────────────────────── */}
+      {/* ── CENTER CHAT ──────────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Chat Header */}
-        <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200 flex-shrink-0">
+
+        {/* Top bar */}
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-white border-b border-slate-200 flex-shrink-0 h-11">
           <button onClick={() => setShowSidebar(v => !v)}
-            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-500">
-            <MessageSquare className="w-4 h-4" />
+            className="w-7 h-7 rounded-md hover:bg-slate-100 flex items-center justify-center text-slate-500 transition-colors">
+            <MessageSquare className="w-3.5 h-3.5" />
           </button>
           <div className="flex-1 min-w-0">
-            <h2 className="font-semibold text-gray-900 text-sm truncate">
-              {activeConv?.title || 'Nuova conversazione'}
-            </h2>
-            {messages.length > 0 && (
-              <p className="text-xs text-gray-400">{messages.length} messaggi</p>
-            )}
+            <p className="text-sm font-medium text-slate-800 truncate">{activeConv?.title || 'Nuova conversazione'}</p>
           </div>
-          <button onClick={() => setShowContext(v => !v)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              showContext ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-500 hover:bg-gray-100'
+          <button onClick={() => setShowSources(v => !v)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+              showSources ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-100'
             }`}>
-            <Database className="w-3.5 h-3.5" /> Contesto
+            <Database className="w-3 h-3" /> Fonti
           </button>
         </div>
 
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
           {isEmpty ? (
-            /* Welcome State */
-            <div className="flex flex-col items-center justify-center h-full min-h-64 text-center">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-lg"
+            // ── Welcome ──────────────────────────────────────────────────────
+            <div className="flex flex-col items-center justify-center h-full min-h-64 text-center max-w-2xl mx-auto">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5 shadow-lg"
                 style={{ background: 'linear-gradient(135deg, #1147FF 0%, #0B2341 100%)' }}>
-                <Bot className="w-8 h-8 text-white" />
+                <Bot className="w-6 h-6 text-white" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-1">
-                Ciao{user ? `, ${user.full_name?.split(' ')[0]}` : ''}! 👋
+              <h2 className="text-xl font-semibold text-slate-900 mb-1.5 tracking-tight">
+                {user ? `Ciao, ${user.full_name?.split(' ')[0]}` : 'Codex AI'}
               </h2>
-              <p className="text-gray-500 text-sm mb-8 max-w-sm">
-                Sono Codex AI. Ho accesso completo ai tuoi dati operativi. Come posso aiutarti?
+              <p className="text-sm text-slate-500 mb-8 leading-relaxed max-w-sm">
+                Ho accesso a progetti, ticket, preventivi, finanze e knowledge base. Come posso aiutarti?
               </p>
 
-              {/* Suggested Prompts Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full max-w-2xl">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 w-full">
                 {SUGGESTED_PROMPTS.map((sp, i) => (
                   <button key={i} onClick={() => send(sp.prompt)}
-                    className="flex items-start gap-3 p-4 bg-white border border-gray-200 rounded-2xl text-left hover:border-blue-300 hover:shadow-md transition-all group">
-                    <div className={`w-8 h-8 rounded-xl ${sp.bg} flex items-center justify-center flex-shrink-0`}>
-                      <sp.icon className={`w-4 h-4 ${sp.color}`} />
+                    className="group flex items-start gap-3 p-3.5 bg-white border border-slate-200 rounded-xl text-left hover:border-blue-300 hover:shadow-sm transition-all">
+                    <div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-50 group-hover:border-blue-200 transition-colors mt-0.5">
+                      <sp.icon className="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-600 transition-colors" />
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">{sp.label}</p>
-                      <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{sp.prompt.slice(0, 55)}…</p>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-slate-800 mb-0.5 group-hover:text-blue-700 transition-colors">{sp.label}</p>
+                      <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">{sp.prompt.slice(0, 60)}…</p>
                     </div>
                   </button>
                 ))}
@@ -592,46 +522,49 @@ export default function CodexAI() {
             ))
           )}
 
+          {/* Typing indicator */}
           {loading && (
             <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: 'linear-gradient(135deg, #1147FF 0%, #0B2341 100%)' }}>
-                <Bot className="w-4 h-4 text-white" />
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 bg-[#0B2341]">
+                <Bot className="w-3.5 h-3.5 text-white" />
               </div>
-              <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-3 shadow-sm">
-                <div className="flex gap-1">
-                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+              <div className="bg-white border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm flex items-center gap-2.5">
+                <div className="flex gap-1 items-center">
+                  {[0, 150, 300].map(delay => (
+                    <span key={delay} className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce"
+                      style={{ animationDelay: `${delay}ms`, animationDuration: '900ms' }} />
+                  ))}
                 </div>
-                <span className="text-xs text-gray-400">Analizzando contesto operativo...</span>
+                <span className="text-xs text-slate-400">Recupero contesto e genero risposta…</span>
               </div>
             </div>
           )}
           <div ref={bottomRef} />
         </div>
 
-        {/* Action Feedback */}
-        {actionFeedback && (
-          <div className={`mx-6 mb-2 px-4 py-3 border rounded-xl text-sm flex items-center justify-between ${
-            actionFeedback.type === 'error'
+        {/* Feedback toast */}
+        {feedback && (
+          <div className={`mx-5 mb-1.5 px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between border ${
+            feedback.type === 'error'
               ? 'bg-red-50 border-red-200 text-red-700'
-              : 'bg-green-50 border-green-200 text-green-700'
+              : 'bg-emerald-50 border-emerald-200 text-emerald-700'
           }`}>
-            <span>{actionFeedback.text}</span>
-            <button onClick={() => setActionFeedback(null)}><X className="w-4 h-4" /></button>
+            <span className="flex items-center gap-2">
+              {feedback.type === 'error' ? <AlertCircle className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+              {feedback.text}
+            </span>
+            <button onClick={() => setFeedback(null)}><X className="w-3.5 h-3.5" /></button>
           </div>
         )}
 
-        {/* Attachments Preview */}
+        {/* Attachments */}
         {attachments.length > 0 && (
-          <div className="px-6 pb-1 flex gap-2 flex-wrap">
+          <div className="px-5 pb-1 flex gap-2 flex-wrap">
             {attachments.map((att, i) => (
               <div key={i} className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-lg px-2.5 py-1 text-xs text-blue-700">
                 <Paperclip className="w-3 h-3" />
                 <span className="truncate max-w-32">{att.name}</span>
-                <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))}
-                  className="text-blue-400 hover:text-blue-700 ml-0.5">
+                <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))}>
                   <X className="w-3 h-3" />
                 </button>
               </div>
@@ -639,50 +572,46 @@ export default function CodexAI() {
           </div>
         )}
 
-        {/* Input Area */}
-        <div className="px-6 pb-5">
-          <div className="flex gap-3 items-end bg-white border border-gray-200 rounded-2xl p-3 shadow-sm focus-within:border-blue-300 focus-within:shadow-md transition-all">
-            {/* Attach */}
+        {/* Input */}
+        <div className="px-5 pb-4">
+          <div className="flex gap-2 items-end bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm focus-within:border-blue-300 focus-within:shadow-md transition-all">
             <button onClick={() => fileInputRef.current?.click()} disabled={uploadingFile}
-              className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors flex-shrink-0">
+              className="p-1.5 text-slate-400 hover:text-blue-500 transition-colors flex-shrink-0 rounded-lg hover:bg-slate-50">
               {uploadingFile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
             </button>
             <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} />
-
             <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-              placeholder="Chiedi qualcosa a Codex AI... (Invio per inviare, Shift+Invio per a capo)"
+              placeholder="Chiedi a Codex AI… (↵ per inviare, ⇧↵ per a capo)"
               rows={1}
-              className="flex-1 resize-none text-sm text-gray-900 placeholder-gray-400 bg-transparent outline-none leading-relaxed max-h-32" />
-
+              className="flex-1 resize-none text-sm text-slate-800 placeholder-slate-400 bg-transparent outline-none leading-relaxed max-h-32" />
             <button onClick={() => send()} disabled={!input.trim() || loading}
-              className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-40"
-              style={{ background: input.trim() && !loading ? 'linear-gradient(135deg, #1147FF 0%, #0B2341 100%)' : '#E5E7EB' }}>
-              <Send className={`w-4 h-4 ${input.trim() && !loading ? 'text-white' : 'text-gray-400'}`} />
+              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-30"
+              style={{ background: input.trim() && !loading ? 'linear-gradient(135deg, #1147FF 0%, #0B2341 100%)' : '#e2e8f0' }}>
+              <Send className={`w-3.5 h-3.5 ${input.trim() && !loading ? 'text-white' : 'text-slate-400'}`} />
             </button>
           </div>
-          <p className="text-xs text-gray-300 text-center mt-2">
-            Codex AI accede ai dati aziendali · RBAC attivo · Ogni interazione è registrata nell'Audit Log
+          <p className="text-center text-[10px] text-slate-300 mt-1.5">
+            Codex AI · RBAC attivo · Audit log · Dati aziendali protetti
           </p>
         </div>
       </div>
 
-      {/* ── Right Panel: Context ──────────────────────────────────────────────── */}
-      {showContext && (
-        <aside className="w-64 flex-shrink-0 bg-white border-l border-gray-200 flex flex-col">
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <Database className="w-4 h-4 text-blue-500" /> Contesto
-            </h3>
-            <button onClick={() => setShowContext(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
-              <X className="w-4 h-4" />
+      {/* ── RIGHT SOURCES PANEL ───────────────────────────────────────────────── */}
+      {showSources && (
+        <aside className="w-[200px] flex-shrink-0 border-l border-slate-200 bg-white flex flex-col">
+          <div className="px-4 py-2.5 border-b border-slate-100 h-11 flex items-center justify-between">
+            <p className="text-[11px] font-semibold text-slate-600 flex items-center gap-1.5">
+              <Database className="w-3 h-3 text-blue-500" /> Fonti
+            </p>
+            <button onClick={() => setShowSources(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
-          <ContextPanel lastMessage={lastAssistantMsg} />
+          <SourcesPanel lastMsg={lastAssistantMsg} />
         </aside>
       )}
 
-      {/* Action Modal */}
       {pendingAction && (
         <ActionConfirmModal
           action={pendingAction}
