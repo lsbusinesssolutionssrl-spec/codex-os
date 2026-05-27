@@ -8,6 +8,8 @@ import PredictivePropertyHealth from '../components/ai/PredictivePropertyHealth'
 import OperationalTimeline from '../components/ai/OperationalTimeline';
 import WarrantyTracker from '../components/ai/WarrantyTracker';
 import AICommunicationGenerator from '../components/ai/AICommunicationGenerator';
+import LifecycleTimeline from '../components/ai/LifecycleTimeline';
+import PredictiveGuardian from '../components/ai/PredictiveGuardian';
 
 const NOTES_SECTIONS = [
   { key: 'electrical_notes', label: 'Impianto Elettrico', icon: Zap, color: '#F59E0B' },
@@ -32,6 +34,8 @@ export default function PropertyDetail() {
   const [showTimeline, setShowTimeline] = useState(false);
   const [showWarranties, setShowWarranties] = useState(false);
   const [showCommunication, setShowCommunication] = useState(false);
+  const [showLifecycle, setShowLifecycle] = useState(false);
+  const [showGuardian, setShowGuardian] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -143,6 +147,24 @@ export default function PropertyDetail() {
           Timeline AI
         </button>
         <button
+          onClick={() => setShowLifecycle(!showLifecycle)}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+            showLifecycle ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Clock className="w-3.5 h-3.5" />
+          Lifecycle
+        </button>
+        <button
+          onClick={() => setShowGuardian(!showGuardian)}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+            showGuardian ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Shield className="w-3.5 h-3.5" />
+          Guardian
+        </button>
+        <button
           onClick={() => setShowCommunication(!showCommunication)}
           className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
             showCommunication ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
@@ -173,6 +195,12 @@ export default function PropertyDetail() {
 
       {/* Operational Timeline */}
       {showTimeline && <OperationalTimeline entityType="property" entityId={id} />}
+
+      {/* Lifecycle Timeline */}
+      {showLifecycle && <LifecycleTimeline entityType="property" entityId={id} />}
+
+      {/* Predictive Guardian */}
+      {showGuardian && <PredictiveGuardian propertyId={id} clientId={property.client_id} />}
 
       {/* AI Communication Generator */}
       {showCommunication && <AICommunicationGenerator entityType="property" entityId={id} onClose={() => setShowCommunication(false)} />}

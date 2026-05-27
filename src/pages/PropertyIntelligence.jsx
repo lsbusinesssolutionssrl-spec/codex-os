@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Brain, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Activity, Home, Calendar, Zap, Droplets, Thermometer } from 'lucide-react';
+import { Brain, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Activity, Home, Calendar, Zap, Droplets, Thermometer, BarChart3 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { hasRole } from '@/lib/roleUtils';
 import PredictivePropertyHealth from '../components/ai/PredictivePropertyHealth';
+import PropertyAnalytics from '../components/ai/PropertyAnalytics';
 
 export default function PropertyIntelligence() {
   const navigate = useNavigate();
@@ -22,6 +23,8 @@ export default function PropertyIntelligence() {
   const [topRisks, setTopRisks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [companyId, setCompanyId] = useState(null);
 
   useEffect(() => {
     hasRole(['admin', 'company_admin', 'project_manager']).then(auth => {
@@ -41,6 +44,7 @@ export default function PropertyIntelligence() {
         const user = await base44.auth.me();
         const companyRes = await base44.functions.invoke('getCurrentCompany', {}).catch(() => ({ data: { company: null } }));
         const companyId = companyRes.data?.company?.id;
+        setCompanyId(companyId);
 
         const [allProperties, allTickets, allProjects, allEquipment, allMaintenance, allRisks, allInsights] = await Promise.all([
           base44.entities.Property.list(),
@@ -157,13 +161,24 @@ export default function PropertyIntelligence() {
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">Portafoglio: {portfolioStats.totalProperties} proprietà · Salute media: {portfolioStats.avgHealthScore}/100</p>
         </div>
-        <button 
-          onClick={() => navigate('/properties')}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
-        >
-          <Home className="w-3.5 h-3.5" />
-          Tutte le Proprietà
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => setShowAnalytics(!showAnalytics)}
+            className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-all ${
+              showAnalytics ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+            }`}
+          >
+            <BarChart3 className="w-3.5 h-3.5" />
+            Analytics
+          </button>
+          <button 
+            onClick={() => navigate('/properties')}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
+          >
+            <Home className="w-3.5 h-3.5" />
+            Tutte le Proprietà
+          </button>
+        </div>
       </div>
 
       {/* Portfolio KPIs */}
@@ -177,6 +192,9 @@ export default function PropertyIntelligence() {
         <KpiCard label="Rischi" value={portfolioStats.totalRisks} icon={AlertTriangle} color="#EF4444" />
         <KpiCard label="Risparmio" value={`€${portfolioStats.predictedSavings.toLocaleString()}`} icon={DollarSign} color="#10B981" />
       </div>
+
+      {/* Analytics Section */}
+      {showAnalytics && companyId && <PropertyAnalytics companyId={companyId} />}
 
       {/* Health Distribution */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
