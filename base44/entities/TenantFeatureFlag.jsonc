@@ -1,0 +1,53 @@
+{
+  "name": "TenantFeatureFlag",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "feature_name": {
+      "type": "string",
+      "title": "Feature Name",
+      "enum": [
+        "ai_estimator",
+        "financial_control",
+        "guardian",
+        "workflow_automation",
+        "predictive_intelligence",
+        "white_label",
+        "api_access",
+        "advanced_analytics",
+        "custom_integrations",
+        "priority_support"
+      ]
+    },
+    "enabled": {
+      "type": "boolean",
+      "title": "Enabled",
+      "default": false
+    },
+    "plan_required": {
+      "type": "string",
+      "title": "Plan Required",
+      "enum": [
+        "starter",
+        "professional",
+        "enterprise"
+      ]
+    },
+    "custom_limit": {
+      "type": "number",
+      "title": "Custom Limit"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "company_id",
+    "feature_name",
+    "enabled"
+  ]
+}

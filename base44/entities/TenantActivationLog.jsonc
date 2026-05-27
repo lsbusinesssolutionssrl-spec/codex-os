@@ -1,0 +1,50 @@
+{
+  "name": "TenantActivationLog",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "event_type": {
+      "type": "string",
+      "title": "Event Type",
+      "enum": [
+        "tenant_created",
+        "plan_assigned",
+        "admin_invited",
+        "feature_enabled",
+        "feature_disabled",
+        "tenant_activated",
+        "tenant_suspended",
+        "tenant_cancelled",
+        "impersonation_started",
+        "impersonation_ended",
+        "plan_upgraded",
+        "plan_downgraded"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "performed_by": {
+      "type": "string",
+      "title": "Performed By (User Email)"
+    },
+    "metadata": {
+      "type": "object",
+      "title": "Metadata"
+    },
+    "created_date": {
+      "type": "string",
+      "title": "Created Date"
+    }
+  },
+  "required": [
+    "company_id",
+    "event_type",
+    "description",
+    "performed_by"
+  ]
+}

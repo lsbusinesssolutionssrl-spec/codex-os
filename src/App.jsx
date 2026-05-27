@@ -106,6 +106,8 @@ import LiveCommandCenter from './pages/LiveCommandCenter';
 import ExecutiveFocusDashboard from './pages/ExecutiveFocusDashboard';
 import EvolutionDashboard from './pages/EvolutionDashboard';
 import ExecutionIntelligenceDashboard from './pages/ExecutionIntelligenceDashboard';
+import ActivationWizard from './pages/ActivationWizard';
+import TenantManagement from './pages/TenantManagement';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -233,6 +235,8 @@ const AuthenticatedApp = () => {
       <Route path="/marketplace" element={<Marketplace />} />
       <Route path="/white-label" element={<WhiteLabelSettings />} />
       <Route path="/property-intelligence" element={<PropertyIntelligence />} />
+      <Route path="/activation-wizard" element={<ActivationWizard />} />
+      <Route path="/tenant/:companyId" element={<TenantManagement />} />
 
       </Route>
       <Route element={<PortalLayout />}>

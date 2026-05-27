@@ -1,0 +1,56 @@
+{
+  "name": "TenantImpersonation",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company (Tenant)"
+    },
+    "super_admin_email": {
+      "type": "string",
+      "title": "Super Admin Email"
+    },
+    "impersonating_user_id": {
+      "type": "string",
+      "title": "Impersonating User ID"
+    },
+    "target_user_email": {
+      "type": "string",
+      "title": "Target User Email (Tenant Admin)"
+    },
+    "started_at": {
+      "type": "string",
+      "title": "Started At"
+    },
+    "ended_at": {
+      "type": "string",
+      "title": "Ended At"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "active",
+        "ended"
+      ],
+      "default": "active"
+    },
+    "reason": {
+      "type": "string",
+      "title": "Reason for Impersonation"
+    },
+    "actions_performed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Actions Performed"
+    }
+  },
+  "required": [
+    "company_id",
+    "super_admin_email",
+    "started_at",
+    "status"
+  ]
+}
