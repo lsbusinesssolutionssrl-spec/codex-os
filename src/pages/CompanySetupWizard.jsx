@@ -77,7 +77,18 @@ export default function CompanySetupWizard() {
 
       // Create or update Company entity
       const companyData = {
-        ...form,
+        name: form.name,
+        legal_name: form.legal_name,
+        tax_id: form.tax_id,
+        email: form.email,
+        phone: form.phone,
+        address: form.address,
+        country: form.country,
+        language: form.language,
+        timezone: form.timezone,
+        brand_color_primary: form.brand_color_primary,
+        brand_color_secondary: form.brand_color_secondary,
+        logo_url: form.logo_url,
         slug: form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         settings: {
           currency: 'EUR',
