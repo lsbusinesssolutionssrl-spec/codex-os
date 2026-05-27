@@ -71,6 +71,7 @@ import AICopilotFeatures from './pages/AICopilotFeatures';
 import WorkflowBuilder from './pages/WorkflowBuilder';
 import WorkflowAnalytics from './pages/WorkflowAnalytics';
 import Workflows from './pages/Workflows';
+import ApprovalsManager from './pages/ApprovalsManager';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -162,6 +163,8 @@ const AuthenticatedApp = () => {
       <Route path="/workflows" element={<Workflows />} />
       <Route path="/workflows/builder" element={<WorkflowBuilder />} />
       <Route path="/workflow-analytics" element={<WorkflowAnalytics />} />
+      <Route path="/approvals" element={<ApprovalsManager />} />
+      <Route path="/operations" element={<OperationsDashboard />} />
 
       </Route>
       <Route element={<PortalLayout />}>
