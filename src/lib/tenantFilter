@@ -1,0 +1,137 @@
+import { base44 } from '@/api/base44Client';
+
+/**
+ * Tenant-aware data fetching middleware
+ * 
+ * All entity queries MUST go through this to ensure tenant isolation.
+ * Never use base44.entities.X.list() directly - use these methods instead.
+ */
+
+export class TenantFilter {
+  constructor(companyId) {
+    if (!companyId) {
+      throw new Error('TenantFilter requires a companyId');
+    }
+    this.companyId = companyId;
+  }
+
+  /**
+   * Filter entity query by company_id
+   * @param {string} entityName - Entity name (e.g., 'Project', 'Client')
+   * @param {object} additionalFilters - Additional filters to merge
+   * @returns {object} - Filter object for base44.entities.filter()
+   */
+  filter(entityName, additionalFilters = {}) {
+    // Check if this entity should be filtered by company_id
+    const filterableEntities = [
+      'Project', 'Client', 'Property', 'Estimate', 'Document',
+      'SupportTicket', 'Task', 'ChecklistItem', 'GuardianSubscription',
+      'ProjectCost', 'Timesheet', 'PurchaseOrder', 'Supplier',
+      'KnowledgeBase', 'ProjectLearning', 'IoTDevice', 'SOPTemplate',
+      'IntelligenceInsight', 'PropertyInsight', 'BrandTheme', 'BrandAuditLog',
+      'TenantActivationLog', 'Workflow', 'WorkflowExecution', 'WorkflowApproval',
+      'Notification', 'Comment', 'MaintenanceSchedule', 'PlatformIntegration'
+    ];
+
+    if (!filterableEntities.includes(entityName)) {
+      // Entity doesn't need tenant filtering (e.g., SubscriptionPlan)
+      return additionalFilters;
+    }
+
+    // Merge with company_id filter
+    return {
+      company_id: this.companyId,
+      ...additionalFilters,
+    };
+  }
+
+  /**
+   * Fetch entity list with automatic tenant filtering
+   * @param {string} entityName - Entity name
+   * @param {string} sort - Sort order (e.g., '-created_date')
+   * @param {number} limit - Max results
+   * @param {object} additionalFilters - Additional filters
+   * @returns {Promise<Array>} - Filtered entity list
+   */
+  async list(entityName, sort = '-created_date', limit = 100, additionalFilters = {}) {
+    const filter = this.filter(entityName, additionalFilters);
+    return await base44.entities[entityName].filter(filter, sort, limit);
+  }
+
+  /**
+   * Get single entity with tenant verification
+   * @param {string} entityName - Entity name
+   * @param {string} id - Entity ID
+   * @returns {Promise<object|null>} - Entity or null if not found/belongs to other tenant
+   */
+  async get(entityName, id) {
+    const entity = await base44.entities[entityName].get(id);
+    
+    // Verify entity belongs to this tenant
+    if (entity && entity.company_id !== this.companyId) {
+      console.warn(`Security: Entity ${entityName}/${id} belongs to different tenant`);
+      return null;
+    }
+    
+    return entity;
+  }
+}
+
+/**
+ * Get current user's tenant filter
+ * @returns {Promise<TenantFilter|null>} - Filter or null if user has no tenant
+ */
+export async function getCurrentTenantFilter() {
+  try {
+    const user = await base44.auth.me();
+    
+    if (!user) {
+      return null;
+    }
+
+    // Platform users don't have a default tenant
+    if (['admin', 'developer'].includes(user.role)) {
+      // Check if impersonating a tenant
+      const impersonateId = localStorage.getItem('impersonate_tenant_id');
+      if (impersonateId) {
+        return new TenantFilter(impersonateId);
+      }
+      return null; // Platform mode - no tenant context
+    }
+
+    // Tenant users MUST have company_id
+    if (!user.company_id) {
+      console.error('CRITICAL: Tenant user has no company_id');
+      throw new Error('User not associated with any tenant');
+    }
+
+    return new TenantFilter(user.company_id);
+  } catch (error) {
+    console.error('Error getting tenant filter:', error);
+    return null;
+  }
+}
+
+/**
+ * Verify user has access to a specific tenant
+ * @param {string} companyId - Tenant ID to verify
+ * @returns {Promise<boolean>} - True if user has access
+ */
+export async function verifyTenantAccess(companyId) {
+  try {
+    const user = await base44.auth.me();
+    
+    if (!user) return false;
+
+    // Platform users can access all tenants
+    if (['admin', 'developer'].includes(user.role)) {
+      return true;
+    }
+
+    // Tenant users can only access their own tenant
+    return user.company_id === companyId;
+  } catch (error) {
+    console.error('Error verifying tenant access:', error);
+    return false;
+  }
+}

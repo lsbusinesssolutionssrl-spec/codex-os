@@ -9,31 +9,40 @@ import { base44 } from '@/api/base44Client';
 import NotificationBell from './NotificationBell';
 import CodexLogo from './CodexLogo';
 import GlobalSearch from './GlobalSearch';
-import BrandSelector from './BrandSelector';
 import CommandPalette from './CommandPalette';
 import QuickCreate from './QuickCreate';
-import WorkspaceSwitcher from './workspace/WorkspaceSwitcher';
+import TenantSwitcher from './tenant/TenantSwitcher';
 import { useOfflineSync } from '../hooks/useOfflineSync';
+import { useTenant } from './tenant/TenantContext';
+import ContextBanner from './tenant/ContextBanner';
 
-const navItems = [
-  { path: '/', icon: LayoutDashboard, label: 'Command Center' },
-  { path: '/clients', label: 'Clienti', icon: Users },
-  { path: '/projects', label: 'Progetti', icon: FolderKanban },
-  { path: '/properties', label: 'Home Passport', icon: Home },
-  { path: '/estimates', label: 'Preventivi', icon: FileText },
-  { path: '/guardian', label: 'Guardian', icon: Shield },
-  { path: '/documents', label: 'Documenti', icon: Archive },
-  { path: '/ai', label: 'AI Copilot', icon: Bot },
-  { path: '/financial-control', label: 'Controllo Finanziario', icon: TrendingUp },
-  { path: '/company-settings', label: 'Impostazioni', icon: Building2 },
-  // Platform tools - visible only to admin
-  { path: '/super-admin', label: 'Platform', icon: Shield, adminOnly: true },
-  { path: '/platform-settings', label: 'Impostazioni Platform', icon: Shield, adminOnly: true },
-  { path: '/subscription-plans', label: 'Piani SaaS', icon: CreditCard, adminOnly: true },
-  { path: '/developer', label: 'Developer', icon: Database, adminOnly: true },
-  { path: '/integrations', label: 'Integrazioni', icon: Globe, adminOnly: true },
-  { path: '/brand-approval', label: 'White Label', icon: Palette, adminOnly: true },
-  { path: '/system-status', label: 'Stato Sistema', icon: Activity, adminOnly: true },
+// Tenant navigation - modules enabled dynamically based on plan
+const TENANT_NAV_ITEMS = [
+  { path: '/', icon: LayoutDashboard, label: 'Command Center', module: 'core' },
+  { path: '/clients', label: 'Clienti', icon: Users, module: 'core' },
+  { path: '/projects', label: 'Progetti', icon: FolderKanban, module: 'core' },
+  { path: '/properties', label: 'Home Passport', icon: Home, module: 'core' },
+  { path: '/estimates', label: 'Preventivi', icon: FileText, module: 'core' },
+  { path: '/documents', label: 'Documenti', icon: Archive, module: 'core' },
+  { path: '/guardian', label: 'Guardian', icon: Shield, module: 'guardian' },
+  { path: '/financial-control', label: 'Controllo Finanziario', icon: TrendingUp, module: 'financial_control' },
+  { path: '/ai', label: 'AI Copilot', icon: Bot, module: 'ai_copilot' },
+  { path: '/intelligence', label: 'Intelligence', icon: Brain, module: 'intelligence' },
+  { path: '/workflows', label: 'Workflows', icon: Zap, module: 'workflows' },
+  { path: '/company-settings', label: 'Impostazioni', icon: Building2, module: 'core' },
+];
+
+// Platform navigation - only for Super Admin / Developer
+const PLATFORM_NAV_ITEMS = [
+  { path: '/super-admin', icon: Shield, label: 'Dashboard' },
+  { path: '/tenant-onboarding', icon: Building2, label: 'Nuovo Tenant' },
+  { path: '/saas-plans-admin', icon: CreditCard, label: 'Piani SaaS' },
+  { path: '/platform-settings', icon: Shield, label: 'Impostazioni' },
+  { path: '/brand-approval', icon: Palette, label: 'White Label' },
+  { path: '/developer', icon: Database, label: 'Developer' },
+  { path: '/integrations', icon: Globe, label: 'Integrazioni' },
+  { path: '/system-status', icon: Activity, label: 'Stato Sistema' },
+  { path: '/product-analytics', icon: TrendingUp, label: 'Analytics' },
 ];
 
 export default function Layout() {
@@ -43,6 +52,7 @@ export default function Layout() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const { isOnline, queueCount } = useOfflineSync();
+  const { activeTenant, isPlatformMode, loading: tenantLoading } = useTenant();
   const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
@@ -50,6 +60,15 @@ export default function Layout() {
       setUserRole(u?.role);
     }).catch(() => {});
   }, []);
+
+  // Show loading while tenant context initializes
+  if (tenantLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -86,17 +105,20 @@ export default function Layout() {
     client: [],
   };
   const allowedPaths = userRole ? NAV_BY_ROLE[userRole] : null;
-  const visibleNav = navItems.filter(i => {
-    // Admin sees everything
-    if (userRole === 'admin') {
-      // Hide adminOnly items from main nav (they're accessible via Platform workspace)
-      if (i.adminOnly) return false;
-      return true;
+  
+  // Determine which navigation to use
+  const visibleNav = isPlatformMode ? PLATFORM_NAV_ITEMS : TENANT_NAV_ITEMS.filter(item => {
+    // Check if module is enabled for this tenant
+    if (item.module && item.module !== 'core') {
+      // Module-based items only appear if enabled
+      // For now, show all - will be filtered by enabledModules in future
     }
-    // If item has role restriction, only show for those roles
-    if (i.roles && !i.roles.includes(userRole)) return false;
-    // If user role has path restrictions, filter by allowed paths
-    if (allowedPaths && !allowedPaths.includes(i.path)) return false;
+    
+    // Check role-based access
+    if (allowedPaths && !allowedPaths.includes(item.path)) {
+      return false;
+    }
+    
     return true;
   });
 
@@ -106,6 +128,9 @@ export default function Layout() {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Context Banner - shows Platform vs Tenant mode */}
+      <ContextBanner />
+      
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
@@ -148,6 +173,22 @@ export default function Layout() {
               <><WifiOff className="w-3.5 h-3.5 text-orange-400" /><span className="text-orange-400">Offline{queueCount > 0 ? ` · ${queueCount} in coda` : ''}</span></>
             )}
           </div>
+          
+          {/* Context indicator */}
+          <div className="text-xs text-white/40 border-t border-white/10 pt-2 mt-2">
+            {isPlatformMode ? (
+              <div className="flex items-center gap-1.5">
+                <Shield className="w-3 h-3" />
+                <span>Platform Mode</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <Building2 className="w-3 h-3" />
+                <span>Tenant Workspace</span>
+              </div>
+            )}
+          </div>
+          
           <Link
             to="/company-settings"
             className="flex items-center gap-2 text-white/50 hover:text-white text-sm transition-colors"
@@ -188,8 +229,23 @@ export default function Layout() {
             <span className="text-xs text-white/80 border border-white/30 px-1.5 py-0.5 rounded">⌘N</span>
           </button>
           <div className="flex-1" />
-          <BrandSelector />
-          <WorkspaceSwitcher />
+          {/* Show active tenant context */}
+          {isPlatformMode && <TenantSwitcher />}
+          {!isPlatformMode && activeTenant && (
+            <div className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 bg-gray-100 rounded-lg">
+              {activeTenant.logo_url ? (
+                <img src={activeTenant.logo_url} alt="" className="w-4 h-4 object-contain" />
+              ) : (
+                <div 
+                  className="w-4 h-4 rounded flex items-center justify-center text-white text-xs font-bold"
+                  style={{ backgroundColor: activeTenant.brand_color_primary || '#1147FF' }}
+                >
+                  {activeTenant.name?.[0]?.toUpperCase()}
+                </div>
+              )}
+              <span className="font-medium">{activeTenant.name}</span>
+            </div>
+          )}
           <NotificationBell />
         </header>
         <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />

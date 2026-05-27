@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { WorkspaceProvider } from '@/components/workspace/WorkspaceContext';
+import { TenantProvider } from '@/components/tenant/TenantContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
@@ -112,6 +113,7 @@ import WhiteLabelCenter from './pages/WhiteLabelCenter';
 import BrandApprovalQueue from './pages/BrandApprovalQueue';
 import PlatformSettings from './pages/PlatformSettings';
 import SaasPlansAdmin from './pages/SaasPlansAdmin';
+import TenantIntegrityAudit from './pages/TenantIntegrityAudit';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -245,6 +247,7 @@ const AuthenticatedApp = () => {
       <Route path="/brand-approval" element={<BrandApprovalQueue />} />
       <Route path="/platform-settings" element={<PlatformSettings />} />
       <Route path="/saas-plans-admin" element={<SaasPlansAdmin />} />
+      <Route path="/tenant-integrity" element={<TenantIntegrityAudit />} />
 
       </Route>
       <Route element={<PortalLayout />}>
@@ -262,9 +265,11 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <WorkspaceProvider>
-          <Router>
-            <AuthenticatedApp />
-          </Router>
+          <TenantProvider>
+            <Router>
+              <AuthenticatedApp />
+            </Router>
+          </TenantProvider>
           <Toaster />
         </WorkspaceProvider>
       </QueryClientProvider>

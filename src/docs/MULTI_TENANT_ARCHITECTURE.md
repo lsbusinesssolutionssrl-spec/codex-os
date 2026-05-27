@@ -1,380 +1,330 @@
-# Codex OS — Multi-Tenant Architecture
-## Commercial Distribution Ready
+# Codex OS Multi-Tenant SaaS Architecture
 
-**Version:** 2.0  
-**Date:** 2026-05-26
+## Overview
 
----
-
-## 1. Overview
-
-Codex OS è stato trasformato da applicazione single-tenant a piattaforma **multi-tenant SaaS** pronta per la distribuzione commerciale. Ogni azienda (tenant) opera in isolamento completo, con dati, impostazioni, e subscription separate.
+Codex OS è una piattaforma **enterprise multi-tenant SaaS** con isolamento reale dei dati e contesti di lavoro separati.
 
 ---
 
-## 2. Tenant Architecture
+## Core Concepts
 
-### Company Entity (Tenant)
-Ogni azienda è rappresentata dall'entity `Company`:
-- **Isolamento**: Tutti i dati sono filtrati per `company_id`
-- **Brand personalizzato**: Logo, colori primari/secondari
-- **Settings aziendali**: Currency, language, timezone, formati data
-- **Slug univoco**: Identificatore URL-safe per routing futuro
+### 1. **Platform Owner Context** (Super Admin / Developer)
 
-### User Association
-- Ogni utente appartiene a **una sola company** tramite `company_id`
-- Ruoli estesi: `company_admin` (gestisce subscription e settings aziendali)
-- Ruoli esistenti: `admin`, `project_manager`, `technician`, `sales`, `client`
+**Chi:** Solo Super Admin e Developer
+
+**Cosa vede:**
+- Dashboard multi-tenant
+- Tutti i tenant (aziende)
+- Piani SaaS e subscription
+- Feature flags
+- Audit log platform-wide
+- White label requests
+- System health
+
+**NON è un tenant** - è il contesto di gestione della piattaforma.
+
+### 2. **Tenant Company Context** (Cliente SaaS)
+
+**Esempi:** Rossi Costruzioni, Alfa Impianti, Studio Beta
+
+**Isolamento:**
+- ✅ Database context isolato (tramite company_id filters)
+- ✅ Utenti isolati (ogni user ha company_id)
+- ✅ Progetti isolati
+- ✅ Clienti isolati
+- ✅ Financials isolati
+- ✅ Branding isolato
+- ✅ AI memory isolata
+
+**Tenant users:**
+- `company_admin` - Admin dell'azienda
+- `project_manager` - PM
+- `technician` - Tecnico
+- `sales` - Commerciale
+- `client` - Cliente finale (portal)
+
+### 3. **Product / Module Context**
+
+**NON sono tenant** - sono moduli abilitati dal piano SaaS:
+
+- Guardian (manutenzione programmata)
+- Home Passport (digital twin proprietà)
+- Financial Control (margini, costi)
+- AI Copilot (assistente contestuale)
+- Intelligence (analytics avanzati)
+- Workflow Engine (automazioni)
+- White Label (branding personalizzato)
 
 ---
 
-## 3. Data Isolation
+## Architecture Implementation
 
-### Entity-Level Isolation
-Tutte le entity principali includono `company_id`:
-- Client, Property, Estimate, Project
-- SupportTicket, GuardianSubscription, Document
-- ChecklistItem, Supplier, Timesheet, PurchaseOrder
-- User (associazione)
+### Tenant Context Engine
 
-### Row-Level Security (RLS)
-Backend function `getUserFilters` applica filtri automatici:
 ```javascript
-// Tutti i record devono avere company_id = user's company
-{ company_id: userCompanyId }
+// components/tenant/TenantContext
+const { activeTenant, isPlatformMode, enabledModules } = useTenant();
 ```
 
-### Backend Functions
-Tutte le funzioni backend devono:
-1. Verificare autenticazione utente
-2. Recuperare `company_id` dall'utente
-3. Applicare filtro `company_id` a tutte le query
+**Platform Mode:**
+- `isPlatformMode = true`
+- `activeTenant = null`
+- Menu: PLATFORM_NAV_ITEMS
+- Accesso: Super Admin / Developer only
+
+**Tenant Mode:**
+- `isPlatformMode = false`
+- `activeTenant = { company data }`
+- `enabledModules = ['guardian', 'financial_control', ...]`
+- Menu: TENANT_NAV_ITEMS (filtered by modules)
 
 ---
 
-## 4. Subscription & Billing
+## Data Isolation
 
-### Subscription Plans
-Entity `SubscriptionPlan` definisce piani con:
-- **Prezzi**: Mensili e annuali
-- **Quote**: Limiti configurabili per risorsa
-- **Features**: Lista di funzionalità incluse
-- **Stripe integration**: Price IDs per checkout
+### Middleware: TenantFilter
 
-### Company Subscription
-Entity `CompanySubscription` traccia:
-- Piano attivo e ciclo di billing
-- Periodo corrente e trial
-- Stripe subscription/customer IDs
-- Utilizzo corrente (seats, storage)
+```javascript
+// lib/tenantFilter
+const filter = await getCurrentTenantFilter();
+const projects = await filter.list('Project', '-created_date');
+```
 
-### Usage Tracking
-Entity `UsageLog` registra:
-- Ogni creazione/aggiornamento di risorse
-- Consumo di AI request, storage, ticket
-- Timestamp e user_email per audit
+**TUTTE le query devono passare da TenantFilter** per garantire isolamento.
 
-### Quota Enforcement
-Function `checkQuota`:
-- Verifica limiti prima di creare risorse
-- Supporta resource_type: user, project, estimate, ticket, storage, ai_request, client, property
-- Restituisce: allowed, current, limit, remaining, exceeded
+### RLS Filters (Row Level Security)
 
----
-
-## 5. Entity Schemas
-
-### Core Entities
-
-#### Company
-```json
+```javascript
+// functions/getUserFilters
 {
-  "name": "Company Name",
-  "slug": "company-slug",
-  "email": "admin@company.com",
-  "brand_color_primary": "#1147FF",
-  "brand_color_secondary": "#0B2341",
-  "settings": {
-    "currency": "EUR",
-    "language": "it",
-    "timezone": "Europe/Rome"
+  Project: { company_id: "abc123" },
+  Estimate: { company_id: "abc123" },
+  Client: { company_id: "abc123" },
+  // ...
+}
+```
+
+**Platform users** ricevono filtri vuoti (possono vedere tutto).
+
+**Tenant users** ricevono filtri strict per company_id.
+
+---
+
+## Tenant Switching
+
+### Solo per Super Admin / Developer
+
+```javascript
+// components/tenant/TenantSwitcher
+<TenantSwitcher />
+```
+
+**Funzionalità:**
+- Switch tra Platform e tenant specifici
+- Impersonation mode (x-impersonate-tenant-id header)
+- Branding del tenant attivo
+- Reload contestuale
+
+### Tenant Users
+
+**NON vedono il tenant switcher** - sono vincolati al loro company_id.
+
+---
+
+## Module Activation
+
+### Piani SaaS abilitano moduli
+
+```javascript
+// Starter Plan
+enabledModules: ['projects', 'estimates', 'clients', 'documents']
+
+// Professional Plan
+enabledModules: [...Starter, 'guardian', 'financial_control', 'ai_copilot']
+
+// Enterprise Plan
+enabledModules: [...Professional, 'intelligence', 'workflows', 'white_label']
+```
+
+### Menu dinamico
+
+Il sidebar filtra le voci in base ai moduli abilitati:
+
+```javascript
+// components/Layout
+const visibleNav = TENANT_NAV_ITEMS.filter(item => {
+  if (item.module && !enabledModules.includes(item.module)) {
+    return false; // Modulo non abilitato
   }
-}
-```
-
-#### SubscriptionPlan
-```json
-{
-  "name": "Professional",
-  "price_monthly": 99,
-  "price_yearly": 990,
-  "quotas": {
-    "max_users": 10,
-    "max_projects": 50,
-    "max_storage_gb": 20,
-    "max_estimates_per_month": 100,
-    "ai_requests_per_month": 500
-  },
-  "features": ["AI Estimator", "Advanced Reports", "Priority Support"]
-}
-```
-
-#### CompanySubscription
-```json
-{
-  "company_id": "...",
-  "plan_id": "...",
-  "status": "active",
-  "billing_cycle": "monthly",
-  "trial_end": "2026-06-09",
-  "mrr": 99,
-  "seats_used": 3,
-  "storage_used_gb": 2.5
-}
+  return true;
+});
 ```
 
 ---
 
-## 6. Backend Functions
+## Security Model
 
-### createCompany
-Crea nuova azienda con:
-- Company record
-- Subscription (trial 14 giorni)
-- User associato come `company_admin`
-- Log utilizzo iniziale
+### 1. User Entity
 
-**Endpoint:** `POST /functions/createCompany`
-
-### getCurrentCompany
-Recupera company, subscription e user corrente.
-
-**Endpoint:** `GET /functions/getCurrentCompany`
-
-### checkQuota
-Verifica limiti prima di creare risorse.
-
-**Input:**
 ```json
 {
-  "resource_type": "project",
-  "action": "create",
-  "quantity": 1
+  "email": "user@company.com",
+  "company_id": "abc123", // Obbligatorio per tenant users
+  "role": "project_manager"
 }
 ```
 
-**Output:**
+### 2. All Data Entities
+
 ```json
 {
-  "allowed": true,
-  "current": 12,
-  "limit": 50,
-  "remaining": 38,
-  "exceeded": false
+  "company_id": "abc123", // Obbligatorio
+  "title": "Project Alpha",
+  // ...
 }
 ```
 
-### logUsage
-Registra consumo di risorse.
+### 3. Backend Verification
 
-**Input:**
-```json
-{
-  "resource_type": "ai_request",
-  "action": "consume",
-  "quantity": 1,
-  "metadata": { "model": "gpt-4o-mini" }
-}
-```
-
----
-
-## 7. Frontend Pages
-
-### Company Settings (`/company-settings`)
-Gestione impostazioni aziendali:
-- **Tab Generale**: Nome, email, tax ID, indirizzo
-- **Tab Brand**: Logo upload, colori primari/secondari
-- **Tab Subscription**: Piano corrente, billing, MRR
-- **Tab Usage**: Barre di utilizzo per utenti, progetti, storage
-
-### Subscription Plans (`/subscription-plans`)
-Upgrade/downgrade piano:
-- Grid 3 piani (Starter, Professional, Enterprise)
-- Features e quote per piano
-- Toggle monthly/yearly billing
-- Stripe integration (placeholder)
-
----
-
-## 8. Security & Access Control
-
-### Authentication
-- Utenti autenticati tramite Base44 auth
-- `company_id` recuperato da User entity
-- Sessioni isolate per company
-
-### Authorization
-- RLS applica filtri `company_id` automaticamente
-- Ruoli `company_admin` e `admin` gestiscono settings
-- Clienti vedono solo i propri dati (portal)
-
-### Data Leakage Prevention
-- Nessuna query senza filtro `company_id`
-- Backend functions validano sempre l'appartenenza
-- Usage log tracciano tutte le operazioni
-
----
-
-## 9. Billing Integration (Stripe Ready)
-
-### Required Setup
-1. **Stripe Products**: Crea prodotti per ogni piano
-2. **Price IDs**: Popola `stripe_price_id_monthly` e `stripe_price_id_yearly`
-3. **Webhooks**: Configura endpoint per:
-   - `invoice.payment_succeeded` → aggiorna `last_payment_date`, `last_payment_amount`
-   - `customer.subscription.updated` → sync status, period dates
-   - `customer.subscription.deleted` → imposta `cancelled_at`, `status: cancelled`
-
-### Checkout Flow
 ```javascript
-// 1. User seleziona piano
-// 2. Redirect a Stripe Checkout Session
-// 3. Stripe webhook conferma pagamento
-// 4. CompanySubscription aggiornata
-```
-
----
-
-## 10. Migration Path
-
-### Existing Data (Single-Tenant)
-Tutti i record esistenti devono essere aggiornati:
-```javascript
-// Script di migrazione
-const companyId = 'default-company-id';
-await Promise.all([
-  base44.entities.Client.updateMany({}, { company_id: companyId }),
-  base44.entities.Property.updateMany({}, { company_id: companyId }),
-  // ... tutte le entity
-]);
-```
-
-### Default Company
-Crea una company "default" per dati legacy:
-```json
-{
-  "name": "Codex Solution (Default)",
-  "slug": "default",
-  "email": "admin@codexsolution.it"
+// functions/getUserFilters
+if (!company_id && !['admin', 'developer'].includes(user.role)) {
+  return Response.json({ error: 'Tenant user must have company_id' }, { status: 403 });
 }
 ```
 
 ---
 
-## 11. Onboarding Flow
+## Tenant Onboarding
 
-### Self-Signup
-1. User visita `/subscription-plans`
-2. Seleziona piano e billing cycle
-3. Compila form company (nome, email, slug)
-4. `createCompany` crea:
-   - Company record
-   - Subscription (trial 14 giorni)
-   - User come `company_admin`
-5. Redirect a `/company-settings` per configurazione
+### Wizard: /tenant-onboarding
 
-### Manual Invite (Admin)
-1. Admin crea company da dashboard
-2. Invita utenti via email
-3. Utenti registrati associati a company
-4. Ruolo default: `user` o specifico
+1. **Dati Azienda**
+   - Ragione sociale
+   - Slug (URL-safe)
+   - Email, VAT, Address
+
+2. **Logo + Brand**
+   - Upload logo
+   - Colori primari/secondari
+
+3. **Utente Admin**
+   - Email admin tenant
+   - Invito automatico
+
+4. **Subscription**
+   - Piano (Starter/Professional/Enterprise)
+   - Trial 14 giorni
+
+5. **Numerazione**
+   - Prefissi preventivi/progetti
+
+6. **Attivazione**
+   - Company creata
+   - Subscription attiva
+   - Moduli abilitati
+   - Workspace pronto
 
 ---
 
-## 12. Quota Examples
+## Integrity Audit
 
-### Starter Plan (€49/mese)
-```json
-{
-  "max_users": 3,
-  "max_projects": 10,
-  "max_storage_gb": 5,
-  "max_estimates_per_month": 20,
-  "max_tickets_per_month": 30,
-  "ai_requests_per_month": 50
-}
+### /tenant-integrity
+
+Verifica automatica:
+- ✅ Utenti senza company_id
+- ✅ Aziende senza subscription
+- ✅ Dati orfani (company_id invalido)
+- ✅ Moduli non allineati al piano
+
+**Auto-fix:** Assegna company_id inferito dai dati esistenti.
+
+---
+
+## Context Banner
+
+Header mostra SEMPRE il contesto attivo:
+
+**Platform:**
+```
+🛡️ Platform Administration — Gestione multi-tenant
+Super Admin Mode
 ```
 
-### Professional Plan (€99/mese)
-```json
-{
-  "max_users": 10,
-  "max_projects": 50,
-  "max_storage_gb": 20,
-  "max_estimates_per_month": 100,
-  "max_tickets_per_month": 100,
-  "ai_requests_per_month": 500,
-  "custom_reports": true
-}
+**Tenant:**
 ```
-
-### Enterprise Plan (€249/mese)
-```json
-{
-  "max_users": null,
-  "max_projects": null,
-  "max_storage_gb": 100,
-  "max_estimates_per_month": null,
-  "max_tickets_per_month": null,
-  "ai_requests_per_month": 2000,
-  "custom_reports": true,
-  "api_access": true,
-  "priority_support": true,
-  "white_label": true
-}
+🏢 Tenant Workspace: Rossi Costruzioni
+Isolato • Solo dati aziendali ✓
 ```
 
 ---
 
-## 13. Monitoring & Analytics
+## Best Practices
 
-### Metrics to Track
-- **MRR (Monthly Recurring Revenue)**: Somma di tutte le subscription attive
-- **Churn Rate**: Cancellazioni / totale subscription
-- **Usage per Tenant**: Quota consumption per azienda
-- **Active Users**: MAU/DAU per company
+### ✅ DO
 
-### Alerts
-- Quota superata (>90% utilizzo)
-- Subscription in scadenza
-- Trial in scadenza (3 giorni prima)
+1. Usare SEMPRE `TenantFilter` per query
+2. Verificare `company_id` in backend functions
+3. Mostrare contesto attivo (ContextBanner)
+4. Filtrare menu per moduli abilitati
+5. Audit regolari con TenantIntegrityAudit
 
----
+### ❌ DON'T
 
-## 14. Next Steps
-
-### Phase 1 (Completed)
-- ✅ Multi-tenant entity schema
-- ✅ Company isolation
-- ✅ Subscription plans
-- ✅ Usage tracking
-- ✅ Quota enforcement
-
-### Phase 2 (TODO)
-- [ ] Stripe integration completa
-- [ ] Webhook handling per billing events
-- [ ] Email notifications (trial expiry, quota warnings)
-- [ ] Admin dashboard per platform metrics
-- [ ] Self-service upgrade/downgrade
-
-### Phase 3 (Future)
-- [ ] White-label customization
-- [ ] Custom domains per company
-- [ ] API rate limiting per tenant
-- [ ] Advanced analytics per company
-- [ ] Reseller/multi-brand support
+1. Usare `base44.entities.X.list()` senza filtri
+2. Permettere tenant switching a utenti tenant
+3. Mischiare moduli con tenant (Guardian ≠ tenant)
+4. Mostrare dati cross-tenant
+5. Hardcodare company_id
 
 ---
 
-**Codex OS è ora pronto per la distribuzione commerciale multi-tenant.**
+## Migration Notes
+
+### Da vecchio sistema a nuovo:
+
+1. **Rimuovere BrandSelector finto**
+2. **Aggiungere TenantProvider** in App.jsx
+3. **Sostituire WorkspaceSwitcher** con TenantSwitcher
+4. **Aggiornare getUserFilters** per platform mode
+5. **Audit integrity** e fix dati orfani
+
+---
+
+## File Structure
+
+```
+components/tenant/
+  ├── TenantContext.jsx      # Contesto attivo
+  ├── TenantSwitcher.jsx     # Solo platform users
+  └── ContextBanner.jsx      # Header indicator
+
+lib/
+  └── tenantFilter.js        # Middleware isolation
+
+pages/
+  └── TenantIntegrityAudit.jsx
+
+functions/
+  └── getUserFilters.js      # RLS filters
+```
+
+---
+
+## Summary
+
+**Prima:**
+- ❌ Brand selector finto (Codex Solution/Living/Guardian)
+- ❌ Nessun isolamento tenant
+- ❌ Moduli mischiati con tenant
+- ❌ Menu ibrido platform/tenant
+
+**Adesso:**
+- ✅ Tenant context engine reale
+- ✅ Isolamento dati per company_id
+- ✅ Platform vs Tenant separation
+- ✅ Moduli abilitati da piano SaaS
+- ✅ Tenant switching solo admin
+- ✅ Integrity audit automatico
+
+Codex OS è ora una **vera piattaforma enterprise multi-tenant SaaS**.

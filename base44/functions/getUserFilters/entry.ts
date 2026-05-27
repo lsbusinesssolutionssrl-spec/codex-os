@@ -13,9 +13,56 @@ Deno.serve(async (req) => {
     const users = await base44.entities.User.filter({ email: user.email });
     const company_id = users[0]?.company_id || null;
 
-    // STRICT ROLE-BASED FILTERS
-    // Admin/Company Admin: full access within company
-    if (user.role === 'admin' || user.role === 'company_admin') {
+    // PLATFORM MODE: Super Admin / Developer
+    // No default filters - they can access all tenants via tenant switcher
+    if (user.role === 'admin' || user.role === 'developer') {
+      // Check if impersonating a specific tenant
+      const impersonateId = req.headers.get('x-impersonate-tenant-id');
+      
+      if (impersonateId) {
+        // Admin is viewing a specific tenant's data
+        return Response.json({
+          filters: {
+            Project: { company_id: impersonateId },
+            Estimate: { company_id: impersonateId },
+            Client: { company_id: impersonateId },
+            Property: { company_id: impersonateId },
+            Document: { company_id: impersonateId },
+            SupportTicket: { company_id: impersonateId },
+            GuardianSubscription: { company_id: impersonateId },
+            ChecklistItem: { company_id: impersonateId },
+            ProjectCost: { company_id: impersonateId },
+            Timesheet: { company_id: impersonateId },
+            PurchaseOrder: { company_id: impersonateId },
+            Supplier: { company_id: impersonateId },
+            KnowledgeBase: { company_id: impersonateId },
+            ProjectLearning: { company_id: impersonateId },
+            IntelligenceInsight: { company_id: impersonateId },
+            EstimatePreset: { company_id: impersonateId },
+            FinancialAlert: { company_id: impersonateId },
+          },
+          is_impersonating: true,
+          impersonated_tenant_id: impersonateId,
+        });
+      }
+      
+      // Platform mode - no filters, can see all tenants
+      return Response.json({
+        filters: {},
+        is_platform_mode: true,
+      });
+    }
+
+    // TENANT MODE: All other roles belong to a specific company
+    if (!company_id) {
+      return Response.json({ 
+        error: 'Tenant user must have company_id',
+        filters: {}
+      }, { status: 403 });
+    }
+
+    // Company Admin: full access within their company
+    if (user.role === 'company_admin') {
       return Response.json({
         filters: {
           Project: { company_id },
