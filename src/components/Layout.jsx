@@ -20,12 +20,14 @@ import LayoutInspector from './LayoutInspector';
 
 // Tenant navigation - modules enabled dynamically based on plan
 const TENANT_NAV_ITEMS = [
-  { path: '/', icon: LayoutDashboard, label: 'Command Center', module: 'core' },
+  { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard', module: 'core' },
   { path: '/clients', label: 'Clienti', icon: Users, module: 'core' },
   { path: '/projects', label: 'Progetti', icon: FolderKanban, module: 'core' },
-  { path: '/properties', label: 'Home Passport', icon: Home, module: 'core' },
+  { path: '/properties', label: 'Immobili', icon: Home, module: 'core' },
   { path: '/estimates', label: 'Preventivi', icon: FileText, module: 'core' },
   { path: '/documents', label: 'Documenti', icon: Archive, module: 'core' },
+  { path: '/admin/team', label: 'Team & Ruoli', icon: Users2, module: 'core' },
+  { path: '/admin/modules', label: 'Moduli Attivi', icon: Zap, module: 'core' },
   { path: '/guardian', label: 'Guardian', icon: Shield, module: 'guardian' },
   { path: '/financial-control', label: 'Controllo Finanziario', icon: TrendingUp, module: 'financial_control' },
   { path: '/ai', label: 'AI Copilot', icon: Bot, module: 'ai_copilot' },

@@ -125,6 +125,9 @@ import ModuleActivationManager from './pages/ModuleActivationManager';
 import BusinessIntelligence from './pages/BusinessIntelligence';
 import Insights from './pages/Insights';
 import TeamPerformance from './pages/TeamPerformance';
+import TenantAdminDashboard from './pages/TenantAdminDashboard';
+import TeamManagement from './pages/TeamManagement';
+import ModuleManagement from './pages/ModuleManagement';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -155,8 +158,11 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<WorkspaceRouter />} />
-      <Route path="/dashboard" element={<WorkspaceRouter />} />
-      <Route path="/request-demo" element={<RequestDemo />} />
+        <Route path="/dashboard" element={<WorkspaceRouter />} />
+        <Route path="/admin/dashboard" element={<TenantAdminDashboard />} />
+        <Route path="/admin/team" element={<TeamManagement />} />
+        <Route path="/admin/modules" element={<ModuleManagement />} />
+        <Route path="/request-demo" element={<RequestDemo />} />
       <Route path="/product-analytics" element={<ProductAnalytics />} />
       <Route path="/platform-health" element={<PlatformHealth />} />
       <Route path="/daily-operations" element={<DailyOperations />} />

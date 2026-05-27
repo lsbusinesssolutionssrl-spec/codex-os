@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useGlobalContext } from '@/lib/GlobalContextEngine';
 import SuperAdminWorkspace from '@/components/workspace/SuperAdminWorkspace';
 import ExecutiveWorkspace from '@/components/workspace/ExecutiveWorkspace';
@@ -6,9 +7,18 @@ import TechnicianWorkspace from '@/components/workspace/TechnicianWorkspace';
 import SalesWorkspace from '@/components/workspace/SalesWorkspace';
 import FinancialWorkspace from '@/components/workspace/FinancialWorkspace';
 import GuardianWorkspace from '@/components/workspace/GuardianWorkspace';
+import { useEffect } from 'react';
 
 export default function WorkspaceRouter() {
-  const { workspaceType, loading } = useGlobalContext();
+  const { workspaceType, loading, activeTenantRole } = useGlobalContext();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Redirect Tenant Admin to dedicated console
+    if (activeTenantRole === 'tenant_admin' && !loading) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [activeTenantRole, loading, navigate]);
 
   if (loading) {
     return (
@@ -18,6 +28,7 @@ export default function WorkspaceRouter() {
     );
   }
 
+  // Tenant Admin redirected, show workspaces for other roles
   switch (workspaceType) {
     case 'super_admin':
       return <SuperAdminWorkspace />;
