@@ -4,8 +4,11 @@ import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
+
 export default function CompanySettings() {
   const navigate = useNavigate();
+  const globalContext = useGlobalContext();
   const [user, setUser] = useState(null);
   const [company, setCompany] = useState(null);
   const [subscription, setSubscription] = useState(null);
@@ -16,6 +19,7 @@ export default function CompanySettings() {
   const [form, setForm] = useState({});
   const [logoFile, setLogoFile] = useState(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const { tenantMemberships } = globalContext;
 
   useEffect(() => {
     const load = async () => {
@@ -156,22 +160,83 @@ export default function CompanySettings() {
     );
   }
 
-  if (!company) return (
-    <div className="p-6 max-w-md mx-auto mt-20 bg-white rounded-2xl border border-gray-200 shadow-lg text-center space-y-4">
-      <Building2 className="w-12 h-12 text-gray-300 mx-auto" />
-      <h2 className="font-bold text-gray-900">Company Non Trovata</h2>
-      <p className="text-sm text-gray-500">
-        Il tuo utente non è associato a nessuna company. Contatta l'amministratore per creare o assegnare una company.
-      </p>
-      <button 
-        onClick={() => base44.auth.logout()} 
-        className="px-4 py-2 text-sm text-white rounded-lg font-medium"
-        style={{ backgroundColor: '#1147FF' }}
-      >
-        Logout
-      </button>
-    </div>
-  );
+  if (!company) {
+    // Check if user has memberships but company settings missing
+    const hasMembership = tenantMemberships && tenantMemberships.length > 0;
+    const activeMembership = tenantMemberships?.find(m => m.is_primary) || tenantMemberships?.[0];
+    
+    if (hasMembership && activeMembership) {
+      // User has membership but company settings incomplete - show wizard
+      return (
+        <div className="p-6 max-w-2xl mx-auto mt-10 space-y-6">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 text-center space-y-4">
+            <Building2 className="w-12 h-12 text-orange-400 mx-auto" />
+            <h2 className="font-bold text-gray-900">Configurazione Company Incompleta</h2>
+            <p className="text-sm text-gray-500">
+              Il tuo utente è associato al tenant <strong>{activeMembership.tenant_id}</strong> ma le impostazioni company non sono state completate.
+            </p>
+            <button 
+              onClick={() => window.location.href = '/activation-wizard'} 
+              className="px-4 py-2 text-sm text-white rounded-lg font-medium"
+              style={{ backgroundColor: '#1147FF' }}
+            >
+              Completa Configurazione
+            </button>
+          </div>
+        </div>
+      );
+    }
+    
+    // No membership - show repair option for admins
+    if (user?.role === 'admin') {
+      return (
+        <div className="p-6 max-w-2xl mx-auto mt-10 space-y-6">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+            <h2 className="font-bold text-gray-900 flex items-center gap-2">
+              <Shield className="w-6 h-6" />
+              Ripristino Tenant Membership
+            </h2>
+            <p className="text-sm text-gray-500">
+              Il tuo utente admin non ha una TenantMembership attiva. Usa il pannello di riparazione per collegarti a un tenant esistente.
+            </p>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => window.location.href = '/tenant-membership-repair'} 
+                className="px-4 py-2 text-sm text-white rounded-lg font-medium"
+                style={{ backgroundColor: '#F59E0B' }}
+              >
+                Apri Repair Center
+              </button>
+              <button 
+                onClick={() => window.location.href = '/super-admin'} 
+                className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
+              >
+                Super Admin Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // Regular user with no membership - contact admin
+    return (
+      <div className="p-6 max-w-md mx-auto mt-20 bg-white rounded-2xl border border-gray-200 shadow-lg text-center space-y-4">
+        <Building2 className="w-12 h-12 text-gray-300 mx-auto" />
+        <h2 className="font-bold text-gray-900">Company Non Trovata</h2>
+        <p className="text-sm text-gray-500">
+          Il tuo utente non è associato a nessuna company. Contatta l'amministratore per creare o assegnare una company.
+        </p>
+        <button 
+          onClick={() => base44.auth.logout()} 
+          className="px-4 py-2 text-sm text-white rounded-lg font-medium"
+          style={{ backgroundColor: '#1147FF' }}
+        >
+          Logout
+        </button>
+      </div>
+    );
+  }
 
   const tabs = [
     { id: 'general', label: 'Generale', icon: Building2 },
