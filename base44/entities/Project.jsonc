@@ -142,10 +142,16 @@
         "type": "object"
       },
       "title": "Milestones"
+    },
+    "is_sample": {
+      "type": "boolean",
+      "title": "Sample Data",
+      "default": false
     }
   },
   "required": [
     "title",
-    "client_id"
+    "client_id",
+    "property_id"
   ]
 }

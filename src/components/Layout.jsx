@@ -45,6 +45,14 @@ const PLATFORM_NAV_ITEMS = [
   { path: '/product-analytics', icon: TrendingUp, label: 'Analytics' },
 ];
 
+const NAV_BY_ROLE = {
+  admin: null, // all
+  project_manager: ['/', '/projects', '/checklists', '/documents', '/calendar', '/report', '/team'],
+  technician: ['/', '/projects', '/checklists', '/tickets'],
+  sales: ['/', '/clients', '/properties', '/estimates', '/documents'],
+  client: [],
+};
+
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -55,20 +63,12 @@ export default function Layout() {
   const { activeTenant, isPlatformMode, loading: tenantLoading } = useTenant();
   const [userRole, setUserRole] = useState(null);
 
+  // All hooks must be called unconditionally at the top
   useEffect(() => {
     base44.auth.me().then(u => {
       setUserRole(u?.role);
     }).catch(() => {});
   }, []);
-
-  // Show loading while tenant context initializes
-  if (tenantLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -92,29 +92,28 @@ export default function Layout() {
       return;
     }
     const allowed = NAV_BY_ROLE[userRole];
-    if (!allowed) return; // admin: tutto permesso
+    if (!allowed) return;
     const ok = allowed.some(p => p === '/' ? location.pathname === '/' : location.pathname.startsWith(p));
     if (!ok) navigate('/', { replace: true });
   }, [userRole, location.pathname]);
 
-  const NAV_BY_ROLE = {
-    admin: null, // all
-    project_manager: ['/', '/projects', '/checklists', '/documents', '/calendar', '/report', '/team'],
-    technician: ['/', '/projects', '/checklists', '/tickets'],
-    sales: ['/', '/clients', '/properties', '/estimates', '/documents'],
-    client: [],
-  };
+  // Show loading while tenant context initializes
+  if (tenantLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   const allowedPaths = userRole ? NAV_BY_ROLE[userRole] : null;
   
   // Determine which navigation to use
   const visibleNav = isPlatformMode ? PLATFORM_NAV_ITEMS : TENANT_NAV_ITEMS.filter(item => {
-    // Check if module is enabled for this tenant
     if (item.module && item.module !== 'core') {
       // Module-based items only appear if enabled
-      // For now, show all - will be filtered by enabledModules in future
     }
     
-    // Check role-based access
     if (allowedPaths && !allowedPaths.includes(item.path)) {
       return false;
     }
@@ -128,7 +127,6 @@ export default function Layout() {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Context Banner - shows Platform vs Tenant mode */}
       <ContextBanner />
       
       {sidebarOpen && (
@@ -174,7 +172,6 @@ export default function Layout() {
             )}
           </div>
           
-          {/* Context indicator */}
           <div className="text-xs text-white/40 border-t border-white/10 pt-2 mt-2">
             {isPlatformMode ? (
               <div className="flex items-center gap-1.5">
@@ -229,7 +226,6 @@ export default function Layout() {
             <span className="text-xs text-white/80 border border-white/30 px-1.5 py-0.5 rounded">⌘N</span>
           </button>
           <div className="flex-1" />
-          {/* Show active tenant context */}
           {isPlatformMode && <TenantSwitcher />}
           {!isPlatformMode && activeTenant && (
             <div className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 bg-gray-100 rounded-lg">

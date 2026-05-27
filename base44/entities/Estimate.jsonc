@@ -201,6 +201,11 @@
         "type": "string"
       },
       "title": "Survey Photos"
+    },
+    "is_sample": {
+      "type": "boolean",
+      "title": "Sample Data",
+      "default": false
     }
   },
   "required": [

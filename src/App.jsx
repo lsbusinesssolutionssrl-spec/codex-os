@@ -114,6 +114,7 @@ import BrandApprovalQueue from './pages/BrandApprovalQueue';
 import PlatformSettings from './pages/PlatformSettings';
 import SaasPlansAdmin from './pages/SaasPlansAdmin';
 import TenantIntegrityAudit from './pages/TenantIntegrityAudit';
+import TenantIsolationAudit from './pages/TenantIntegrityAudit';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -248,6 +249,7 @@ const AuthenticatedApp = () => {
       <Route path="/platform-settings" element={<PlatformSettings />} />
       <Route path="/saas-plans-admin" element={<SaasPlansAdmin />} />
       <Route path="/tenant-integrity" element={<TenantIntegrityAudit />} />
+      <Route path="/tenant-isolation-audit" element={<TenantIsolationAudit />} />
 
       </Route>
       <Route element={<PortalLayout />}>

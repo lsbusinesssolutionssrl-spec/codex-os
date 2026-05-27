@@ -313,6 +313,19 @@ export default function SuperAdminDashboard() {
           </div>
           <p className="text-sm text-gray-500">Visualizza metriche utilizzo e salute tenant</p>
         </button>
+
+        <button
+          onClick={() => navigate('/tenant-isolation-audit')}
+          className="p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-all text-left"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10B981' }}>
+              <Shield className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="font-semibold text-gray-900">Tenant Isolation Audit</h3>
+          </div>
+          <p className="text-sm text-gray-500">Verifica integrità dati e isolamento tenant</p>
+        </button>
       </div>
     </div>
   );

@@ -47,6 +47,11 @@
         "Existing Client"
       ]
     },
+    "is_sample": {
+      "type": "boolean",
+      "title": "Sample Data",
+      "default": false
+    },
     "notes": {
       "type": "string",
       "title": "Notes"

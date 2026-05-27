@@ -61,46 +61,57 @@ Deno.serve(async (req) => {
       }, { status: 403 });
     }
 
+    // Check if this is a demo tenant
+    const currentCompany = await base44.entities.Company.get(company_id);
+    const isDemoTenant = currentCompany?.slug?.includes('demo') || 
+                         currentCompany?.name?.toLowerCase().includes('demo') ||
+                         currentCompany?.demo_mode === true;
+
     // Company Admin: full access within their company
     if (user.role === 'company_admin') {
+      // CRITICAL: Exclude sample data from real tenants
+      const sampleFilter = isDemoTenant ? {} : { is_sample: { $ne: true } };
+      
       return Response.json({
         filters: {
-          Project: { company_id },
-          Estimate: { company_id },
-          Client: { company_id },
-          Property: { company_id },
-          Document: { company_id },
-          SupportTicket: { company_id },
-          GuardianSubscription: { company_id },
-          ChecklistItem: { company_id },
-          ProjectCost: { company_id },
-          Timesheet: { company_id },
-          PurchaseOrder: { company_id },
-          Supplier: { company_id },
-          KnowledgeBase: { company_id },
-          ProjectLearning: { company_id },
-          IntelligenceInsight: { company_id },
-          EstimatePreset: { company_id },
-          FinancialAlert: { company_id },
+          Project: { company_id, ...sampleFilter },
+          Estimate: { company_id, ...sampleFilter },
+          Client: { company_id, ...sampleFilter },
+          Property: { company_id, ...sampleFilter },
+          Document: { company_id, ...sampleFilter },
+          SupportTicket: { company_id, ...sampleFilter },
+          GuardianSubscription: { company_id, ...sampleFilter },
+          ChecklistItem: { company_id, ...sampleFilter },
+          ProjectCost: { company_id, ...sampleFilter },
+          Timesheet: { company_id, ...sampleFilter },
+          PurchaseOrder: { company_id, ...sampleFilter },
+          Supplier: { company_id, ...sampleFilter },
+          KnowledgeBase: { company_id, ...sampleFilter },
+          ProjectLearning: { company_id, ...sampleFilter },
+          IntelligenceInsight: { company_id, ...sampleFilter },
+          EstimatePreset: { company_id, ...sampleFilter },
+          FinancialAlert: { company_id, ...sampleFilter },
         }
       });
     }
 
     // Project Manager: full project access, NO company settings/financial dashboards
     if (user.role === 'project_manager') {
+      const sampleFilter = isDemoTenant ? {} : { is_sample: { $ne: true } };
+      
       return Response.json({
         filters: {
-          Project: { company_id },
-          Estimate: { company_id },
-          Client: { company_id },
-          Property: { company_id },
-          Document: { company_id },
-          SupportTicket: { company_id },
-          GuardianSubscription: { company_id },
-          ChecklistItem: { company_id },
-          ProjectCost: { company_id },
-          Timesheet: { company_id },
-          PurchaseOrder: { company_id },
+          Project: { company_id, ...sampleFilter },
+          Estimate: { company_id, ...sampleFilter },
+          Client: { company_id, ...sampleFilter },
+          Property: { company_id, ...sampleFilter },
+          Document: { company_id, ...sampleFilter },
+          SupportTicket: { company_id, ...sampleFilter },
+          GuardianSubscription: { company_id, ...sampleFilter },
+          ChecklistItem: { company_id, ...sampleFilter },
+          ProjectCost: { company_id, ...sampleFilter },
+          Timesheet: { company_id, ...sampleFilter },
+          PurchaseOrder: { company_id, ...sampleFilter },
           // NO access to: Supplier, KnowledgeBase, FinancialAlert, IntelligenceInsight
         },
         restricted_entities: ['Supplier', 'KnowledgeBase', 'FinancialAlert', 'IntelligenceInsight', 'EstimatePreset']
@@ -109,27 +120,32 @@ Deno.serve(async (req) => {
 
     // Technician: ONLY assigned projects/tasks/tickets - NO financial data
     if (user.role === 'technician') {
+      const sampleFilter = isDemoTenant ? {} : { is_sample: { $ne: true } };
+      
       const myProjects = await base44.entities.Project.filter({
         company_id,
+        ...sampleFilter,
         $or: [
           { created_by: user.email },
           { team_members: user.email }
         ]
       });
-      const myProjectIds = myProjects.map(p => p.id);
+      const myProjectIds = myProjectIds.map(p => p.id);
 
       return Response.json({
         filters: {
-          Project: { id: myProjectIds.length > 0 ? { $in: myProjectIds } : null },
+          Project: { id: myProjectIds.length > 0 ? { $in: myProjectIds } : null, ...sampleFilter },
           ChecklistItem: {
             $or: [
               { assigned_person: user.email },
               { created_by: user.email },
               { project_id: myProjectIds.length > 0 ? { $in: myProjectIds } : null }
-            ]
+            ],
+            company_id,
+            ...sampleFilter
           },
-          SupportTicket: { assigned_technician: user.email },
-          Document: { project_id: myProjectIds.length > 0 ? { $in: myProjectIds } : null },
+          SupportTicket: { assigned_technician: user.email, company_id, ...sampleFilter },
+          Document: { project_id: myProjectIds.length > 0 ? { $in: myProjectIds } : null, company_id, ...sampleFilter },
           // NO access to: Client, Property, Estimate, GuardianSubscription, ProjectCost, Timesheet, PurchaseOrder, Supplier
         },
         restricted_entities: ['Client', 'Property', 'Estimate', 'GuardianSubscription', 'ProjectCost', 'Timesheet', 'PurchaseOrder', 'Supplier', 'KnowledgeBase', 'FinancialAlert', 'IntelligenceInsight', 'EstimatePreset']
@@ -138,13 +154,15 @@ Deno.serve(async (req) => {
 
     // Sales: Clients, Properties, Estimates - NO project financials
     if (user.role === 'sales') {
+      const sampleFilter = isDemoTenant ? {} : { is_sample: { $ne: true } };
+      
       return Response.json({
         filters: {
-          Client: { company_id },
-          Property: { company_id },
-          Estimate: { company_id },
-          Document: { company_id },
-          Project: { company_id, created_by: user.email }, // Only projects from their estimates
+          Client: { company_id, ...sampleFilter },
+          Property: { company_id, ...sampleFilter },
+          Estimate: { company_id, ...sampleFilter },
+          Document: { company_id, ...sampleFilter },
+          Project: { company_id, created_by: user.email, ...sampleFilter },
           // NO access to: ProjectCost, Timesheet, PurchaseOrder, Supplier, FinancialAlert
         },
         restricted_entities: ['ProjectCost', 'Timesheet', 'PurchaseOrder', 'Supplier', 'FinancialAlert', 'IntelligenceInsight']
@@ -178,17 +196,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Default: company_id filter only
+    // Default: company_id filter only (with sample data exclusion)
+    const sampleFilter = isDemoTenant ? {} : { is_sample: { $ne: true } };
+    
     return Response.json({
       filters: {
-        Project: { company_id },
-        Estimate: { company_id },
-        Client: { company_id },
-        Property: { company_id },
-        Document: { company_id },
-        SupportTicket: { company_id },
-        GuardianSubscription: { company_id },
-        ChecklistItem: { company_id },
+        Project: { company_id, ...sampleFilter },
+        Estimate: { company_id, ...sampleFilter },
+        Client: { company_id, ...sampleFilter },
+        Property: { company_id, ...sampleFilter },
+        Document: { company_id, ...sampleFilter },
+        SupportTicket: { company_id, ...sampleFilter },
+        GuardianSubscription: { company_id, ...sampleFilter },
+        ChecklistItem: { company_id, ...sampleFilter },
       }
     });
   } catch (error) {

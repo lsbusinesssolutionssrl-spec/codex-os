@@ -71,8 +71,18 @@
         "fiscal_year_start": {
           "type": "string",
           "default": "01/01"
+        },
+        "demo_mode": {
+          "type": "boolean",
+          "default": false,
+          "title": "Demo Mode (show sample data)"
         }
       }
+    },
+    "demo_mode": {
+      "type": "boolean",
+      "default": false,
+      "title": "Demo Mode"
     },
     "status": {
       "type": "string",
