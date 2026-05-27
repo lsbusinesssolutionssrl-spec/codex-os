@@ -153,6 +153,24 @@ Deno.serve(async (req) => {
     if (focusedEstimate) focusedEstimate = sanitizeForRole(focusedEstimate, role);
   }
 
+  // ── CONTEXT ENGINE — Phase 3: RAG Retrieval ──────────────────
+  // Search indexed chunks for relevant context before answering
+  let ragChunks = [];
+  let ragContext = '';
+  try {
+    const ragResult = await base44.functions.invoke('ragSearch', {
+      query: message,
+      top_k: 6,
+      min_score: 0.12,
+      project_id: hintProjectId || null,
+      client_id: hintClientId || null,
+      property_id: hintPropertyId || null,
+    });
+    ragChunks = ragResult?.results || [];
+    ragContext = ragResult?.rag_context || '';
+    if (ragChunks.length) contextEntityList.push('rag_documents');
+  } catch { /* RAG non bloccante */ }
+
   const sanitizedProjects = projects.map(p => sanitizeForRole(p, role));
   const sanitizedEstimates = estimates.map(e => sanitizeForRole(e, role));
 
@@ -299,11 +317,10 @@ ${intelligenceInsights.map(i => `• [${i.severity}] ${i.insight_type}: ${i.titl
 MANUTENZIONI PROGRAMMATE:
 ${maintenance.map(m => `• ${m.title} — Scadenza: ${m.next_due_date || '—'} — Tecnico: ${m.assigned_technician || '—'}`).join('\n') || 'Nessuna manutenzione.'}
 
+DOCUMENTI INDICIZZATI (RAG) — ${ragChunks.length} frammenti rilevanti recuperati:
+${ragContext || 'Nessun documento indicizzato corrisponde alla domanda.'}
+
 AI MEMORY (${memories.length} memorie — scoped a questo contesto):
-${memories.length > 0 ? memories.map(m => {
-  const links = [m.client_id && 'cli:'+m.client_id.slice(-6), m.project_id && 'prj:'+m.project_id.slice(-6), m.property_id && 'prop:'+m.property_id.slice(-6)].filter(Boolean).join('|');
-  return `• [${m.memory_type}${links ? ' → '+links : ''}] ${m.title}: ${truncate(m.content, 200)}`;
-}).join('\n') : 'Nessuna memoria per questo contesto.'}
 
 KNOWLEDGE BASE (${knowledge.length} articoli):
 ${knowledge.map(k => `• [${k.category}] ${k.title}: Prob: ${truncate(k.problem, 80)} → Sol: ${truncate(k.solution, 80)}`).join('\n') || 'Nessun articolo KB.'}
@@ -316,6 +333,7 @@ Rispondi SEMPRE in italiano, in modo preciso, operativo e conciso.
 Quando suggerisci azioni, elencale chiaramente come azioni confermate dall'utente.
 Cita le fonti dai dati interni quando pertinente (es. "Dal progetto X...", "Secondo il ticket Y...").
 Se non hai dati sufficienti, dillo chiaramente invece di inventare.
+Se citi informazioni da documenti indicizzati (RAG), indica la fonte con [Fonte: tipo - titolo].
 
 USO MEMORIA:
 - Le memorie sono ordinate per rilevanza e scoped al contesto attuale.

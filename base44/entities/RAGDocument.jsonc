@@ -1,0 +1,133 @@
+{
+  "name": "RAGDocument",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company (Tenant)"
+    },
+    "source_type": {
+      "type": "string",
+      "title": "Tipo Sorgente",
+      "enum": [
+        "pdf",
+        "contract",
+        "estimate",
+        "certification",
+        "manual",
+        "sop",
+        "home_passport",
+        "project_notes",
+        "comment",
+        "ticket",
+        "image_metadata",
+        "knowledge_base",
+        "checklist"
+      ]
+    },
+    "source_id": {
+      "type": "string",
+      "title": "ID Entit\u00e0 Sorgente"
+    },
+    "source_title": {
+      "type": "string",
+      "title": "Titolo Documento Sorgente"
+    },
+    "source_url": {
+      "type": "string",
+      "title": "URL File Originale"
+    },
+    "chunk_index": {
+      "type": "number",
+      "title": "Indice Chunk",
+      "default": 0
+    },
+    "chunk_total": {
+      "type": "number",
+      "title": "Totale Chunks",
+      "default": 1
+    },
+    "chunk_text": {
+      "type": "string",
+      "title": "Testo Chunk"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Parole Chiave (per keyword search)"
+    },
+    "embedding_vector": {
+      "type": "string",
+      "title": "Embedding Vector (placeholder \u2014 JSON serialized float[])"
+    },
+    "embedding_model": {
+      "type": "string",
+      "title": "Modello Embedding",
+      "default": "none"
+    },
+    "client_id": {
+      "type": "string",
+      "title": "Cliente"
+    },
+    "property_id": {
+      "type": "string",
+      "title": "Propriet\u00e0"
+    },
+    "project_id": {
+      "type": "string",
+      "title": "Progetto"
+    },
+    "language": {
+      "type": "string",
+      "title": "Lingua",
+      "default": "it"
+    },
+    "relevance_boost": {
+      "type": "number",
+      "title": "Relevance Boost (0-2)",
+      "default": 1.0,
+      "minimum": 0,
+      "maximum": 2
+    },
+    "is_indexed": {
+      "type": "boolean",
+      "title": "Indicizzato",
+      "default": false
+    },
+    "index_date": {
+      "type": "string",
+      "title": "Data Indicizzazione"
+    },
+    "metadata": {
+      "type": "object",
+      "title": "Metadati Extra",
+      "properties": {
+        "page_number": {
+          "type": "number"
+        },
+        "section": {
+          "type": "string"
+        },
+        "doc_date": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "file_size_kb": {
+          "type": "number"
+        },
+        "image_description": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": [
+    "source_type",
+    "source_id",
+    "chunk_text"
+  ]
+}
