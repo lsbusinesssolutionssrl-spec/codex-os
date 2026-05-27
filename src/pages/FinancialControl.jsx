@@ -39,23 +39,32 @@ export default function FinancialControl() {
     
     const load = async () => {
       try {
+        const user = await base44.auth.me();
+        const companyRes = await base44.functions.invoke('getCurrentCompany', {});
+        const companyId = companyRes.data.company?.id;
+
         const [projs, projectCosts, financialAlerts] = await Promise.all([
           base44.entities.Project.list(),
           base44.entities.ProjectCost.list(),
           base44.entities.FinancialAlert.filter({ resolved: false }).catch(() => []),
         ]);
 
-        setProjects(projs);
-        setCosts(projectCosts);
-        setAlerts(financialAlerts);
+        // Filter by company_id if available
+        const filteredProjects = companyId ? projs.filter(p => p.company_id === companyId) : projs;
+        const filteredCosts = companyId ? projectCosts.filter(c => c.company_id === companyId) : projectCosts;
+        const filteredAlerts = companyId ? financialAlerts.filter(a => a.company_id === companyId) : financialAlerts;
+
+        setProjects(filteredProjects);
+        setCosts(filteredCosts);
+        setAlerts(filteredAlerts);
 
         // Calculate stats
-        const totalRevenue = projs.reduce((sum, p) => sum + (p.contract_value || 0), 0);
-        const totalCosts = projectCosts.reduce((sum, c) => sum + (c.total_cost || 0), 0);
+        const totalRevenue = filteredProjects.reduce((sum, p) => sum + (p.contract_value || 0), 0);
+        const totalCosts = filteredCosts.reduce((sum, c) => sum + (c.total_cost || 0), 0);
         const totalMargin = totalRevenue - totalCosts;
         const avgMarginPct = totalRevenue > 0 ? ((totalMargin / totalRevenue) * 100) : 0;
-        const projectsInProfit = projs.filter(p => {
-          const pCosts = projectCosts.filter(c => c.project_id === p.id).reduce((sum, c) => sum + (c.total_cost || 0), 0);
+        const projectsInProfit = filteredProjects.filter(p => {
+          const pCosts = filteredCosts.filter(c => c.project_id === p.id).reduce((sum, c) => sum + (c.total_cost || 0), 0);
           return (p.contract_value || 0) > pCosts;
         }).length;
 
@@ -65,7 +74,7 @@ export default function FinancialControl() {
           totalMargin,
           avgMarginPct: avgMarginPct.toFixed(1),
           projectsInProfit,
-          projectsInLoss: projs.length - projectsInProfit,
+          projectsInLoss: filteredProjects.length - projectsInProfit,
         });
       } catch (error) {
         console.error('Error loading financial data:', error);

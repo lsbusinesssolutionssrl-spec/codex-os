@@ -46,6 +46,10 @@ export default function CEODashboard() {
     
     const load = async () => {
       try {
+        const user = await base44.auth.me();
+        const companyRes = await base44.functions.invoke('getCurrentCompany', {});
+        const companyId = companyRes.data.company?.id;
+
         const [projects, estimates, guardians, costs, projectCosts] = await Promise.all([
           base44.entities.Project.list(),
           base44.entities.Estimate.list(),
@@ -54,24 +58,31 @@ export default function CEODashboard() {
           base44.entities.ProjectCost.list(),
         ]);
 
+        // Filter by company_id if available
+        const filteredProjects = companyId ? projects.filter(p => p.company_id === companyId) : projects;
+        const filteredEstimates = companyId ? estimates.filter(e => e.company_id === companyId) : estimates;
+        const filteredGuardians = companyId ? guardians.filter(g => g.company_id === companyId) : guardians;
+        const filteredCosts = companyId ? costs.filter(c => c.company_id === companyId) : costs;
+        const filteredProjectCosts = companyId ? projectCosts.filter(c => c.company_id === companyId) : projectCosts;
+
       // Monthly calculations (current month)
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
       
-      const monthlyRevenue = projects
+      const monthlyRevenue = filteredProjects
         .filter(p => p.start_date && new Date(p.start_date).getMonth() === currentMonth)
         .reduce((sum, p) => sum + (p.contract_value || 0), 0);
       
-      const monthlyCollections = projects
+      const monthlyCollections = filteredProjects
         .filter(p => p.payment_collected)
         .reduce((sum, p) => sum + (p.payment_collected || 0), 0);
 
       // Project stats
-      const projectsInProgress = projects.filter(p => p.status === 'In Progress').length;
+      const projectsInProgress = filteredProjects.filter(p => p.status === 'In Progress').length;
       
       // Calculate margins for each project
-      const projectsWithMargin = projects.map(p => {
-        const projectCosts = costs.filter(c => c.project_id === p.id).reduce((sum, c) => sum + (c.total_cost || 0), 0);
+      const projectsWithMargin = filteredProjects.map(p => {
+        const projectCosts = filteredCosts.filter(c => c.project_id === p.id).reduce((sum, c) => sum + (c.total_cost || 0), 0);
         const margin = (p.contract_value || 0) - projectCosts;
         const marginPct = (p.contract_value || 0) > 0 ? ((margin / p.contract_value) * 100) : 0;
         return { ...p, margin, marginPct };
@@ -88,7 +99,7 @@ export default function CEODashboard() {
       const worstProject = sortedByMargin[sortedByMargin.length - 1];
 
       // Guardian MRR/ARR
-      const guardianMRR = guardians.reduce((sum, g) => sum + (g.monthly_price || 0), 0);
+      const guardianMRR = filteredGuardians.reduce((sum, g) => sum + (g.monthly_price || 0), 0);
       const guardianARR = guardianMRR * 12;
 
       // Cash Flow calculations
@@ -97,11 +108,11 @@ export default function CEODashboard() {
       const days60 = new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000);
       const days90 = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000);
 
-      const calcIncoming = (endDate) => projects
+      const calcIncoming = (endDate) => filteredProjects
         .filter(p => p.expected_end_date && new Date(p.expected_end_date) <= endDate)
         .reduce((sum, p) => sum + ((p.contract_value || 0) - (p.payment_collected || 0)), 0);
 
-      const calcOutgoing = (endDate) => projectCosts
+      const calcOutgoing = (endDate) => filteredProjectCosts
         .filter(c => c.date && new Date(c.date) <= endDate && !c.paid)
         .reduce((sum, c) => sum + (c.total_cost || 0), 0);
 
@@ -112,12 +123,12 @@ export default function CEODashboard() {
       });
 
       // Pipeline (estimates not converted)
-      const pipelineValue = estimates
+      const pipelineValue = filteredEstimates
         .filter(e => e.status === 'Sent' || e.status === 'Draft')
         .reduce((sum, e) => sum + (e.revenue || 0), 0);
 
       // Backlog (approved but not delivered)
-      const backlogValue = projects
+      const backlogValue = filteredProjects
         .filter(p => p.status === 'Approved' || p.status === 'In Progress')
         .reduce((sum, p) => sum + (p.contract_value || 0), 0);
 
