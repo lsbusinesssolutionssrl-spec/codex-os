@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import {
   Brain, TrendingUp, TrendingDown, AlertCircle, CheckCircle2, Lightbulb,
   Activity, Sparkles, Loader2, BarChart3, Award, Target, Users, Package,
@@ -288,22 +289,34 @@ export default function CodexIntelligence() {
 
   const loadAll = async () => {
     setLoading(true);
+    
+    // Get user filters for tenant isolation
+    const filtersRes = await base44.functions.invoke('getUserFilters', {});
+    const company_id = filtersRes.data.filters?.Project?.company_id || filtersRes.data.filters?.company_id;
+    
+    if (!company_id) {
+      toast.error('Nessun tenant attivo - impossibile caricare Intelligence');
+      setLoading(false);
+      return;
+    }
+
+    // Load ONLY tenant-filtered data
     const [projects, costs, suppliers, timesheets, learnings, tickets, storedInsights, knowledge] = await Promise.all([
-      base44.entities.Project.list('-updated_date', 50),
-      base44.entities.ProjectCost.list('-date', 100),
-      base44.entities.Supplier.list(),
-      base44.entities.Timesheet.list('-date', 100),
-      base44.entities.ProjectLearning.list('-created_date', 50),
-      base44.entities.SupportTicket.list('-created_date', 100),
-      base44.entities.IntelligenceInsight.list('-created_date', 30),
-      base44.entities.KnowledgeBase.list(),
+      base44.entities.Project.filter({ company_id }, '-updated_date', 50),
+      base44.entities.ProjectCost.filter({ company_id }, '-date', 100),
+      base44.entities.Supplier.filter({ company_id }),
+      base44.entities.Timesheet.filter({ company_id }, '-date', 100),
+      base44.entities.ProjectLearning.filter({ company_id }, '-created_date', 50),
+      base44.entities.SupportTicket.filter({ company_id }, '-created_date', 100),
+      base44.entities.IntelligenceInsight.filter({ company_id }, '-created_date', 30),
+      base44.entities.KnowledgeBase.filter({ company_id }),
     ]);
 
-    // Compute local insights
+    // Compute local insights from REAL tenant data only
     const computed = computeLocalInsights(projects, costs, suppliers, timesheets, learnings, tickets);
     setLocalInsights(computed);
 
-    // AI-generated insights from DB
+    // AI-generated insights from DB (tenant-filtered)
     setAiInsights(storedInsights);
     if (storedInsights.length > 0) setLastGenerated(storedInsights[0].created_date);
 
@@ -334,11 +347,29 @@ export default function CodexIntelligence() {
   const generateAIInsights = async () => {
     setGenerating(true);
     try {
-      await base44.functions.invoke('generateIntelligenceInsights', {});
-      const fresh = await base44.entities.IntelligenceInsight.list('-created_date', 30);
+      const result = await base44.functions.invoke('generateIntelligenceInsights', {});
+      
+      // Check if sufficient data exists
+      if (result.data.data_maturity && result.data.data_maturity.level < 2) {
+        toast.info(result.data.recommendation || 'Dati insufficienti per generare insights AI');
+        setGenerating(false);
+        return;
+      }
+      
+      // Get fresh insights with tenant filter
+      const filtersRes = await base44.functions.invoke('getUserFilters', {});
+      const company_id = filtersRes.data.filters?.Project?.company_id;
+      const fresh = await base44.entities.IntelligenceInsight.filter(
+        { company_id },
+        '-created_date',
+        30
+      );
       setAiInsights(fresh);
       if (fresh.length > 0) setLastGenerated(fresh[0].created_date);
-    } catch {}
+      toast.success(`${fresh.length} insights generati con successo`);
+    } catch (error) {
+      toast.error('Errore nella generazione insights: ' + error.message);
+    }
     setGenerating(false);
   };
 
