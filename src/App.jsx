@@ -87,6 +87,8 @@ import ProductAnalytics from './pages/ProductAnalytics';
 import PlatformHealth from './pages/PlatformHealth';
 import DailyOperations from './pages/DailyOperations';
 import DataQuality from './pages/DataQuality';
+import WorkflowEnforcement from './pages/WorkflowEnforcement';
+import TeamAccountability from './pages/TeamAccountability';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -122,6 +124,8 @@ const AuthenticatedApp = () => {
       <Route path="/platform-health" element={<PlatformHealth />} />
       <Route path="/daily-operations" element={<DailyOperations />} />
       <Route path="/data-quality" element={<DataQuality />} />
+      <Route path="/workflow-enforcement" element={<WorkflowEnforcement />} />
+      <Route path="/team-accountability" element={<TeamAccountability />} />
       <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/clients/:id" element={<ClientDetail />} />
