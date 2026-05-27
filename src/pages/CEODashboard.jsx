@@ -45,13 +45,14 @@ export default function CEODashboard() {
     if (!isAuthorized) return;
     
     const load = async () => {
-      const [projects, estimates, guardians, costs, projectCosts] = await Promise.all([
-        base44.entities.Project.list(),
-        base44.entities.Estimate.list(),
-        base44.entities.GuardianSubscription.filter({ status: 'Active' }),
-        base44.entities.ProjectCost.list(),
-        base44.entities.ProjectCost.list(),
-      ]);
+      try {
+        const [projects, estimates, guardians, costs, projectCosts] = await Promise.all([
+          base44.entities.Project.list(),
+          base44.entities.Estimate.list(),
+          base44.entities.GuardianSubscription.filter({ status: 'Active' }),
+          base44.entities.ProjectCost.list(),
+          base44.entities.ProjectCost.list(),
+        ]);
 
       // Monthly calculations (current month)
       const currentMonth = new Date().getMonth();
@@ -136,8 +137,11 @@ export default function CEODashboard() {
         guardianMRR,
         guardianARR,
       });
-
-      setLoading(false);
+      } catch (error) {
+        console.error('Error loading CEO dashboard:', error);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
