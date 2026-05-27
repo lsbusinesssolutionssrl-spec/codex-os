@@ -84,6 +84,7 @@ import PropertyIntelligence from './pages/PropertyIntelligence';
 import Landing from './pages/Landing';
 import RequestDemo from './pages/RequestDemo';
 import ProductAnalytics from './pages/ProductAnalytics';
+import PlatformHealth from './pages/PlatformHealth';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -116,6 +117,7 @@ const AuthenticatedApp = () => {
         <Route path="/" element={<Landing />} />
       <Route path="/request-demo" element={<RequestDemo />} />
       <Route path="/product-analytics" element={<ProductAnalytics />} />
+      <Route path="/platform-health" element={<PlatformHealth />} />
       <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/clients/:id" element={<ClientDetail />} />
