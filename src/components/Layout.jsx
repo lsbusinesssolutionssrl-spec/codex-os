@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Home, FileText, FolderKanban,
-  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2, BookOpen, TrendingUp, Crown, Clock, Package, DollarSign, Brain, Database, Building2, CreditCard, ListTodo, Wrench, Activity, Bell, Zap, Globe, Puzzle, Store, Palette, Settings
+  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2, BookOpen, TrendingUp, Crown, Clock, Package, DollarSign, Brain, Database, Building2, CreditCard, ListTodo, Wrench, Activity, Bell, Zap, Command
 } from 'lucide-react';
 
 import { base44 } from '@/api/base44Client';
@@ -10,66 +10,27 @@ import NotificationBell from './NotificationBell';
 import CodexLogo from './CodexLogo';
 import GlobalSearch from './GlobalSearch';
 import BrandSelector from './BrandSelector';
+import CommandPalette from './CommandPalette';
 import { useOfflineSync } from '../hooks/useOfflineSync';
 
 const navItems = [
-  { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/clients', icon: Users, label: 'Clienti' },
-  { path: '/properties', icon: Home, label: 'Home Passport' },
-  { path: '/estimates', icon: FileText, label: 'Preventivi' },
-  { path: '/projects', icon: FolderKanban, label: 'Progetti' },
-  { path: '/checklists', icon: CheckSquare, label: 'Checklist' },
-  { path: '/guardian', icon: Shield, label: 'Guardian' },
-  { path: '/tickets', icon: Ticket, label: 'Ticket' },
-  { path: '/documents', icon: Archive, label: 'Documenti' },
-  { path: '/team', icon: Users2, label: 'Team' },
-  { path: '/ai', icon: Bot, label: 'Codex AI' },
-  // codex-ai is now served at /ai
-  { path: '/calendar', icon: CalendarDays, label: 'Calendario' },
-  { path: '/report', icon: BarChart2, label: 'Report' },
-  { path: '/sop', icon: BookOpen, label: 'SOP Templates' },
-  { path: '/financial-control', icon: TrendingUp, label: 'Controllo Finanziario', roles: ['admin'] },
-  { path: '/ceo-dashboard', icon: Crown, label: 'CEO Dashboard', roles: ['admin'] },
-  { path: '/suppliers', icon: Users2, label: 'Fornitori' },
-  { path: '/timesheets', icon: Clock, label: 'Timesheet' },
-  { path: '/purchase-orders', icon: Package, label: 'Ordini Acquisto' },
-  { path: '/cash-flow', icon: DollarSign, label: 'Cash Flow', roles: ['admin'] },
-  { path: '/intelligence', icon: Brain, label: 'Codex Intelligence', roles: ['admin'] },
-  { path: '/knowledge-base', icon: BookOpen, label: 'Knowledge Base', roles: ['admin'] },
-  { path: '/ai-advisor', icon: Bot, label: 'AI Advisor', roles: ['admin'] },
-  { path: '/executive-insights', icon: Crown, label: 'Executive Insights', roles: ['admin'] },
-  { path: '/architecture-review', icon: Database, label: 'Architecture Review', roles: ['admin'] },
-  { path: '/company-settings', icon: Building2, label: 'Company Settings', roles: ['company_admin', 'admin'] },
-  { path: '/subscription-plans', icon: CreditCard, label: 'Piani Subscription', roles: ['company_admin', 'admin'] },
-  { path: '/permissions-test', icon: Shield, label: 'Permissions Test', roles: ['admin'] },
-  { path: '/data-integrity', icon: Database, label: 'Data Integrity', roles: ['admin'] },
-  { path: '/go-live-checklist', icon: CheckSquare, label: 'Go Live Checklist', roles: ['admin'] },
-  { path: '/super-admin', icon: Shield, label: 'Super Admin', roles: ['admin'] },
-  { path: '/api-keys', icon: Database, label: 'API Keys', roles: ['admin'] },
-  { path: '/tasks', icon: ListTodo, label: 'Task' },
-  { path: '/technician', icon: Wrench, label: 'Vista Tecnico' },
-  { path: '/activity', icon: Activity, label: 'Activity Feed', roles: ['admin', 'company_admin', 'project_manager'] },
-  { path: '/notifications', icon: Bell, label: 'Notifiche' },
-  { path: '/maintenance', icon: Wrench, label: 'Manutenzioni Programmate' },
-  { path: '/operations', icon: Zap, label: 'Operations Dashboard', roles: ['admin', 'company_admin', 'project_manager'] },
-  { path: '/schedule', icon: CalendarDays, label: 'Scheduling' },
-  { path: '/workflows', icon: Zap, label: 'Workflows', roles: ['admin', 'company_admin', 'project_manager'] },
-  { path: '/approvals', icon: Shield, label: 'Approvals', roles: ['admin', 'company_admin', 'project_manager'] },
-  { path: '/workflow-analytics', icon: BarChart2, label: 'Workflow Analytics', roles: ['admin', 'company_admin'] },
-  { path: '/integrations', icon: Globe, label: 'Integrations', roles: ['admin', 'company_admin'] },
-  { path: '/developer', icon: Settings, label: 'Developer', roles: ['admin', 'company_admin'] },
-  { path: '/system-status', icon: Activity, label: 'System Status', roles: ['admin', 'company_admin'] },
-  { path: '/platform-core', icon: Puzzle, label: 'Platform Core', roles: ['admin', 'company_admin'] },
-  { path: '/extensions', icon: Puzzle, label: 'Extensions', roles: ['admin', 'company_admin'] },
-  { path: '/marketplace', icon: Store, label: 'Marketplace', roles: ['admin', 'company_admin'] },
-  { path: '/white-label', icon: Palette, label: 'White Label', roles: ['admin', 'company_admin'] },
-  { path: '/property-intelligence', icon: Brain, label: 'Property Intelligence', roles: ['admin', 'company_admin', 'project_manager'] },
+  { path: '/', icon: LayoutDashboard, label: 'Command Center', icon: LayoutDashboard },
+  { path: '/clients', label: 'Clienti', icon: Users },
+  { path: '/projects', label: 'Progetti', icon: FolderKanban },
+  { path: '/properties', label: 'Home Passport', icon: Home },
+  { path: '/estimates', label: 'Preventivi', icon: FileText },
+  { path: '/guardian', label: 'Guardian', icon: Shield },
+  { path: '/documents', label: 'Documenti', icon: Archive },
+  { path: '/ai', label: 'AI Copilot', icon: Bot },
+  { path: '/financial-control', label: 'Financial', icon: TrendingUp, roles: ['admin'] },
+  { path: '/company-settings', label: 'Settings', icon: Building2, roles: ['company_admin', 'admin'] },
 ];
 
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { isOnline, queueCount } = useOfflineSync();
   const [userRole, setUserRole] = useState(null);
 
@@ -77,6 +38,17 @@ export default function Layout() {
     base44.auth.me().then(u => {
       setUserRole(u?.role);
     }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen(prev => !prev);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   useEffect(() => {
@@ -177,11 +149,19 @@ export default function Layout() {
           <button className="lg:hidden p-2 rounded-md text-gray-600" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
+          <button 
+            onClick={() => setCommandPaletteOpen(true)}
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            <Command className="w-4 h-4" />
+            <span>Cerca...</span>
+            <span className="text-xs text-gray-400 border border-gray-300 px-1.5 py-0.5 rounded">⌘K</span>
+          </button>
           <div className="flex-1" />
           <BrandSelector />
-          <GlobalSearch />
           <NotificationBell />
         </header>
+        <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>

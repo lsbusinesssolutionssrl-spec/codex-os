@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, AlertTriangle, Clock, CheckCircle, TrendingUp, AlertCircle, Zap, Calendar, Users, FileText, FolderKanban, Home } from 'lucide-react';
+import { AlertTriangle, Clock, CheckCircle, TrendingUp, AlertCircle, Activity, Users, FileText, Calendar, Zap } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 export default function LiveCommandCenter() {
@@ -12,13 +12,10 @@ export default function LiveCommandCenter() {
     overdueTasks: [],
     marginWarnings: [],
     aiAlerts: [],
+    technicianOverload: [],
+    workflowFailures: [],
+    unresolvedIssues: [],
     todayOperations: [],
-    stats: {
-      totalProjects: 0,
-      activeProjects: 0,
-      totalTickets: 0,
-      openTickets: 0,
-    },
   });
 
   useEffect(() => {
@@ -34,18 +31,10 @@ export default function LiveCommandCenter() {
 
         const now = new Date();
         
-        // Stats
-        const stats = {
-          totalProjects: projects.length,
-          activeProjects: projects.filter(p => ['In Progress', 'Approved'].includes(p.status)).length,
-          totalTickets: tickets.length,
-          openTickets: tickets.filter(t => t.status !== 'Resolved' && t.status !== 'Closed').length,
-        };
-
         // Delayed projects
         const delayed = projects.filter(p => {
           if (!p.expected_end_date) return false;
-          return new Date(p.expected_end_date) < now && !['Delivered', 'Archived'].includes(p.status);
+          return new Date(p.expected_end_date) < now && p.status !== 'Delivered';
         }).map(p => ({
           ...p,
           delayDays: Math.floor((now - new Date(p.expected_end_date)) / (1000 * 60 * 60 * 24)),
@@ -72,7 +61,7 @@ export default function LiveCommandCenter() {
           if (!p.start_date) return false;
           const start = new Date(p.start_date);
           return start.toDateString() === now.toDateString();
-        }).slice(0, 10);
+        });
 
         setOps({
           delayedProjects: delayed,
@@ -80,8 +69,10 @@ export default function LiveCommandCenter() {
           overdueTasks: overdue,
           marginWarnings: lowMargin,
           aiAlerts: insights.filter(i => i.severity === 'Critical' || i.severity === 'High').slice(0, 5),
+          technicianOverload: [],
+          workflowFailures: [],
+          unresolvedIssues: tickets.filter(t => t.status !== 'Resolved' && t.status !== 'Closed').slice(0, 10),
           todayOperations: today,
-          stats,
         });
       } catch (error) {
         console.error('Error loading operations:', error);
@@ -104,7 +95,7 @@ export default function LiveCommandCenter() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Activity className="w-6 h-6 text-blue-600" />
-            Command Center
+            Live Command Center
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">Panoramica operativa in tempo reale</p>
         </div>
@@ -112,14 +103,6 @@ export default function LiveCommandCenter() {
           <AlertCircle className="w-4 h-4 text-red-600" />
           <span className="text-sm font-semibold text-red-700">{totalIssues} issue attivi</span>
         </div>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Progetti Totali" value={ops.stats.totalProjects} icon={FolderKanban} color="#1147FF" />
-        <StatCard label="Progetti Attivi" value={ops.stats.activeProjects} icon={Activity} color="#10B981" />
-        <StatCard label="Ticket Aperti" value={ops.stats.openTickets} icon={Users} color="#F59E0B" />
-        <StatCard label="Ticket Totali" value={ops.stats.totalTickets} icon={FileText} color="#8B5CF6" />
       </div>
 
       {/* Critical Alerts */}
@@ -264,18 +247,6 @@ export default function LiveCommandCenter() {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function StatCard({ label, value, icon: Icon, color }) {
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className="w-4 h-4" style={{ color }} />
-        <span className="text-xs text-gray-500 font-medium">{label}</span>
-      </div>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
     </div>
   );
 }

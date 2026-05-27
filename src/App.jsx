@@ -100,6 +100,7 @@ import ExecutionDisciplineEngine from './pages/ExecutionDisciplineEngine';
 import RealityGapAnalytics from './pages/RealityGapAnalytics';
 import AITrainingDataQuality from './pages/AITrainingDataQuality';
 import EnterpriseOperationalUX from './pages/EnterpriseOperationalUX';
+import LiveCommandCenter from './pages/LiveCommandCenter';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -129,7 +130,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<LiveCommandCenter />} />
       <Route path="/request-demo" element={<RequestDemo />} />
       <Route path="/product-analytics" element={<ProductAnalytics />} />
       <Route path="/platform-health" element={<PlatformHealth />} />
@@ -148,7 +149,7 @@ const AuthenticatedApp = () => {
       <Route path="/reality-gap" element={<RealityGapAnalytics />} />
       <Route path="/ai-data-quality" element={<AITrainingDataQuality />} />
       <Route path="/enterprise-ux" element={<EnterpriseOperationalUX />} />
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/dashboard" element={<LiveCommandCenter />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/clients/:id" element={<ClientDetail />} />
         <Route path="/properties" element={<Properties />} />
