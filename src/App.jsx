@@ -107,6 +107,7 @@ import ExecutiveFocusDashboard from './pages/ExecutiveFocusDashboard';
 import EvolutionDashboard from './pages/EvolutionDashboard';
 import ExecutionIntelligenceDashboard from './pages/ExecutionIntelligenceDashboard';
 import ActivationWizard from './pages/ActivationWizard';
+import CompanySetupWizard from './pages/CompanySetupWizard';
 import TenantManagement from './pages/TenantManagement';
 import WhiteLabelCenter from './pages/WhiteLabelCenter';
 import BrandApprovalQueue from './pages/BrandApprovalQueue';
@@ -252,6 +253,7 @@ const AuthenticatedApp = () => {
       <Route path="/white-label" element={<WhiteLabelSettings />} />
       <Route path="/property-intelligence" element={<PropertyIntelligence />} />
       <Route path="/activation-wizard" element={<ActivationWizard />} />
+      <Route path="/company-setup" element={<CompanySetupWizard />} />
       <Route path="/tenant/:companyId" element={<TenantManagement />} />
       <Route path="/white-label" element={<WhiteLabelCenter />} />
       <Route path="/brand-approval" element={<BrandApprovalQueue />} />

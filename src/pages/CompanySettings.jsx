@@ -103,7 +103,7 @@ export default function CompanySettings() {
               Il tuo utente è associato al tenant <strong>{activeMembership.tenant_id}</strong> ma le impostazioni company non sono state completate.
             </p>
             <button 
-              onClick={() => window.location.href = '/activation-wizard'} 
+              onClick={() => navigate('/company-setup')} 
               className="px-4 py-2 text-sm text-white rounded-lg font-medium"
               style={{ backgroundColor: '#1147FF' }}
             >
