@@ -85,6 +85,8 @@ import Landing from './pages/Landing';
 import RequestDemo from './pages/RequestDemo';
 import ProductAnalytics from './pages/ProductAnalytics';
 import PlatformHealth from './pages/PlatformHealth';
+import DailyOperations from './pages/DailyOperations';
+import DataQuality from './pages/DataQuality';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -118,6 +120,8 @@ const AuthenticatedApp = () => {
       <Route path="/request-demo" element={<RequestDemo />} />
       <Route path="/product-analytics" element={<ProductAnalytics />} />
       <Route path="/platform-health" element={<PlatformHealth />} />
+      <Route path="/daily-operations" element={<DailyOperations />} />
+      <Route path="/data-quality" element={<DataQuality />} />
       <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/clients/:id" element={<ClientDetail />} />
