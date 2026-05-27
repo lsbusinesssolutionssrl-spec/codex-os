@@ -54,6 +54,9 @@ import GoLiveChecklist from './pages/GoLiveChecklist';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import TenantOnboarding from './pages/TenantOnboarding';
 import ApiKeys from './pages/ApiKeys';
+import Tasks from './pages/Tasks';
+import TechnicianView from './pages/TechnicianView';
+import ActivityFeed from './pages/ActivityFeed';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -129,6 +132,9 @@ const AuthenticatedApp = () => {
         <Route path="/super-admin" element={<SuperAdminDashboard />} />
         <Route path="/tenant-onboarding" element={<TenantOnboarding />} />
         <Route path="/api-keys" element={<ApiKeys />} />
+        <Route path="/tasks" element={<Tasks />} />
+        <Route path="/technician" element={<TechnicianView />} />
+        <Route path="/activity" element={<ActivityFeed />} />
       </Route>
       <Route element={<PortalLayout />}>
         <Route path="/portal" element={<ClientPortal />} />

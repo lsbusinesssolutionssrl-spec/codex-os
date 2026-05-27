@@ -1,0 +1,93 @@
+{
+  "name": "Task",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "assigned_to": {
+      "type": "string",
+      "title": "Assigned To"
+    },
+    "priority": {
+      "type": "string",
+      "title": "Priority",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Urgent"
+      ],
+      "default": "Medium"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "To Do",
+        "In Progress",
+        "Waiting",
+        "Completed",
+        "Cancelled"
+      ],
+      "default": "To Do"
+    },
+    "due_date": {
+      "type": "string",
+      "title": "Due Date"
+    },
+    "project_id": {
+      "type": "string",
+      "title": "Project"
+    },
+    "estimate_id": {
+      "type": "string",
+      "title": "Estimate"
+    },
+    "ticket_id": {
+      "type": "string",
+      "title": "Ticket"
+    },
+    "property_id": {
+      "type": "string",
+      "title": "Property"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Attachments"
+    },
+    "comments": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "title": "Comments"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Tags"
+    },
+    "completed_at": {
+      "type": "string",
+      "title": "Completed At"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}
