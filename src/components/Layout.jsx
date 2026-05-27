@@ -9,6 +9,7 @@ import { base44 } from '@/api/base44Client';
 import NotificationBell from './NotificationBell';
 import CodexLogo from './CodexLogo';
 import GlobalSearch from './GlobalSearch';
+import BrandSelector from './BrandSelector';
 import { useOfflineSync } from '../hooks/useOfflineSync';
 
 const navItems = [
@@ -176,6 +177,7 @@ export default function Layout() {
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex-1" />
+          <BrandSelector />
           <GlobalSearch />
           <NotificationBell />
         </header>
