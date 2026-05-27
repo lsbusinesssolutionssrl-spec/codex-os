@@ -1,5 +1,5 @@
 export default function CodexLogo({ size = 'md' }) {
-  const height = size === 'lg' ? 48 : 36;
+  const height = size === 'lg' ? 64 : 52;
   
   return (
     <div style={{ display: 'flex', alignItems: 'center', height }}>
