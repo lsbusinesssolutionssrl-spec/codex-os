@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { RBACResolver } from '@/lib/RBACResolver';
 
 /**
  * GLOBAL CONTEXT ENGINE
@@ -321,9 +322,13 @@ export function GlobalContextProvider({ children }) {
       missingFields: getMissingCompanyFields(loadedTenant),
     });
 
-    // STEP 5: Validate permissions
-    const perms = computePermissions(membership.tenant_role, subscription);
-    setPermissions(perms);
+    // STEP 5: Resolve permissions using centralized RBAC resolver
+    const resolved = RBACResolver.resolvePermissions(
+      membership.tenant_role,
+      modules, // enabled modules
+      {} // feature flags (can be loaded separately)
+    );
+    setPermissions(resolved.permissions);
 
     // STEP 6: Load enabled modules
     console.log('Loading enabled modules for subscription:', subscription?.plan_id);
@@ -378,29 +383,11 @@ export function GlobalContextProvider({ children }) {
     return required.filter(field => !tenant[field]);
   };
 
+  // Deprecated: computePermissions replaced by RBACResolver
+  // Kept for backward compatibility only
   const computePermissions = (tenantRole, subscription) => {
-    const basePerms = ['tenant:read'];
-    
-    if (tenantRole === 'tenant_admin') {
-      basePerms.push('tenant:write', 'team:manage', 'billing:read');
-      if (subscription?.plan_id) {
-        basePerms.push('billing:write');
-      }
-    }
-    
-    if (['tenant_admin', 'project_manager'].includes(tenantRole)) {
-      basePerms.push('projects:write', 'estimates:write', 'clients:write');
-    }
-    
-    if (tenantRole === 'technician') {
-      basePerms.push('projects:read', 'checklists:write', 'tickets:write');
-    }
-    
-    if (tenantRole === 'sales') {
-      basePerms.push('clients:write', 'estimates:write', 'properties:write');
-    }
-    
-    return basePerms;
+    const resolved = RBACResolver.resolvePermissions(tenantRole, []);
+    return resolved.permissions;
   };
 
   const computeEnabledModules = async (subscription, tenantRole) => {

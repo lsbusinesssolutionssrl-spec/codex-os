@@ -18,6 +18,7 @@ import SessionDebugPanel from './SessionDebugPanel';
 import ContextBanner from './tenant/ContextBanner';
 import LayoutInspector from './LayoutInspector';
 import ModuleEntitlementDebug from './ModuleEntitlementDebug';
+import RBACDebugPanel from './RBACDebugPanel';
 
 // Tenant navigation - modules enabled dynamically based on plan
 const TENANT_NAV_ITEMS = [
@@ -267,6 +268,7 @@ export default function Layout() {
         </main>
         <SessionDebugPanel />
         <LayoutInspector />
+        <RBACDebugPanel />
         {userRole === 'admin' || userRole === 'developer' ? (
           <div className="fixed bottom-4 right-4 z-50">
             <details className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-md max-h-96 overflow-auto">
