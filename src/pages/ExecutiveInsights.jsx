@@ -284,12 +284,36 @@ export default function ExecutiveInsights() {
     </div>
   );
 
-  // Module gate - show proper error
+  // Module gate - show proper error with onboarding
   if (!enabledModules.includes('intelligence') && !isPlatformMode) {
     return (
-      <ContextGate requiredContext="tenant" requiredModule="intelligence">
-        <div />
-      </ContextGate>
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="bg-white rounded-2xl border-2 border-dashed border-amber-200 p-12 text-center">
+          <Brain className="w-16 h-16 text-amber-300 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Intelligence Non Abilitata</h2>
+          <p className="text-gray-500 mb-6 max-w-md mx-auto">
+            Il modulo Intelligence non è incluso nel tuo piano attuale o non è stato ancora attivato.
+          </p>
+          <div className="space-y-3">
+            <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl text-left">
+              <p className="text-sm font-semibold text-amber-900 mb-2">Per attivare Intelligence:</p>
+              <ol className="text-sm text-amber-800 space-y-1 list-decimal list-inside">
+                <li>Vai su Impostazioni Company</li>
+                <li>Sezione Subscription & Piani</li>
+                <li>Upgrade a piano Enterprise</li>
+                <li>Oppure contatta il supporto</li>
+              </ol>
+            </div>
+            <button
+              onClick={() => navigate('/company-settings')}
+              className="px-6 py-2.5 text-sm font-semibold text-white rounded-xl hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: '#1147FF' }}
+            >
+              Vai su Impostazioni
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
