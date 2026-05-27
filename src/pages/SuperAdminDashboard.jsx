@@ -120,9 +120,9 @@ export default function SuperAdminDashboard() {
             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#1147FF' }}>
               <Shield className="w-4 h-4 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Super Admin Control Panel</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Pannello di Controllo Super Admin</h1>
           </div>
-          <p className="text-sm text-gray-500">Platform-wide tenant management and oversight</p>
+          <p className="text-sm text-gray-500">Gestione e supervisione tenant platform-wide</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -131,30 +131,30 @@ export default function SuperAdminDashboard() {
             style={{ backgroundColor: '#1147FF' }}
           >
             <Building2 className="w-4 h-4" />
-            New Tenant
+            Nuovo Tenant
           </button>
           <button
             onClick={() => navigate('/subscription-plans')}
             className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
           >
             <CreditCard className="w-4 h-4" />
-            Plans
+            Piani
           </button>
         </div>
       </div>
 
       {/* Platform KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard label="Total Tenants" value={tenants.length} icon={Building2} color="#1147FF" />
-        <KpiCard label="Active" value={activeCount} icon={CheckCircle} color="#10B981" />
+        <KpiCard label="Tenant Totali" value={tenants.length} icon={Building2} color="#1147FF" />
+        <KpiCard label="Attivi" value={activeCount} icon={CheckCircle} color="#10B981" />
         <KpiCard label="MRR" value={`€${mrr.toLocaleString('it-IT')}`} icon={TrendingUp} color="#F59E0B" />
-        <KpiCard label="At Risk" value={atRiskCount} icon={AlertTriangle} color="#EF4444" />
+        <KpiCard label="A Rischio" value={atRiskCount} icon={AlertTriangle} color="#EF4444" />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard label="Trials" value={trialCount} icon={Clock} color="#3B82F6" />
-        <KpiCard label="Total Users" value={tenants.reduce((sum, t) => sum + t.userCount, 0)} icon={Users} color="#0B2341" />
-        <KpiCard label="Suspended" value={tenants.filter(t => t.subscription?.status === 'suspended').length} icon={Ban} color="#6B7280" />
+        <KpiCard label="Trial" value={trialCount} icon={Clock} color="#3B82F6" />
+        <KpiCard label="Utenti Totali" value={tenants.reduce((sum, t) => sum + t.userCount, 0)} icon={Users} color="#0B2341" />
+        <KpiCard label="Sospesi" value={tenants.filter(t => t.subscription?.status === 'suspended').length} icon={Ban} color="#6B7280" />
         <KpiCard label="Enterprise" value={tenants.filter(t => t.plan?.name === 'Enterprise').length} icon={Crown} color="#8B5CF6" />
       </div>
 
@@ -175,32 +175,32 @@ export default function SuperAdminDashboard() {
           className="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none"
         >
           <option value="">Tutti gli stati</option>
-          <option value="active">Active</option>
+          <option value="active">Attivo</option>
           <option value="trial">Trial</option>
-          <option value="trial_expired">Trial Expired</option>
-          <option value="past_due">Past Due</option>
-          <option value="suspended">Suspended</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="trial_expired">Trial Scaduto</option>
+          <option value="past_due">In Ritardo</option>
+          <option value="suspended">Sospeso</option>
+          <option value="cancelled">Cancellato</option>
         </select>
       </div>
 
       {/* Tenant Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="font-semibold text-gray-900">All Tenants</h2>
-          <span className="text-xs text-gray-400">{filteredTenants.length} total</span>
+          <h2 className="font-semibold text-gray-900">Tutti i Tenant</h2>
+          <span className="text-xs text-gray-400">{filteredTenants.length} totali</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
                 <th className="text-left py-3 px-4 font-medium text-gray-600">Company</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-600">Health</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-600">Plan</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-600">Status</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-600">Users</th>
+                <th className="text-center py-3 px-4 font-medium text-gray-600">Salute</th>
+                <th className="text-center py-3 px-4 font-medium text-gray-600">Piano</th>
+                <th className="text-center py-3 px-4 font-medium text-gray-600">Stato</th>
+                <th className="text-center py-3 px-4 font-medium text-gray-600">Utenti</th>
                 <th className="text-center py-3 px-4 font-medium text-gray-600">MRR</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-600">Actions</th>
+                <th className="text-center py-3 px-4 font-medium text-gray-600">Azioni</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -236,7 +236,7 @@ export default function SuperAdminDashboard() {
                         <span className={`text-xs font-medium px-2 py-1 rounded-full capitalize ${statusConfig[t.subscription.status] || 'bg-gray-100 text-gray-600'}`}>
                           {t.subscription.status?.replace('_', ' ')}
                         </span>
-                      ) : <span className="text-xs text-gray-400">No sub</span>}
+                      ) : <span className="text-xs text-gray-400">No subscription</span>}
                     </td>
                     <td className="text-center py-3 px-4 text-gray-600">{t.userCount}</td>
                     <td className="text-center py-3 px-4 font-medium text-gray-900">
@@ -247,14 +247,14 @@ export default function SuperAdminDashboard() {
                         <button
                           onClick={() => navigate(`/company-settings`)}
                           className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
-                          title="View Settings"
+                          title="Vedi Impostazioni"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => navigate(`/tenant-onboarding`)}
                           className="p-1.5 text-gray-400 hover:text-green-600 rounded-lg hover:bg-green-50 transition-colors"
-                          title="Impersonate"
+                          title="Impersona"
                         >
                           <Play className="w-4 h-4" />
                         </button>
@@ -265,7 +265,7 @@ export default function SuperAdminDashboard() {
               })}
               {filteredTenants.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="text-center py-10 text-gray-400 text-sm">No tenants found</td>
+                  <td colSpan={7} className="text-center py-10 text-gray-400 text-sm">Nessun tenant trovato</td>
                 </tr>
               )}
             </tbody>
@@ -283,9 +283,9 @@ export default function SuperAdminDashboard() {
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#1147FF' }}>
               <Building2 className="w-5 h-5 text-white" />
             </div>
-            <h3 className="font-semibold text-gray-900">Create New Tenant</h3>
+            <h3 className="font-semibold text-gray-900">Crea Nuovo Tenant</h3>
           </div>
-          <p className="text-sm text-gray-500">Set up a new company with onboarding wizard</p>
+          <p className="text-sm text-gray-500">Configura una nuova company con wizard di onboarding</p>
         </button>
 
         <button
@@ -296,9 +296,9 @@ export default function SuperAdminDashboard() {
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#F59E0B' }}>
               <CreditCard className="w-5 h-5 text-white" />
             </div>
-            <h3 className="font-semibold text-gray-900">Manage Plans</h3>
+            <h3 className="font-semibold text-gray-900">Gestisci Piani</h3>
           </div>
-          <p className="text-sm text-gray-500">Configure subscription plans and features</p>
+          <p className="text-sm text-gray-500">Configura piani subscription e funzionalità</p>
         </button>
 
         <button
@@ -309,9 +309,9 @@ export default function SuperAdminDashboard() {
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8B5CF6' }}>
               <Activity className="w-5 h-5 text-white" />
             </div>
-            <h3 className="font-semibold text-gray-900">Platform Analytics</h3>
+            <h3 className="font-semibold text-gray-900">Analytics Platform</h3>
           </div>
-          <p className="text-sm text-gray-500">View usage metrics and tenant health</p>
+          <p className="text-sm text-gray-500">Visualizza metriche utilizzo e salute tenant</p>
         </button>
       </div>
     </div>

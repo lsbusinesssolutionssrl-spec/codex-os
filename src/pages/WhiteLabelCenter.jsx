@@ -254,7 +254,7 @@ export default function WhiteLabelCenter() {
             <h1 className="text-2xl font-bold text-gray-900">White Label Center</h1>
           </div>
           <p className="text-sm text-gray-500">
-            {currentPlan?.name || 'Starter'} Plan · {allowedFeatures.length} features available
+            Piano {currentPlan?.name || 'Starter'} · {allowedFeatures.length} funzionalità disponibili
           </p>
         </div>
         <div className="flex gap-2">
@@ -263,7 +263,7 @@ export default function WhiteLabelCenter() {
             className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
           >
             <Eye className="w-4 h-4" />
-            Preview
+            Anteprima
           </button>
           <button
             onClick={saveAsDraft}
@@ -271,7 +271,7 @@ export default function WhiteLabelCenter() {
             className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40"
           >
             <Save className="w-4 h-4" />
-            Save Draft
+            Salva Bozza
           </button>
           <button
             onClick={submitForApproval}
@@ -280,12 +280,12 @@ export default function WhiteLabelCenter() {
             style={{ backgroundColor: '#1147FF' }}
           >
             <CheckCircle className="w-4 h-4" />
-            Submit for Approval
+            Invia per Approvazione
           </button>
         </div>
       </div>
 
-      {/* Plan Tier Banner */}
+      {/* Banner Piano Tier */}
       <div className="p-4 rounded-xl border" style={{ backgroundColor: `${TIERS[planTier]?.color}10`, borderColor: `${TIERS[planTier]?.color}30` }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -295,7 +295,7 @@ export default function WhiteLabelCenter() {
                <TrendingUp className="w-5 h-5 text-white" />}
             </div>
             <div>
-              <p className="font-semibold text-gray-900">{TIERS[planTier]?.label} Features</p>
+              <p className="font-semibold text-gray-900">Funzionalità {TIERS[planTier]?.label}</p>
               <p className="text-sm text-gray-600">{allowedFeatures.join(' · ')}</p>
             </div>
           </div>
@@ -305,7 +305,7 @@ export default function WhiteLabelCenter() {
               className="text-sm font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
               style={{ backgroundColor: TIERS[planTier]?.color, color: 'white' }}
             >
-              Upgrade Plan
+              Upgrade Piano
             </button>
           )}
         </div>
@@ -318,7 +318,7 @@ export default function WhiteLabelCenter() {
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Upload className="w-5 h-5" />
-              Logo & Icon
+              Logo & Icona
             </h2>
             <div className="grid grid-cols-2 gap-6">
               <LogoUploader
@@ -340,7 +340,7 @@ export default function WhiteLabelCenter() {
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Palette className="w-5 h-5" />
-              Design Tokens
+              Token di Design
             </h2>
             <div className="grid grid-cols-3 gap-4">
               {Object.entries(form.colors).map(([key, value]) => (
@@ -369,7 +369,7 @@ export default function WhiteLabelCenter() {
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <FileText className="w-5 h-5" />
-              Custom Terminology
+              Terminologia Personalizzata
             </h2>
             <div className="space-y-4">
               <div>
@@ -405,13 +405,13 @@ export default function WhiteLabelCenter() {
           </div>
         </div>
 
-        {/* Theme History & Status */}
+        {/* Cronologia & Stato Tema */}
         <div className="space-y-6">
-          {/* Active Theme */}
+          {/* Tema Attivo */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-green-600" />
-              Active Theme
+              Tema Attivo
             </h2>
             {activeTheme ? (
               <div className="space-y-3">
@@ -427,11 +427,11 @@ export default function WhiteLabelCenter() {
             )}
           </div>
 
-          {/* Theme History */}
+          {/* Cronologia Temi */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Clock className="w-5 h-5" />
-              Theme History
+              Cronologia Temi
             </h2>
             <div className="space-y-3">
               {brandThemes.slice(0, 5).map(theme => (
@@ -456,15 +456,15 @@ export default function WhiteLabelCenter() {
             </div>
           </div>
 
-          {/* Approval Status */}
+          {/* Stato Approvazione */}
           {brandThemes.some(t => t.status === 'Pending Approval') && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
               <div className="flex items-start gap-3">
                 <Clock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="font-semibold text-amber-900">Pending Approval</h3>
+                  <h3 className="font-semibold text-amber-900">In Attesa di Approvazione</h3>
                   <p className="text-sm text-amber-700 mt-1">
-                    Your branding changes are under review by the platform team.
+                    Le modifiche al brand sono in revisione da parte del team platform.
                   </p>
                 </div>
               </div>

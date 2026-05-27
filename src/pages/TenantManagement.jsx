@@ -209,19 +209,19 @@ export default function TenantManagement() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
-      {/* Impersonation Banner */}
+      {/* Banner Impersonation */}
       {impersonating && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-orange-500 text-white px-4 py-2 flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-2">
             <Eye className="w-5 h-5" />
-            <span className="font-semibold">Impersonating Tenant: {tenant.name}</span>
+            <span className="font-semibold">Impersona Tenant: {tenant.name}</span>
           </div>
           <button
             onClick={endImpersonation}
             className="flex items-center gap-2 px-3 py-1 text-sm bg-white text-orange-600 rounded-lg hover:bg-orange-50"
           >
             <LogOut className="w-4 h-4" />
-            Exit Impersonation
+            Esci Impersona
           </button>
         </div>
       )}
@@ -232,7 +232,7 @@ export default function TenantManagement() {
           <ArrowLeft className="w-4 h-4 text-gray-600" />
         </button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900">Tenant Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Gestione Tenant</h1>
           <p className="text-sm text-gray-500">{tenant.name}</p>
         </div>
         <div className="flex gap-2">
@@ -243,7 +243,7 @@ export default function TenantManagement() {
             style={{ backgroundColor: '#F59E0B' }}
           >
             <Play className="w-4 h-4" />
-            Impersonate
+            Impersona
           </button>
         </div>
       </div>
@@ -281,7 +281,7 @@ export default function TenantManagement() {
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
             <Users className="w-4 h-4" />
-            Users ({users.length})
+            Utenti ({users.length})
           </h3>
           <div className="space-y-2">
             {users.slice(0, 5).map(u => (
@@ -294,7 +294,7 @@ export default function TenantManagement() {
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="font-semibold text-gray-900 mb-3">Quick Actions</h3>
+          <h3 className="font-semibold text-gray-900 mb-3">Azioni Rapide</h3>
           <div className="space-y-2">
             {subscription?.status === 'active' && (
               <button
@@ -303,7 +303,7 @@ export default function TenantManagement() {
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 bg-red-50 rounded-lg hover:bg-red-100 disabled:opacity-40"
               >
                 <Ban className="w-4 h-4" />
-                Suspend Tenant
+                Sospendi Tenant
               </button>
             )}
             {subscription?.status === 'suspended' && (
@@ -313,7 +313,7 @@ export default function TenantManagement() {
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-600 bg-green-50 rounded-lg hover:bg-green-100 disabled:opacity-40"
               >
                 <CheckCircle className="w-4 h-4" />
-                Reactivate Tenant
+                Riattiva Tenant
               </button>
             )}
             <button
@@ -321,7 +321,7 @@ export default function TenantManagement() {
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
             >
               <Settings className="w-4 h-4" />
-              View Settings
+              Vedi Impostazioni
             </button>
           </div>
         </div>
@@ -331,7 +331,7 @@ export default function TenantManagement() {
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <Zap className="w-5 h-5" />
-          Feature Access Control
+          Controllo Accesso Funzionalità
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {FEATURES.map(feature => {
@@ -375,7 +375,7 @@ export default function TenantManagement() {
                     {planRequired}
                   </span>
                   <span className="text-xs text-gray-500">
-                    {enabled ? 'Enabled' : canEnable ? 'Disabled' : 'Upgrade required'}
+                    {enabled ? 'Attivato' : canEnable ? 'Disattivato' : 'Richiede upgrade'}
                   </span>
                 </div>
               </div>
@@ -384,16 +384,16 @@ export default function TenantManagement() {
         </div>
       </div>
 
-      {/* Activation Log */}
+      {/* Log Attivazione */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <Clock className="w-5 h-5" />
-          Recent Activation Logs
+          Log Attivazione Recenti
         </h2>
         <div className="space-y-2">
           {/* This would load from TenantActivationLog entity */}
           <p className="text-sm text-gray-500 text-center py-4">
-            Activation logs are recorded automatically
+            I log di attivazione sono registrati automaticamente
           </p>
         </div>
       </div>
