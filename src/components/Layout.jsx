@@ -268,21 +268,29 @@ export default function Layout() {
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
-        <ContextVerification />
-        <HydrationDebugPanel />
-        <SessionDebugPanel />
-        <LayoutInspector />
-        <RBACDebugPanel />
-        {userRole === 'admin' || userRole === 'developer' ? (
-          <div className="fixed bottom-4 right-4 z-50">
-            <details className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-md max-h-96 overflow-auto">
-              <summary className="px-4 py-2 text-xs font-semibold text-gray-700 cursor-pointer bg-gray-50 border-b border-gray-200">
-                🔧 Module Entitlement Debug
-              </summary>
-              <ModuleEntitlementDebug />
-            </details>
-          </div>
-        ) : null}
+        {/* Context verification - only for platform developers in platform mode */}
+        {(userRole === 'admin' || userRole === 'developer') && isPlatformMode && (
+          <>
+            <ContextVerification />
+            <HydrationDebugPanel />
+          </>
+        )}
+        {/* Debug panels - only visible for platform developers in platform mode */}
+        {(userRole === 'admin' || userRole === 'developer') && isPlatformMode && (
+          <>
+            <SessionDebugPanel />
+            <LayoutInspector />
+            <RBACDebugPanel />
+            <div className="fixed bottom-4 right-4 z-50">
+              <details className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-md max-h-96 overflow-auto">
+                <summary className="px-4 py-2 text-xs font-semibold text-gray-700 cursor-pointer bg-gray-50 border-b border-gray-200">
+                  🔧 Module Entitlement Debug
+                </summary>
+                <ModuleEntitlementDebug />
+              </details>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
