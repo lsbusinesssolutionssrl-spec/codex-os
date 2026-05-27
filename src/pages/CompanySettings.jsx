@@ -31,9 +31,13 @@ export default function CompanySettings() {
       console.log('User company_id:', currentUser?.company_id);
       console.log('Context type:', contextType);
       console.log('Active tenant:', activeTenant?.id);
+      console.log('User role:', currentUser?.role);
+      console.log('Tenant memberships:', tenantMemberships);
       
-      // SECURITY FIX: Platform users should go to PlatformSettings
-      if (['admin', 'developer'].includes(currentUser?.role) && contextType === 'platform') {
+      // SECURITY FIX: Platform users should go to PlatformSettings ONLY if they don't have tenant memberships
+      // Admin users with tenant memberships can access company settings
+      if (['admin', 'developer'].includes(currentUser?.role) && contextType === 'platform' && (!tenantMemberships || tenantMemberships.length === 0)) {
+        console.log('Platform user without tenant memberships, redirecting to PlatformSettings');
         navigate('/platform-settings');
         return;
       }

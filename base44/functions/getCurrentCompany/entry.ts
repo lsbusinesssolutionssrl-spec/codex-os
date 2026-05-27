@@ -9,19 +9,38 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Platform users (admin/developer) don't have a company context by default
-    if (['admin', 'developer'].includes(user.role)) {
-      return Response.json({
-        company: null,
-        subscription: null,
-        user,
-        is_platform_user: true,
-        message: 'Platform users do not have a company context'
+    // Platform users (admin/developer) - check if they have a primary tenant membership
+    let companyId = user.company_id;
+    
+    if (!companyId && ['admin', 'developer'].includes(user.role)) {
+      // Check for primary tenant membership
+      const memberships = await base44.asServiceRole.entities.TenantMembership.filter({
+        user_id: user.id,
+        is_primary: true,
+        status: 'active'
       });
+      
+      if (memberships.length > 0) {
+        companyId = memberships[0].tenant_id;
+        console.log('Platform user using primary membership company_id:', companyId);
+      }
     }
 
-    // Tenant users MUST have a company_id
-    if (!user.company_id) {
+    // If still no company_id, check for any active membership
+    if (!companyId) {
+      const memberships = await base44.asServiceRole.entities.TenantMembership.filter({
+        user_id: user.id,
+        status: 'active'
+      });
+      
+      if (memberships.length > 0) {
+        companyId = memberships[0].tenant_id;
+        console.log('Using first active membership company_id:', companyId);
+      }
+    }
+
+    // No company association found
+    if (!companyId) {
       return Response.json({ 
         error: 'User not associated with any company. Please contact administrator.',
         user_email: user.email,
