@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Camera, BookOpen, Home, FileCheck, FileText, Download, TrendingUp, Brain, Activity, Clock, Users } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Camera, BookOpen, Home, FileCheck, FileText, Download, TrendingUp, Brain, Activity, Clock, Users, Calendar, Mail } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 import FinancialSummary from '../components/FinancialSummary';
@@ -11,6 +11,8 @@ import InternalComments from '../components/InternalComments';
 import ContextualAIPanel from '../components/ai/ContextualAIPanel';
 import OperationalTimeline from '../components/ai/OperationalTimeline';
 import TechnicianLoadAnalysis from '../components/ai/TechnicianLoadAnalysis';
+import WarrantyTracker from '../components/ai/WarrantyTracker';
+import AICommunicationGenerator from '../components/ai/AICommunicationGenerator';
 
 const STATUSES = ['Lead', 'Survey', 'Estimate', 'Approved', 'In Progress', 'Testing', 'Delivered', 'Guardian Active', 'Archived'];
 const SOP_CATEGORIES = ['Bathroom', 'Full Home', 'Electrical', 'Networking', 'Security', 'Roofing', 'Handover'];
@@ -44,6 +46,8 @@ export default function ProjectDetail() {
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
   const [showTechAnalysis, setShowTechAnalysis] = useState(false);
+  const [showWarranties, setShowWarranties] = useState(false);
+  const [showCommunication, setShowCommunication] = useState(false);
 
   useEffect(() => {
     Promise.all([hasRole(['admin', 'project_manager']), canEditFinancialFields()]).then(([hasRoleRes, canEdit]) => {
@@ -284,6 +288,15 @@ export default function ProjectDetail() {
           Timeline AI
         </button>
         <button
+          onClick={() => setShowWarranties(!showWarranties)}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+            showWarranties ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Calendar className="w-3.5 h-3.5" />
+          Garanzie
+        </button>
+        <button
           onClick={() => setShowTechAnalysis(!showTechAnalysis)}
           className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
             showTechAnalysis ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
@@ -291,6 +304,15 @@ export default function ProjectDetail() {
         >
           <Users className="w-3.5 h-3.5" />
           Team Analysis
+        </button>
+        <button
+          onClick={() => setShowCommunication(!showCommunication)}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+            showCommunication ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Mail className="w-3.5 h-3.5" />
+          Email AI
         </button>
         <button
           onClick={() => setShowAIPanel(!showAIPanel)}
@@ -306,8 +328,14 @@ export default function ProjectDetail() {
       {/* Operational Timeline */}
       {showTimeline && <OperationalTimeline entityType="project" entityId={id} />}
 
+      {/* Warranty Tracker */}
+      {showWarranties && <WarrantyTracker projectId={id} />}
+
       {/* Technician Load Analysis */}
       {showTechAnalysis && <TechnicianLoadAnalysis projectId={id} />}
+
+      {/* AI Communication Generator */}
+      {showCommunication && <AICommunicationGenerator entityType="project" entityId={id} onClose={() => setShowCommunication(false)} />}
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3">

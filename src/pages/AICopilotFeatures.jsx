@@ -174,19 +174,19 @@ export default function AICopilotFeatures() {
           <div>
             <p className="font-medium text-gray-700 mb-2">Property Detail:</p>
             <code className="bg-white px-2 py-1 rounded border border-gray-200 block mb-1">
-              &lt;PropertyHealthScore propertyId={property.id} /&gt;
+              &lt;PropertyHealthScore propertyId=&#123;property.id&#125; /&gt;
             </code>
             <code className="bg-white px-2 py-1 rounded border border-gray-200 block">
-              &lt;OperationalTimeline entityType="property" entityId={property.id} /&gt;
+              &lt;OperationalTimeline entityType="property" entityId=&#123;property.id&#125; /&gt;
             </code>
           </div>
           <div>
             <p className="font-medium text-gray-700 mb-2">Project Detail:</p>
             <code className="bg-white px-2 py-1 rounded border border-gray-200 block mb-1">
-              &lt;OperationalTimeline entityType="project" entityId={project.id} /&gt;
+              &lt;OperationalTimeline entityType="project" entityId=&#123;project.id&#125; /&gt;
             </code>
             <code className="bg-white px-2 py-1 rounded border border-gray-200 block">
-              &lt;TechnicianLoadAnalysis projectId={project.id} /&gt;
+              &lt;TechnicianLoadAnalysis projectId=&#123;project.id&#125; /&gt;
             </code>
           </div>
         </div>

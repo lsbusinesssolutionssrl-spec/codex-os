@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Home, Zap, Droplets, Thermometer, Wifi, Shield, DoorOpen, Edit2, Save, X, Trash2, ExternalLink, Brain, Activity, Clock } from 'lucide-react';
+import { ArrowLeft, Home, Zap, Droplets, Thermometer, Wifi, Shield, DoorOpen, Edit2, Save, X, Trash2, ExternalLink, Brain, Activity, Clock, Calendar, Mail } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ContextualAIPanel from '../components/ai/ContextualAIPanel';
 import PropertyHealthScore from '../components/ai/PropertyHealthScore';
 import OperationalTimeline from '../components/ai/OperationalTimeline';
+import WarrantyTracker from '../components/ai/WarrantyTracker';
+import AICommunicationGenerator from '../components/ai/AICommunicationGenerator';
 
 const NOTES_SECTIONS = [
   { key: 'electrical_notes', label: 'Impianto Elettrico', icon: Zap, color: '#F59E0B' },
@@ -27,6 +29,8 @@ export default function PropertyDetail() {
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [showHealthScore, setShowHealthScore] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
+  const [showWarranties, setShowWarranties] = useState(false);
+  const [showCommunication, setShowCommunication] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -111,6 +115,15 @@ export default function PropertyDetail() {
           Property Health
         </button>
         <button
+          onClick={() => setShowWarranties(!showWarranties)}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+            showWarranties ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Calendar className="w-3.5 h-3.5" />
+          Garanzie
+        </button>
+        <button
           onClick={() => setShowTimeline(!showTimeline)}
           className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
             showTimeline ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
@@ -118,6 +131,15 @@ export default function PropertyDetail() {
         >
           <Clock className="w-3.5 h-3.5" />
           Timeline AI
+        </button>
+        <button
+          onClick={() => setShowCommunication(!showCommunication)}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+            showCommunication ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Mail className="w-3.5 h-3.5" />
+          Email AI
         </button>
         <button
           onClick={() => setShowAIPanel(!showAIPanel)}
@@ -133,8 +155,14 @@ export default function PropertyDetail() {
       {/* Property Health Score */}
       {showHealthScore && <PropertyHealthScore propertyId={id} clientId={property.client_id} />}
 
+      {/* Warranty Tracker */}
+      {showWarranties && <WarrantyTracker propertyId={id} />}
+
       {/* Operational Timeline */}
       {showTimeline && <OperationalTimeline entityType="property" entityId={id} />}
+
+      {/* AI Communication Generator */}
+      {showCommunication && <AICommunicationGenerator entityType="property" entityId={id} onClose={() => setShowCommunication(false)} />}
 
       {/* Identity Card */}
       <div className="bg-gradient-to-br from-gray-900 to-blue-950 rounded-2xl p-6 text-white overflow-hidden relative">
