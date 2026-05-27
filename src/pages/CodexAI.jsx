@@ -27,7 +27,7 @@ const ACTION_ICONS = {
   create_task: '✅', create_ticket: '🎫', create_estimate_draft: '📋',
   create_checklist: '☑️', assign_technician: '👷', generate_report: '📊',
   summarize_project: '📝', suggest_pricing: '💶', generate_handover: '🤝',
-  update_homepassport: '🏠', extract_knowledge: '🧠',
+  update_homepassport: '🏠', extract_knowledge: '🧠', generate_meeting_notes: '📋',
 };
 
 const MEMORY_TYPE_LABELS = {
@@ -49,6 +49,68 @@ const MEMORY_TYPE_COLORS = {
   successful_solution: 'bg-emerald-100 text-emerald-700',
   recurring_failure: 'bg-rose-100 text-rose-700',
   pricing_pattern: 'bg-teal-100 text-teal-700',
+};
+
+// ── Action Param Fields config ────────────────────────────────────────────────
+const ACTION_FIELDS = {
+  create_estimate_draft: [
+    { key: 'title', label: 'Titolo preventivo', required: true },
+    { key: 'estimate_type', label: 'Tipo', type: 'select', options: ['Bathroom','Full Home','Electrical System','Networking','Security','Roofing','Maintenance','Other'] },
+    { key: 'quality_level', label: 'Livello qualità', type: 'select', options: ['Essential','Smart','Intelligence'] },
+    { key: 'notes', label: 'Note', type: 'textarea' },
+  ],
+  create_task: [
+    { key: 'title', label: 'Titolo task', required: true },
+    { key: 'description', label: 'Descrizione', type: 'textarea' },
+    { key: 'assigned_to', label: 'Assegnato a' },
+    { key: 'priority', label: 'Priorità', type: 'select', options: ['Low','Medium','High','Urgent'] },
+    { key: 'due_date', label: 'Scadenza', type: 'date' },
+  ],
+  create_checklist: [
+    { key: 'title', label: 'Titolo', required: true },
+    { key: 'description', label: 'Descrizione', type: 'textarea' },
+    { key: 'category', label: 'Categoria', type: 'select', options: ['Bathroom','Full Home','Electrical','Networking','Security','Roofing','Handover'] },
+    { key: 'assigned_person', label: 'Assegnato a' },
+  ],
+  create_ticket: [
+    { key: 'title', label: 'Oggetto', required: true },
+    { key: 'issue_type', label: 'Tipo', type: 'select', options: ['Water Leak','Electrical','Network','Security','Maintenance','Other'] },
+    { key: 'priority', label: 'Priorità', type: 'select', options: ['Low','Medium','High','Urgent'] },
+    { key: 'notes', label: 'Note', type: 'textarea' },
+  ],
+  assign_technician: [
+    { key: 'technician', label: 'Nome tecnico', required: true },
+    { key: 'project_id', label: 'ID Progetto (o lascia vuoto per ticket)' },
+    { key: 'ticket_id', label: 'ID Ticket' },
+  ],
+  generate_report: [
+    { key: 'project_id', label: 'ID Progetto', required: true },
+    { key: 'report_type', label: 'Tipo report', type: 'select', options: ['full','progress','financial','checklist'] },
+  ],
+  summarize_project: [
+    { key: 'project_id', label: 'ID Progetto', required: true },
+  ],
+  suggest_pricing: [
+    { key: 'estimate_type', label: 'Tipo lavoro', type: 'select', options: ['Bathroom','Full Home','Electrical System','Networking','Security','Roofing','Maintenance','Other'] },
+    { key: 'quality_level', label: 'Livello qualità', type: 'select', options: ['Essential','Smart','Intelligence'] },
+    { key: 'square_meters', label: 'Metri quadrati', type: 'number' },
+  ],
+  generate_meeting_notes: [
+    { key: 'subject', label: 'Oggetto riunione', required: true },
+    { key: 'participants', label: 'Partecipanti' },
+    { key: 'agenda', label: 'Agenda / punti principali', type: 'textarea' },
+    { key: 'date', label: 'Data', type: 'date' },
+  ],
+  generate_handover: [
+    { key: 'project_id', label: 'ID Progetto', required: true },
+  ],
+  update_homepassport: [
+    { key: 'property_id', label: 'ID Proprietà', required: true },
+    { key: 'electrical_notes', label: 'Note impianto elettrico', type: 'textarea' },
+    { key: 'plumbing_notes', label: 'Note idraulico', type: 'textarea' },
+    { key: 'networking_notes', label: 'Note networking', type: 'textarea' },
+    { key: 'security_notes', label: 'Note sicurezza', type: 'textarea' },
+  ],
 };
 
 // ── Message Component ────────────────────────────────────────────────────────
@@ -123,32 +185,61 @@ function Message({ msg, onActionConfirm }) {
 
 // ── Action Confirm Modal ─────────────────────────────────────────────────────
 function ActionConfirmModal({ action, onConfirm, onCancel }) {
+  const [editedParams, setEditedParams] = useState({ ...(action.params || {}) });
+  const fields = ACTION_FIELDS[action.type] || [];
+  const setField = (key, val) => setEditedParams(p => ({ ...p, [key]: val }));
+  const isReady = fields.filter(f => f.required).every(f => editedParams[f.key]?.toString().trim());
+
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl space-y-4">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-xl">{ACTION_ICONS[action.type] || '⚡'}</div>
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-xl flex-shrink-0">
+            {ACTION_ICONS[action.type] || '⚡'}
+          </div>
           <div>
             <h3 className="font-bold text-gray-900">{action.label}</h3>
-            <p className="text-xs text-gray-500">Richiede conferma — verrà registrata nell'audit log</p>
+            <p className="text-xs text-gray-500">Completa i parametri — verrà registrata nell'audit log</p>
           </div>
         </div>
-        {action.params && (
-          <div className="bg-gray-50 rounded-xl p-3 space-y-1">
-            {Object.entries(action.params).map(([k, v]) => (
-              <div key={k} className="flex justify-between text-sm">
-                <span className="text-gray-500 capitalize">{k.replace(/_/g, ' ')}</span>
-                <span className="text-gray-900 font-medium truncate ml-2 max-w-[60%]">{String(v)}</span>
+
+        {fields.length > 0 && (
+          <div className="space-y-3">
+            {fields.map(field => (
+              <div key={field.key}>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  {field.label}{field.required && <span className="text-red-500 ml-0.5">*</span>}
+                </label>
+                {field.type === 'select' ? (
+                  <select value={editedParams[field.key] || ''} onChange={e => setField(field.key, e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-blue-300">
+                    <option value="">— Seleziona —</option>
+                    {field.options.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                ) : field.type === 'textarea' ? (
+                  <textarea value={editedParams[field.key] || ''} onChange={e => setField(field.key, e.target.value)}
+                    rows={2} placeholder={`${field.label}...`}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:border-blue-300" />
+                ) : (
+                  <input type={field.type || 'text'} value={editedParams[field.key] || ''} onChange={e => setField(field.key, e.target.value)}
+                    placeholder={`${field.label}...`}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-300" />
+                )}
               </div>
             ))}
           </div>
         )}
+
         <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
           <Shield className="w-3.5 h-3.5 flex-shrink-0" />
-          Azione tracciata — AI Safety policy applicata
+          Azione tracciata · Permessi verificati · AI Safety policy applicata
         </div>
         <div className="flex gap-2">
-          <button onClick={onConfirm} className="flex-1 py-2.5 text-sm text-white rounded-xl font-medium" style={{ backgroundColor: '#1147FF' }}>Conferma</button>
+          <button onClick={() => onConfirm(editedParams)} disabled={!isReady}
+            className="flex-1 py-2.5 text-sm text-white rounded-xl font-medium disabled:opacity-40 transition-opacity"
+            style={{ backgroundColor: '#1147FF' }}>
+            Conferma ed Esegui
+          </button>
           <button onClick={onCancel} className="flex-1 py-2.5 text-sm border border-gray-200 rounded-xl text-gray-600">Annulla</button>
         </div>
       </div>
@@ -156,7 +247,9 @@ function ActionConfirmModal({ action, onConfirm, onCancel }) {
   );
 }
 
-// ── Chat Tab ─────────────────────────────────────────────────────────────────
+// ── Chat Tab ──────────────────────────────────────────────────────────────────
+const chatSendRef = { current: null };
+
 function ChatTab({ user }) {
   const [messages, setMessages] = useState([{
     id: 'welcome', role: 'assistant',
@@ -170,6 +263,8 @@ function ChatTab({ user }) {
   const [actionFeedback, setActionFeedback] = useState(null);
   const bottomRef = useRef(null);
   const qc = useQueryClient();
+
+  chatSendRef.current = (text) => send(text);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
@@ -190,32 +285,37 @@ function ChatTab({ user }) {
     setLoading(false);
   };
 
-  const execAction = async (action) => {
+  const execAction = async (action, editedParams) => {
     setPendingAction(null);
-    let feedback = '';
+    const finalAction = { ...action, params: { ...action.params, ...editedParams } };
+    let feedbackText = '';
+    let feedbackType = 'success';
     try {
-      if (action.type === 'create_task') {
-        await base44.entities.Task.create({ title: action.params?.title || 'Task da Codex AI', status: 'To Do', priority: 'Medium' });
-        feedback = '✅ Task creato!';
-      } else if (action.type === 'create_ticket') {
-        await base44.entities.SupportTicket.create({ title: action.params?.title || 'Ticket da Codex AI', priority: action.params?.priority || 'Medium', status: 'Open' });
-        feedback = '✅ Ticket creato!';
-      } else if (action.type === 'create_checklist') {
-        await base44.entities.ChecklistItem.create({ title: action.params?.title || 'Checklist da AI', status: 'To Do' });
-        feedback = '✅ Checklist creata!';
-      } else if (action.type === 'extract_knowledge' && action.params?.project_id) {
-        const r = await base44.functions.invoke('extractProjectKnowledge', { project_id: action.params.project_id });
-        feedback = '🧠 ' + (r.data?.message || 'Knowledge estratta!');
-        qc.invalidateQueries({ queryKey: ['ai-memories'] });
-      } else {
-        feedback = '✅ Azione "' + action.label + '" registrata.';
+      const res = await base44.functions.invoke('executeAIAction', {
+        action_type: finalAction.type,
+        params: finalAction.params,
+        session_id: SESSION_ID,
+        confirmed: true,
+      });
+      const data = res.data;
+      if (data.error) throw new Error(data.error);
+      feedbackText = `✅ ${finalAction.label} completata con successo!`;
+      if (data.result?.summary) {
+        setMessages(prev => [...prev, {
+          id: Date.now() + 2, role: 'assistant',
+          content: data.result.summary,
+          time: new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }),
+          actions: [], context_used: ['ai_action'], latency_ms: data.latency_ms,
+        }]);
       }
-      base44.entities.AIAuditLog?.create?.({ user_email: user?.email, user_role: user?.role, session_id: SESSION_ID, prompt: 'ACTION: ' + action.type, actions_executed: [action] }).catch(() => {});
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+      qc.invalidateQueries({ queryKey: ['tickets'] });
     } catch (e) {
-      feedback = '⚠️ "' + action.label + '" non completata: ' + e.message;
+      feedbackText = `⚠️ "${finalAction.label}" non completata: ${e.message}`;
+      feedbackType = 'error';
     }
-    setActionFeedback(feedback);
-    setTimeout(() => setActionFeedback(null), 5000);
+    setActionFeedback({ text: feedbackText, type: feedbackType });
+    setTimeout(() => setActionFeedback(null), 6000);
   };
 
   return (
@@ -233,17 +333,22 @@ function ChatTab({ user }) {
         )}
         <div ref={bottomRef} />
       </div>
+
       {actionFeedback && (
-        <div className="mx-6 mb-2 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700 flex items-center justify-between">
-          <span>{actionFeedback}</span>
-          <button onClick={() => setActionFeedback(null)}><X className="w-4 h-4 text-green-500" /></button>
+        <div className={`mx-6 mb-2 px-4 py-3 border rounded-xl text-sm flex items-center justify-between ${
+          actionFeedback.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'
+        }`}>
+          <span>{actionFeedback.text}</span>
+          <button onClick={() => setActionFeedback(null)}><X className="w-4 h-4" /></button>
         </div>
       )}
+
       <div className="lg:hidden flex gap-2 px-4 pb-2 overflow-x-auto">
         {QUICK_PROMPTS.slice(0, 4).map((qp, idx) => (
           <button key={idx} onClick={() => send(qp.prompt)} className="flex-shrink-0 px-3 py-1.5 text-xs font-medium border border-gray-200 rounded-lg text-gray-600 bg-white hover:bg-gray-50 whitespace-nowrap">{qp.label}</button>
         ))}
       </div>
+
       <div className="px-6 pb-6">
         <div className="flex gap-3 items-end bg-white border border-gray-200 rounded-2xl p-3 shadow-sm focus-within:border-blue-300 focus-within:shadow-md transition-all">
           <textarea value={input} onChange={e => setInput(e.target.value)}
@@ -258,7 +363,14 @@ function ChatTab({ user }) {
         </div>
         <p className="text-xs text-gray-300 text-center mt-2">Codex AI ha accesso ai dati aziendali · Ogni interazione viene registrata nell'Audit Log</p>
       </div>
-      {pendingAction && <ActionConfirmModal action={pendingAction} onConfirm={() => execAction(pendingAction)} onCancel={() => setPendingAction(null)} />}
+
+      {pendingAction && (
+        <ActionConfirmModal
+          action={pendingAction}
+          onConfirm={(edited) => execAction(pendingAction, edited)}
+          onCancel={() => setPendingAction(null)}
+        />
+      )}
     </div>
   );
 }
@@ -549,7 +661,7 @@ function ArchitectureTab() {
     {
       title: 'Vector DB / RAG', icon: Database,
       items: [
-        { name: 'Internal (AIMemory Entity)', status: 'active', note: 'Storage semantico su entità' },
+        { name: 'RAGDocument Entity (Keyword)', status: 'active', note: 'Chunking + keyword retrieval — attivo' },
         { name: 'Pinecone', status: 'placeholder', note: 'High-performance vector search' },
         { name: 'Weaviate', status: 'placeholder', note: 'Open-source vector DB' },
         { name: 'pgvector', status: 'placeholder', note: 'PostgreSQL extension' },
@@ -586,7 +698,7 @@ function ArchitectureTab() {
       </div>
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-700">
         <strong>RAG Pipeline:</strong> Ingest → Chunk → Embed → Store → Retrieve → Augment → Generate
-        <span className="text-xs text-blue-500 ml-2">Chunk: 500 token · Overlap: 50 · Top-K: 5</span>
+        <span className="text-xs text-blue-500 ml-2">Chunk: 500 token · Overlap: 50 · Top-K: 6</span>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {sections.map(section => (
@@ -615,25 +727,14 @@ function ArchitectureTab() {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 text-xs text-gray-600">
           <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-green-500" /> RBAC — filtro automatico per ruolo</div>
-          <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-green-500" /> Conferma obbligatoria azioni distruttive</div>
+          <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-green-500" /> Conferma obbligatoria per ogni azione AI</div>
           <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-green-500" /> Audit log completo ogni interazione</div>
           <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-green-500" /> Blocco dati finanziari per client/technician</div>
           <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-green-500" /> Cross-tenant isolation via company_id</div>
+          <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-green-500" /> Permission matrix per action type + role</div>
           <div className="flex items-center gap-1.5"><AlertCircle className="w-3 h-3 text-gray-400" /> Rate limiting (placeholder)</div>
-          <div className="flex items-center gap-1.5"><AlertCircle className="w-3 h-3 text-gray-400" /> Content filtering (placeholder)</div>
           <div className="flex items-center gap-1.5"><AlertCircle className="w-3 h-3 text-gray-400" /> PII detection (placeholder)</div>
         </div>
-      </div>
-      <div className="bg-white border border-gray-200 rounded-xl p-4">
-        <h3 className="font-semibold text-gray-700 text-sm mb-3 flex items-center gap-2">
-          <FileText className="w-4 h-4" /> Document Index Schema
-        </h3>
-        <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-          {['doc_id', 'chunk_id', 'content', 'doc_type', 'entity_type', 'entity_id', 'embedding[]', 'indexed_at'].map(f => (
-            <div key={f} className="bg-gray-50 rounded px-2 py-1 font-mono">{f}</div>
-          ))}
-        </div>
-        <p className="text-xs text-gray-400 mt-2">Indicizzabili: Estimates, Projects, Tickets, KB, Checklists, SOPs, Properties, Documents</p>
       </div>
     </div>
   );
@@ -672,7 +773,7 @@ export default function CodexAI() {
           <div className="p-3 flex-1 overflow-y-auto">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 px-1">Prompt rapidi</p>
             {QUICK_PROMPTS.map((qp, idx) => (
-              <button key={idx}
+              <button key={idx} onClick={() => chatSendRef.current?.(qp.prompt)}
                 className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left hover:bg-gray-50 transition-colors group">
                 <qp.icon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 group-hover:text-blue-500" />
                 <span className="text-xs text-gray-600 group-hover:text-gray-900">{qp.label}</span>
