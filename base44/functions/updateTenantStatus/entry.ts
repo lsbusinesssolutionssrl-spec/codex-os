@@ -9,41 +9,30 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden: Super Admin access required' }, { status: 403 });
+    const payload = await req.json();
+    const { companyId, status, onboardingStep } = payload;
+
+    if (!companyId) {
+      return Response.json({ error: 'Missing companyId' }, { status: 400 });
     }
 
-    const { companyId, newStatus, reason } = await req.json();
-
-    if (!companyId || !newStatus) {
-      return Response.json({ error: 'Missing required fields' }, { status: 400 });
+    // Update Company entity
+    const updates = {};
+    
+    if (status) {
+      updates.status = status;
     }
 
-    const validStatuses = ['active', 'trial', 'suspended', 'cancelled', 'past_due'];
-    if (!validStatuses.includes(newStatus)) {
-      return Response.json({ error: 'Invalid status' }, { status: 400 });
-    }
+    // Update Company
+    const company = await base44.entities.Company.update(companyId, updates);
 
-    const subscriptions = await base44.entities.CompanySubscription.filter({ company_id: companyId });
-    if (!subscriptions[0]) {
-      return Response.json({ error: 'Subscription not found' }, { status: 404 });
-    }
-
-    await base44.entities.CompanySubscription.update(subscriptions[0].id, {
-      status: newStatus,
-      cancelled_at: newStatus === 'cancelled' ? new Date().toISOString() : null,
-      cancel_reason: reason || null,
+    return Response.json({
+      success: true,
+      company,
+      message: `Company ${companyId} updated successfully`,
     });
-
-    await base44.entities.TenantActivationLog.create({
-      company_id: companyId,
-      event_type: `tenant_${newStatus}`,
-      description: `Tenant status changed to ${newStatus}${reason ? `: ${reason}` : ''}`,
-      performed_by: user.email,
-    });
-
-    return Response.json({ success: true, status: newStatus });
   } catch (error) {
+    console.error('Error updating tenant status:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
