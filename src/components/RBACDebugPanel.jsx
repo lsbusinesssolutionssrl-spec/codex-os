@@ -160,12 +160,14 @@ export default function RBACDebugPanel() {
                 <span className="font-medium text-gray-600">Categories</span>
               </div>
               <div className="ml-4 space-y-0.5">
-                {Object.entries(debugInfo.breakdown).slice(0, 8).map(([cat, perms]) => (
-                  <div key={cat} className="flex items-center justify-between text-[10px]">
-                    <span className="text-gray-600 font-medium">{cat}</span>
-                    <span className="text-gray-500">{perms.length} perms</span>
-                  </div>
-                ))}
+                {Object.entries(debugInfo.breakdown).slice(0, 8).map(([cat, perms]) => {
+                  return (
+                    <div key={cat} className="flex items-center justify-between text-[10px]">
+                      <span className="text-gray-600 font-medium">{cat}</span>
+                      <span className="text-gray-500">{perms.length} perms</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

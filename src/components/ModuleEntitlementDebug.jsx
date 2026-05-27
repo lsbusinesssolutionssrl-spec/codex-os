@@ -184,38 +184,40 @@ export default function ModuleEntitlementDebug() {
             Module Entitlements
           </h4>
           <div className="space-y-2">
-            {debug.entitlements.map(ent => (
-              <div
-                key={ent.moduleId}
-                className={`p-2 rounded border ${
-                  ent.finalDecision === 'allowed'
-                    ? 'bg-green-50 border-green-200'
-                    : 'bg-red-50 border-red-200'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-semibold text-gray-900">{ent.module}</span>
-                  {ent.finalDecision === 'allowed' ? (
-                    <CheckCircle2 className="w-3 h-3 text-green-600" />
-                  ) : (
-                    <XCircle className="w-3 h-3 text-red-600" />
-                  )}
+            {debug.entitlements.map(ent => {
+              return (
+                <div
+                  key={ent.moduleId}
+                  className={`p-2 rounded border ${
+                    ent.finalDecision === 'allowed'
+                      ? 'bg-green-50 border-green-200'
+                      : 'bg-red-50 border-red-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-semibold text-gray-900">{ent.module}</span>
+                    {ent.finalDecision === 'allowed' ? (
+                      <CheckCircle2 className="w-3 h-3 text-green-600" />
+                    ) : (
+                      <XCircle className="w-3 h-3 text-red-600" />
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 text-[10px] text-gray-600">
+                    <CheckItem label="Plan Includes" value={ent.planIncludes} />
+                    <CheckItem label="Flag Enabled" value={ent.featureFlagEnabled} />
+                    <CheckItem label="Role Permitted" value={ent.rolePermitted} />
+                    <CheckItem label="In Context" value={ent.enabledInContext} />
+                  </div>
+                  <div className="mt-1 text-[10px]">
+                    <span className="font-medium">Decision: </span>
+                    <span className={ent.finalDecision === 'allowed' ? 'text-green-700' : 'text-red-700'}>
+                      {ent.finalDecision}
+                    </span>
+                    <span className="text-gray-500"> - {ent.reason}</span>
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-1 text-[10px] text-gray-600">
-                  <CheckItem label="Plan Includes" value={ent.planIncludes} />
-                  <CheckItem label="Flag Enabled" value={ent.featureFlagEnabled} />
-                  <CheckItem label="Role Permitted" value={ent.rolePermitted} />
-                  <CheckItem label="In Context" value={ent.enabledInContext} />
-                </div>
-                <div className="mt-1 text-[10px]">
-                  <span className="font-medium">Decision: </span>
-                  <span className={ent.finalDecision === 'allowed' ? 'text-green-700' : 'text-red-700'}>
-                    {ent.finalDecision}
-                  </span>
-                  <span className="text-gray-500"> - {ent.reason}</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
