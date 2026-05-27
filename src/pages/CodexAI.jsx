@@ -11,6 +11,8 @@ import { base44 } from '@/api/base44Client';
 import ReactMarkdown from 'react-markdown';
 import { useQueryClient } from '@tanstack/react-query';
 import ActionConfirmModal from '../components/ai/ActionConfirmModal';
+import ContextFocusPicker from '../components/ai/ContextFocusPicker';
+import PlatformIntelligenceScore from '../components/ai/PlatformIntelligenceScore';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const SESSION_KEY = 'codex_ai_v2_conversations';
@@ -246,6 +248,7 @@ export default function CodexAI() {
   const [showSources, setShowSources] = useState(true);
   const [searchConv, setSearchConv] = useState('');
   const [attachments, setAttachments] = useState([]);
+  const [contextFocus, setContextFocus] = useState(null);
   const [uploadingFile, setUploadingFile] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
@@ -332,6 +335,14 @@ export default function CodexAI() {
     try {
       const payload = { message: msg, session_id: convId };
       if (attachments.length > 0) payload.file_urls = attachments.map(a => a.url);
+      if (contextFocus) {
+        payload.context_hint = {
+          project_id:  contextFocus.type === 'project'  ? contextFocus.id : null,
+          client_id:   contextFocus.type === 'client'   ? contextFocus.id : null,
+          property_id: contextFocus.type === 'property' ? contextFocus.id : null,
+          estimate_id: contextFocus.type === 'estimate' ? contextFocus.id : null,
+        };
+      }
       const res = await base44.functions.invoke('codexAIChat', payload);
       const d = res.data;
       addMessage(convId, {
@@ -497,11 +508,11 @@ export default function CodexAI() {
               <h2 className="text-xl font-semibold text-slate-900 mb-1.5 tracking-tight">
                 {user ? `Ciao, ${user.full_name?.split(' ')[0]}` : 'Codex AI'}
               </h2>
-              <p className="text-sm text-slate-500 mb-8 leading-relaxed max-w-sm">
-                Ho accesso a progetti, ticket, preventivi, finanze e knowledge base. Come posso aiutarti?
+              <p className="text-sm text-slate-500 mb-6 leading-relaxed max-w-sm">
+                Ho accesso a progetti, ticket, preventivi, finanze e knowledge base. Più dati accumuli, più sono preciso.
               </p>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 w-full">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 w-full mb-6">
                 {SUGGESTED_PROMPTS.map((sp, i) => (
                   <button key={i} onClick={() => send(sp.prompt)}
                     className="group flex items-start gap-3 p-3.5 bg-white border border-slate-200 rounded-xl text-left hover:border-blue-300 hover:shadow-sm transition-all">
@@ -514,6 +525,9 @@ export default function CodexAI() {
                     </div>
                   </button>
                 ))}
+              </div>
+              <div className="w-full max-w-2xl">
+                <PlatformIntelligenceScore />
               </div>
             </div>
           ) : (
@@ -574,6 +588,13 @@ export default function CodexAI() {
 
         {/* Input */}
         <div className="px-5 pb-4">
+          {/* Context Focus Bar */}
+          <div className="flex items-center gap-2 mb-2">
+            <ContextFocusPicker focus={contextFocus} onFocusChange={setContextFocus} />
+            {contextFocus && (
+              <span className="text-[11px] text-slate-400">Il contesto AI è focalizzato su questo record</span>
+            )}
+          </div>
           <div className="flex gap-2 items-end bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm focus-within:border-blue-300 focus-within:shadow-md transition-all">
             <button onClick={() => fileInputRef.current?.click()} disabled={uploadingFile}
               className="p-1.5 text-slate-400 hover:text-blue-500 transition-colors flex-shrink-0 rounded-lg hover:bg-slate-50">
