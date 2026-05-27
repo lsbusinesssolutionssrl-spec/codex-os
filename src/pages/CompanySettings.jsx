@@ -26,6 +26,12 @@ export default function CompanySettings() {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
       
+      console.log('=== COMPANY SETTINGS DEBUG ===');
+      console.log('Current user:', currentUser?.email);
+      console.log('User company_id:', currentUser?.company_id);
+      console.log('Context type:', contextType);
+      console.log('Active tenant:', activeTenant?.id);
+      
       // SECURITY FIX: Platform users should go to PlatformSettings
       if (['admin', 'developer'].includes(currentUser?.role) && contextType === 'platform') {
         navigate('/platform-settings');
@@ -34,6 +40,8 @@ export default function CompanySettings() {
       
       try {
         const res = await base44.functions.invoke('getCurrentCompany', {});
+        console.log('getCurrentCompany response:', res.data);
+        
         setCompany(res.data.company);
         setForm(res.data.company);
         setSubscription(res.data.subscription);
@@ -44,8 +52,14 @@ export default function CompanySettings() {
         
         // Se la company esiste ma non ha setup_completed, reindirizza alla wizard
         if (res.data.company && !res.data.company.setup_completed) {
+          console.log('Company setup not completed, redirecting to wizard');
           navigate('/company-setup');
           return;
+        }
+        
+        if (res.data.company) {
+          console.log('Company loaded successfully:', res.data.company.name);
+          console.log('setup_completed:', res.data.company.setup_completed);
         }
       } catch (error) {
         console.error('Error loading company settings:', error);

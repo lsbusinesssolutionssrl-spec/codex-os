@@ -110,6 +110,7 @@ export default function CompanySetupWizard() {
         // Create new company
         const result = await base44.entities.Company.create({ ...companyData, setup_completed: true });
         companyId = result.id;
+        console.log('Company created:', companyId);
 
         // Create TenantMembership for current user as admin
         await base44.entities.TenantMembership.create({
@@ -119,13 +120,25 @@ export default function CompanySetupWizard() {
           status: 'active',
           is_primary: true,
         });
+        console.log('TenantMembership created');
+
+        // Update current user with company_id
+        await base44.auth.updateMe({ company_id: companyId });
+        console.log('User updated with company_id:', companyId);
 
         toast.success('Azienda creata');
       }
 
       toast.success('Configurazione azienda completata!');
       
+      console.log('=== COMPANY SETUP COMPLETE ===');
+      console.log('Company ID:', companyId);
+      console.log('setup_completed: true');
+      console.log('User company_id:', companyId);
       console.log('Redirecting to dashboard...');
+      
+      // Force refresh context before redirect
+      await refreshContext();
       
       // Redirect to dashboard immediately
       navigate('/dashboard');
