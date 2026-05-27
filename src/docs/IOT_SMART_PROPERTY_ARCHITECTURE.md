@@ -1,892 +1,507 @@
-# Codex OS - IoT & Smart Property Architecture
+# IoT Smart Property Architecture
 
-## Overview
+## Panoramica
 
-Codex OS IoT architecture enables property monitoring, predictive maintenance, and smart home integration through a unified telemetry platform.
-
----
-
-## 1. IoT Device Categories
-
-### 1.1 Smart Home Sensors
-
-**Device Types:**
-- Temperature sensors
-- Humidity sensors
-- Motion detectors
-- Door/window contact sensors
-- Glass break sensors
-- Light sensors
-- Air quality sensors (CO2, VOC, PM2.5)
-- Water leak detectors
-- Smoke/CO detectors
-
-**Data Points:**
-```json
-{
-  "device_id": "sensor_001",
-  "type": "temperature",
-  "location": "living_room",
-  "value": 22.5,
-  "unit": "celsius",
-  "battery_level": 85,
-  "signal_strength": -45,
-  "timestamp": "2026-05-27T10:30:00Z"
-}
-```
+Codex OS è **IoT-ready** per integrazione futura di sensori intelligenti che abilitano monitoraggio in tempo reale e manutenzione predittiva avanzata.
 
 ---
 
-### 1.2 HVAC Monitoring
+## Entity Esistente: IoTDevice
 
-**Device Types:**
-- Smart thermostats
-- HVAC controllers
-- Zone controllers
-- Air flow sensors
-- Filter pressure sensors
-- Compressor monitors
+L'entity `IoTDevice` è già implementata e supporta:
 
-**Data Points:**
-```json
+**Tipi di Dispositivi:**
+- Smart Thermostat
+- Leak Sensor
+- Energy Monitor
+- Security Camera
+- Smart Lock
+- Smoke Detector
+- HVAC Controller
+- Water Meter
+- Electric Meter
+- Motion Sensor
+- Door/Window Sensor
+- Smart Plug
+- Light Controller
+- Custom Sensor
+
+**Campi Chiave:**
+```typescript
 {
-  "device_id": "hvac_001",
-  "type": "thermostat",
-  "location": "main_floor",
-  "current_temp": 21.0,
-  "target_temp": 22.0,
-  "mode": "heating",
-  "fan_speed": "medium",
-  "filter_status": "good",
-  "energy_consumption_kwh": 2.5,
-  "runtime_hours": 1250,
-  "last_maintenance": "2026-01-15",
-  "timestamp": "2026-05-27T10:30:00Z"
-}
-```
-
-**Alerts:**
-- Filter replacement needed
-- Unusual energy consumption
-- Compressor failure detected
-- Zone temperature deviation
-- System efficiency degradation
-
----
-
-### 1.3 Energy Monitoring
-
-**Device Types:**
-- Smart meters (electric, water, gas)
-- Circuit-level monitors
-- Solar panel inverters
-- Battery storage monitors
-- EV charger monitors
-- Smart plugs/outlets
-
-**Data Points:**
-```json
-{
-  "device_id": "meter_001",
-  "type": "electric_meter",
-  "location": "electrical_room",
-  "current_power_w": 3500,
-  "voltage_v": 230,
-  "current_a": 15.2,
-  "power_factor": 0.95,
-  "total_consumption_kwh": 12450,
-  "solar_production_kwh": 8200,
-  "grid_export_kwh": 3100,
-  "battery_level_pct": 78,
-  "timestamp": "2026-05-27T10:30:00Z"
-}
-```
-
-**Analytics:**
-- Real-time consumption
-- Peak demand tracking
-- Solar production vs consumption
-- Cost optimization recommendations
-- Anomaly detection (unusual usage patterns)
-
----
-
-### 1.4 Leak Detection
-
-**Device Types:**
-- Water leak sensors
-- Flow meters
-- Pressure sensors
-- Automatic shut-off valves
-- Moisture sensors
-
-**Data Points:**
-```json
-{
-  "device_id": "leak_001",
-  "type": "water_leak_sensor",
-  "location": "basement",
-  "status": "dry",
-  "water_detected": false,
-  "flow_rate_lpm": 0,
-  "pressure_bar": 3.5,
-  "valve_position": "open",
-  "battery_level": 92,
-  "timestamp": "2026-05-27T10:30:00Z"
-}
-```
-
-**Alert Levels:**
-- **Info**: Normal operation
-- **Warning**: Unusual flow pattern detected
-- **Critical**: Water leak detected - automatic shut-off triggered
-- **Emergency**: Major leak - immediate action required
-
----
-
-### 1.5 Security Systems
-
-**Device Types:**
-- Security cameras (IP, PoE)
-- Motion sensors
-- Door/window sensors
-- Smart locks
-- Alarm panels
-- Access control systems
-- Video doorbells
-
-**Data Points:**
-```json
-{
-  "device_id": "cam_001",
-  "type": "security_camera",
-  "location": "front_entrance",
-  "status": "recording",
-  "motion_detected": false,
-  "last_motion": "2026-05-27T09:15:00Z",
-  "storage_used_gb": 45,
-  "network_status": "online",
-  "firmware_version": "2.1.5",
-  "timestamp": "2026-05-27T10:30:00Z"
-}
-```
-
-**Events:**
-- Motion detected
-- Door opened/closed
-- Lock engaged/disengaged
-- Alarm triggered
-- Camera offline
-- Storage full warning
-
----
-
-### 1.6 Maintenance Telemetry
-
-**Device Types:**
-- Equipment runtime monitors
-- Vibration sensors
-- Temperature probes
-- Pressure sensors
-- Flow sensors
-- Performance monitors
-
-**Monitored Equipment:**
-- Water heaters
-- Pumps
-- Elevators
-- Generators
-- Pool equipment
-- Irrigation systems
-
-**Data Points:**
-```json
-{
-  "device_id": "pump_001",
-  "type": "water_pump",
-  "location": "mechanical_room",
-  "status": "running",
-  "runtime_hours": 2450,
-  "vibration_level": "normal",
-  "temperature_c": 45,
-  "pressure_bar": 4.2,
-  "efficiency_pct": 87,
-  "next_maintenance": "2026-06-15",
-  "timestamp": "2026-05-27T10:30:00Z"
-}
-```
-
-**Predictive Maintenance:**
-- Runtime-based maintenance scheduling
-- Vibration anomaly detection
-- Efficiency degradation tracking
-- Failure prediction (ML-based)
-
----
-
-## 2. IoT Entity Model
-
-### IoTDevice Entity (Already Exists - Extended)
-
-```json
-{
-  "id": "device_001",
-  "company_id": "comp_456",
-  "property_id": "prop_789",
-  "brand_id": "brand_123",
-  "name": "Living Room Thermostat",
-  "device_type": "Smart Thermostat",
-  "manufacturer": "Nest",
-  "model": "Learning Thermostat 3rd Gen",
-  "serial_number": "ABC123456",
-  "firmware_version": "5.9.3",
-  "connection_type": "WiFi",
-  "status": "Online",
-  "last_seen": "2026-05-27T10:30:00Z",
-  "install_date": "2025-06-15",
-  "warranty_expiry": "2027-06-15",
-  "location": "Living Room",
-  "config": {
-    "ip_address": "192.168.1.100",
-    "mac_address": "00:1A:2B:3C:4D:5E",
-    "sampling_interval_seconds": 60,
-    "reporting_interval_seconds": 300
-  },
-  "metadata": {
-    "battery_level": 85,
-    "signal_strength": -45,
-    "uptime_hours": 2160
+  name: string
+  device_type: enum (vedi sopra)
+  manufacturer: string
+  model: string
+  serial_number: string
+  firmware_version: string
+  connection_type: enum [WiFi, Zigbee, Z-Wave, Bluetooth, LoRaWAN, Cellular, Ethernet]
+  status: enum [Online, Offline, Error, Maintenance, Disconnected]
+  last_seen: datetime
+  install_date: date
+  warranty_expiry: date
+  location: string
+  config: object
+  metadata: {
+    ip_address: string
+    mac_address: string
+    battery_level: number
+    signal_strength: number
   }
 }
 ```
 
-### IoTTelemetry Entity (New)
-
-```json
-{
-  "id": "telemetry_001",
-  "company_id": "comp_456",
-  "property_id": "prop_789",
-  "device_id": "device_001",
-  "metric_type": "temperature",
-  "value": 22.5,
-  "unit": "celsius",
-  "quality": "good",
-  "timestamp": "2026-05-27T10:30:00Z",
-  "metadata": {
-    "battery_level": 85,
-    "signal_strength": -45
-  }
-}
-```
-
-### IoTAlert Entity (New)
-
-```json
-{
-  "id": "alert_001",
-  "company_id": "comp_456",
-  "property_id": "prop_789",
-  "device_id": "device_001",
-  "alert_type": "water_leak_detected",
-  "severity": "Critical",
-  "title": "Water Leak Detected in Basement",
-  "description": "Water leak sensor in basement has detected moisture",
-  "status": "Active",
-  "acknowledged_by": null,
-  "acknowledged_at": null,
-  "resolved_by": null,
-  "resolved_at": null,
-  "auto_action_taken": "shut_off_valve",
-  "created_date": "2026-05-27T10:30:00Z"
-}
-```
-
-### IoTAutomationRule Entity (New)
-
-```json
-{
-  "id": "rule_001",
-  "company_id": "comp_456",
-  "property_id": "prop_789",
-  "name": "Auto Shut-off on Leak Detection",
-  "trigger": {
-    "device_type": "water_leak_sensor",
-    "condition": "water_detected == true"
-  },
-  "actions": [
-    {
-      "type": "device_command",
-      "device_type": "shut_off_valve",
-      "command": "close"
-    },
-    {
-      "type": "notification",
-      "channels": ["push", "sms", "email"],
-      "message": "Water leak detected! Automatic shut-off activated."
-    },
-    {
-      "type": "create_ticket",
-      "priority": "Urgent",
-      "assign_to": "emergency_team"
-    }
-  ],
-  "enabled": true,
-  "execution_count": 3,
-  "last_executed": "2026-05-20T14:22:00Z"
-}
-```
-
 ---
 
-## 3. Integration with Existing Systems
+## Architettura di Integrazione
 
-### 3.1 Home Passport Integration
+### Livello 1: Device Connectivity
 
-**Property Health Score Enhancement:**
+```
+IoT Sensors → Gateway → Base44 Functions → Entity IoTDevice
+```
 
+**Protocolli Supportati:**
+- **WiFi**: Direct HTTP/MQTT
+- **Zigbee/Z-Wave**: Hub required (e.g., SmartThings, Hubitat)
+- **LoRaWAN**: Network server → webhook
+- **Bluetooth**: Mobile bridge
+- **Cellular**: Direct MQTT/HTTPS
+
+### Livello 2: Data Ingestion
+
+**Backend Function: `ingestIoTTelemetry`**
 ```javascript
-// Property health score includes IoT data
-const healthScore = {
-  overall: 87,
-  components: {
-    structural: 90,
-    electrical: 85,
-    plumbing: 88,
-    hvac: 82,
-    security: 95,
-    energy_efficiency: 80
+// Riceve telemetry da dispositivi
+Deno.serve(async (req) => {
+  const { device_id, telemetry } = await req.json();
+  
+  // 1. Validate device
+  const device = await base44.entities.IoTDevice.get(device_id);
+  
+  // 2. Store reading (new entity: IoTReading)
+  await base44.entities.IoTReading.create({
+    device_id,
+    property_id: device.property_id,
+    timestamp: new Date().toISOString(),
+    data: telemetry,
+  });
+  
+  // 3. Check thresholds → alerts
+  await checkThresholds(device_id, telemetry);
+  
+  return Response.json({ success: true });
+});
+```
+
+**Nuova Entity: IoTReading** (da creare)
+```json
+{
+  "device_id": "string",
+  "property_id": "string",
+  "timestamp": "datetime",
+  "data": {
+    "temperature": "number",
+    "humidity": "number",
+    "consumption": "number",
+    "battery": "number",
+    // dynamic fields based on device type
   },
-  iot_insights: {
-    devices_online: 24,
-    devices_total: 25,
-    alerts_active: 1,
-    energy_consumption_trend: 'decreasing',
-    maintenance_due: 2,
-    anomalies_detected: 0
-  }
+  "anomaly_detected": "boolean",
+  "alert_triggered": "boolean"
+}
+```
+
+### Livello 3: Real-time Processing
+
+**Threshold Rules Engine:**
+```javascript
+const THRESHOLDS = {
+  'Leak Sensor': { water_detected: true → alert: 'CRITICAL' },
+  'Energy Monitor': { consumption > baseline * 1.5 → alert: 'WARNING' },
+  'HVAC Controller': { efficiency < 80% → alert: 'MAINTENANCE' },
+  'Smoke Detector': { smoke_detected: true → alert: 'EMERGENCY' },
 };
 ```
 
-**Interventions Timeline:**
-```json
-{
-  "property_id": "prop_789",
-  "interventions": [
-    {
-      "type": "iot_installation",
-      "date": "2026-05-27",
-      "description": "Installed smart thermostat and leak sensors",
-      "devices": ["device_001", "device_002", "device_003"],
-      "project_id": "proj_456"
-    },
-    {
-      "type": "iot_alert_response",
-      "date": "2026-05-20",
-      "description": "Responded to water leak alert",
-      "alert_id": "alert_001",
-      "ticket_id": "ticket_789",
-      "action_taken": "Replaced faulty pipe section"
+**Alert Generation:**
+```javascript
+async function checkThresholds(device_id, telemetry) {
+  const device = await base44.entities.IoTDevice.get(device_id);
+  const thresholds = THRESHOLDS[device.device_type];
+  
+  for (const [key, rule] of Object.entries(thresholds)) {
+    if (rule.condition(telemetry[key])) {
+      await base44.entities.PropertyRisk.create({
+        property_id: device.property_id,
+        risk_type: mapDeviceTypeToRisk(device.device_type),
+        severity: rule.alert,
+        confidence_level: 95,
+        title: `${device.device_type} Alert`,
+        description: `Anomaly detected: ${key}`,
+        evidence: [device_id],
+        detected_date: new Date().toISOString(),
+      });
     }
-  ]
+  }
 }
 ```
 
 ---
 
-### 3.2 Guardian Integration
+## Use Cases per Categoria
 
-**Proactive Maintenance:**
+### 1. Water Leak Detection
+
+**Sensori:** Aqara, Fibaro, Shelly
+**Telemetria:** `water_detected: boolean`
+**Alert:** Immediato (push notification + ticket automatico)
+**Integrazione:**
+```javascript
+if (telemetry.water_detected) {
+  // Create emergency ticket
+  await base44.entities.SupportTicket.create({
+    property_id,
+    issue_type: 'Water Leak',
+    priority: 'Urgent',
+    title: 'Perdita Rilevata - IoT Sensor',
+    status: 'Open',
+  });
+  
+  // Send SMS/Email
+  await base44.integrations.Core.SendEmail({
+    to: propertyOwner,
+    subject: 'ALLARME PERDITA',
+    body: 'Perdita rilevata in [location]',
+  });
+}
+```
+
+### 2. Energy Monitoring
+
+**Sensori:** Shelly EM, Tasmota, Modbus
+**Telemetria:** `consumption_kwh, voltage, current, power_factor`
+**Analisi:**
+- Baseline calculation (storico 30 giorni)
+- Anomaly detection (>2σ dalla baseline)
+- Cost forecasting
+
+**Insight AI:**
+```
+"Consumo energetico anomalo rilevato:
+- Consumo attuale: 5.2 kWh
+- Baseline storica: 2.1 kWh (+147%)
+- Possibile causa: HVAC malfunzionante
+- Costo stimato extra: €45/mese
+- Azione: Ispezione HVAC raccomandata"
+```
+
+### 3. HVAC Telemetry
+
+**Sensori:** Nest, Ecobee, Tado
+**Telemetria:** `temperature, humidity, setpoint, efficiency, runtime_hours`
+**Manutenzione Predittiva:**
+```javascript
+// Calculate efficiency degradation
+const efficiency = telemetry.efficiency;
+const baseline = device.metadata.install_efficiency;
+const degradation = (baseline - efficiency) / baseline;
+
+if (degradation > 0.2) {
+  // 20% degradation → maintenance needed
+  await base44.entities.PropertyMaintenance.create({
+    property_id: device.property_id,
+    maintenance_type: 'Predictive',
+    title: 'HVAC Efficiency Degradation',
+    description: `Efficiency dropped from ${baseline}% to ${efficiency}%`,
+    scheduled_date: addDays(30),
+    ai_generated: true,
+    ai_reasoning: `HVAC efficiency degraded by ${(degradation * 100).toFixed(0)}% since installation. Maintenance recommended to restore performance.`,
+  });
+}
+```
+
+### 4. Environmental Sensors
+
+**Sensori:** Temperature, humidity, CO2, PM2.5
+**Telemetria:** `temp, humidity, co2_ppm, pm25`
+**Health Impact:**
+```javascript
+// Indoor air quality scoring
+const aqi = calculateAQI(telemetry);
+if (aqi < 50) {
+  // Good air quality
+} else if (aqi < 100) {
+  // Moderate → suggest ventilation
+} else {
+  // Poor → alert + HVAC recommendation
+  await createInsight({
+    type: 'Efficiency Improvement',
+    title: 'Qualità Aria Scadente',
+    ai_reasoning: `CO2: ${telemetry.co2_ppm}ppm (soglia: 1000ppm). 
+                   PM2.5: ${telemetry.pm25}μg/m³ (soglia: 25μg/m³).
+                   Ventilazione o purificatore raccomandati.`,
+  });
+}
+```
+
+### 5. Smart Meters
+
+**Sensori:** Water meter, electric meter
+**Telemetria:** `total_consumption, flow_rate, leak_probability`
+**Leak Detection Algorithm:**
+```javascript
+// Continuous flow detection (2am-5am baseline)
+if (hour >= 2 && hour <= 5) {
+  const baseline_flow = 0; // No usage expected
+  const actual_flow = telemetry.flow_rate;
+  
+  if (actual_flow > baseline_flow + threshold) {
+    // Probable leak
+    await createRisk({
+      type: 'Water Leak',
+      severity: 'High',
+      confidence: 85,
+      ai_reasoning: `Flusso notturno anomalo: ${actual_flow}L/h 
+                     (baseline: ${baseline_flow}L/h).
+                     Possibile perdita occulta.`,
+    });
+  }
+}
+```
+
+---
+
+## Integration Patterns
+
+### Pattern 1: Webhook-Based (Cloud Devices)
+
+```
+Device Cloud → Webhook → Base44 Function → Entity Storage
+```
+
+**Esempio:** Shelly, Tuya, SmartThings
+```javascript
+functions/handleIoTWebhook.js:
+Deno.serve(async (req) => {
+  const payload = await req.json();
+  
+  // Map webhook to device
+  const device = await findDeviceByWebhookId(payload.device_id);
+  
+  // Process telemetry
+  await ingestTelemetry(device, payload.data);
+  
+  return Response.json({ ok: true });
+});
+```
+
+### Pattern 2: MQTT Broker (Direct Devices)
+
+```
+Device → MQTT Broker → MQTT Subscriber → Base44 Function
+```
+
+**Setup:**
+1. MQTT Broker (AWS IoT, HiveMQ, Mosquitto)
+2. Subscriber function (Deno Deploy con MQTT client)
+3. Forward to Base44 via HTTP
+
+### Pattern 3: Edge Gateway (Local Protocol)
+
+```
+Zigbee/Z-Wave Devices → Gateway → Cloud API → Base44
+```
+
+**Gateway:** Hubitat, Home Assistant, OpenHAB
+**Integration:** Gateway webhook o polling API
+
+---
+
+## Data Model Extensions
+
+### Entity: IoTReading (Nuova)
 
 ```json
 {
-  "guardian_subscription_id": "guard_001",
-  "property_id": "prop_789",
-  "iot_monitoring": {
-    "enabled": true,
-    "devices_monitored": 25,
-    "alert_threshold": "warning",
-    "auto_response_enabled": true,
-    "24_7_monitoring": true
+  "name": "IoTReading",
+  "type": "object",
+  "properties": {
+    "company_id": "string",
+    "device_id": "string",
+    "property_id": "string",
+    "timestamp": "datetime",
+    "data": "object",
+    "anomaly_score": "number (0-1)",
+    "alert_triggered": "boolean",
+    "processed": "boolean",
+    "metadata": "object"
   },
-  "automated_actions": [
-    {
-      "trigger": "hvac_filter_pressure_high",
-      "action": "create_maintenance_ticket",
-      "priority": "Medium"
-    },
-    {
-      "trigger": "water_leak_detected",
-      "action": "emergency_response",
-      "priority": "Critical"
-    },
-    {
-      "trigger": "security_breach",
-      "action": "alert_owner_and_authorities",
-      "priority": "Critical"
-    }
-  ],
-  "monthly_reports": {
-    "device_uptime": "99.8%",
-    "alerts_resolved": 12,
-    "energy_savings": "15%",
-    "maintenance_events": 3
-  }
+  "required": ["device_id", "timestamp", "data"]
 }
 ```
 
-**Guardian Service Tiers:**
-
-| Tier | IoT Features | Price |
-|------|--------------|-------|
-| **Basic** | Leak detection, smoke/CO monitoring | €29/mo |
-| **Smart** | + HVAC, energy monitoring, security | €79/mo |
-| **Premium** | + Full automation, predictive maintenance | €149/mo |
-| **Enterprise** | + Custom integrations, SLA | Custom |
-
----
-
-### 3.3 Property Entity Integration
-
-**Property Entity (Extended):**
+### Entity: IoTAlertRule (Nuova)
 
 ```json
 {
-  "id": "prop_789",
-  "company_id": "comp_456",
-  "property_name": "Villa Rosa",
-  "client_id": "client_123",
-  "type": "Villa",
-  "smart_property_features": {
-    "iot_enabled": true,
-    "devices_installed": 25,
-    "automation_rules": 8,
-    "energy_monitoring": true,
-    "security_system": true,
-    "hvac_smart_control": true,
-    "leak_detection": true,
-    "solar_panels": true,
-    "battery_storage": false,
-    "ev_charger": true
-  },
-  "iot_infrastructure": {
-    "hub_model": "Samsung SmartThings Hub v3",
-    "protocol": ["Zigbee", "Z-Wave", "WiFi", "Thread"],
-    "network_coverage": "excellent",
-    "backup_power": true,
-    "internet_backup": "4G LTE"
+  "name": "IoTAlertRule",
+  "type": "object",
+  "properties": {
+    "company_id": "string",
+    "property_id": "string",
+    "device_type": "string",
+    "metric": "string",
+    "operator": "enum [>, <, =, >=, <=]",
+    "threshold": "number",
+    "severity": "enum [Low, Medium, High, Critical]",
+    "action": "enum [Create Ticket, Send Email, SMS, Push]",
+    "enabled": "boolean"
   }
 }
 ```
 
 ---
 
-## 4. Data Flow Architecture
+## Security Considerations
 
-### 4.1 Telemetry Pipeline
+### Device Authentication
+- API keys per device
+- Token rotation ogni 90 giorni
+- Rate limiting per device ID
 
-```
-[IoT Devices] 
-    ↓ (MQTT/HTTP/WebSocket)
-[IoT Gateway]
-    ↓ (Validation & Normalization)
-[Message Queue (Kafka/RabbitMQ)]
-    ↓ (Stream Processing)
-[Time-Series Database (InfluxDB/TimescaleDB)]
-    ↓ (Real-time Analytics)
-[Alert Engine]
-    ↓ (Notification)
-[Codex OS Platform]
-    ↓ (Storage & Visualization)
-[Dashboard & Mobile App]
-```
+### Data Encryption
+- TLS 1.3 per telemetria in transito
+- AES-256 per dati sensibili a riposo
 
-### 4.2 Data Retention Policy
-
-| Data Type | Retention | Storage |
-|-----------|-----------|---------|
-| Real-time telemetry | 30 days | Time-series DB |
-| Aggregated hourly | 1 year | Time-series DB |
-| Aggregated daily | 5 years | Cold storage |
-| Alerts | 2 years | PostgreSQL |
-| Device events | 1 year | PostgreSQL |
-| Automation logs | 90 days | PostgreSQL |
+### Access Control
+- Tenant isolation (company_id)
+- Property-scoped access
+- Admin-only device configuration
 
 ---
 
-## 5. Communication Protocols
+## Scalability
 
-### 5.1 Supported Protocols
+### Volume Estimates
+- 100 properties × 10 devices = 1,000 devices
+- 1 reading/min/device = 1,440,000 readings/day
+- Storage: ~100MB/day (compressed)
 
-**Device-to-Gateway:**
-- MQTT (primary)
-- HTTP/HTTPS REST API
-- WebSocket (real-time)
-- CoAP (constrained devices)
-
-**Gateway-to-Cloud:**
-- HTTPS REST API
-- MQTT over TLS
-- gRPC (high-performance)
-
-**Local Network:**
-- Zigbee 3.0
-- Z-Wave Plus
-- Thread
-- Bluetooth LE
-- WiFi (2.4GHz/5GHz)
-- LoRaWAN (long-range)
-
-### 5.2 Message Format
-
-**MQTT Topic Structure:**
-```
-codex/{company_id}/{property_id}/{device_id}/{metric_type}
-```
-
-**Example Messages:**
-```json
-// Temperature reading
-{
-  "topic": "codex/comp_456/prop_789/device_001/temperature",
-  "payload": {
-    "value": 22.5,
-    "unit": "celsius",
-    "quality": "good",
-    "ts": 1716804600000
-  }
-}
-
-// Alert event
-{
-  "topic": "codex/comp_456/prop_789/device_002/alert",
-  "payload": {
-    "alert_type": "water_detected",
-    "severity": "critical",
-    "message": "Water leak detected in basement",
-    "ts": 1716804600000
-  }
-}
-```
+### Optimization Strategies
+- Aggregazione hourly/daily per long-term storage
+- Downsampling: raw data (7 giorni) → hourly (30 giorni) → daily (1 anno)
+- Time-series DB (InfluxDB, TimescaleDB) per alta frequenza
 
 ---
 
-## 6. Security & Privacy
+## Implementation Roadmap
 
-### 6.1 Device Security
+### Phase 1: Foundation (Completed)
+✅ Entity IoTDevice esistente
+✅ Architecture design
+✅ Integration patterns definiti
 
-**Requirements:**
-- Unique device credentials (X.509 certificates)
-- Encrypted communication (TLS 1.3)
-- Secure boot and firmware signing
-- Regular firmware updates (OTA)
-- Hardware security module (HSM) for critical devices
+### Phase 2: Core Integration (Next)
+- [ ] Entity IoTReading
+- [ ] Entity IoTAlertRule
+- [ ] Function: ingestIoTTelemetry
+- [ ] Function: handleIoTWebhook
+- [ ] Function: processIoTAlerts
 
-**Authentication:**
-```json
-{
-  "device_id": "device_001",
-  "auth_method": "certificate",
-  "certificate_issued": "2026-01-01",
-  "certificate_expiry": "2027-01-01",
-  "last_authenticated": "2026-05-27T10:30:00Z",
-  "auth_status": "valid"
-}
-```
+### Phase 3: Intelligence
+- [ ] Anomaly detection ML
+- [ ] Baseline calculation
+- [ ] Predictive maintenance da telemetry
+- [ ] Energy optimization AI
 
-### 6.2 Data Privacy
-
-**GDPR Compliance:**
-- Data minimization (collect only necessary data)
-- Purpose limitation (use data only for specified purposes)
-- Storage limitation (retention policies enforced)
-- Security by design (encryption, access control)
-- User consent management
-
-**Data Access Control:**
-```json
-{
-  "user_id": "user_001",
-  "property_access": ["prop_789"],
-  "device_access": ["device_001", "device_002"],
-  "data_access_level": "read_only",
-  "can_control_devices": false,
-  "can_view_history": true,
-  "history_range_days": 30
-}
-```
+### Phase 4: Ecosystem
+- [ ] Mobile app per technician
+- [ ] Real-time dashboard
+- [ ] Alert notification system
+- [ ] Integration con smart home platforms
 
 ---
 
-## 7. API Design
+## Business Value
 
-### 7.1 Device Management API
+**Per Property Manager:**
+- Rilevamento immediato guasti
+- Riduzione danni da perdite (€€€)
+- Ottimizzazione energetica (15-25% savings)
+- Manutenzione basata su condizioni reali
 
-```
-GET    /api/v1/iot/devices                      - List all devices
-POST   /api/v1/iot/devices                      - Register new device
-GET    /api/v1/iot/devices/:id                  - Get device details
-PUT    /api/v1/iot/devices/:id                  - Update device
-DELETE /api/v1/iot/devices/:id                  - Remove device
-POST   /api/v1/iot/devices/:id/command          - Send command to device
-GET    /api/v1/iot/devices/:id/telemetry        - Get device telemetry
-GET    /api/v1/iot/devices/:id/alerts           - Get device alerts
-```
+**Per Clienti:**
+- Sicurezza 24/7
+- Minor downtime
+- Risparmio energetico
+- Comfort ambientale
 
-### 7.2 Telemetry API
-
-```
-GET    /api/v1/iot/telemetry                    - Query telemetry data
-POST   /api/v1/iot/telemetry                    - Ingest telemetry (devices)
-GET    /api/v1/iot/telemetry/aggregate          - Get aggregated data
-GET    /api/v1/iot/telemetry/anomalies          - Detect anomalies
-```
-
-### 7.3 Alerts API
-
-```
-GET    /api/v1/iot/alerts                       - List alerts
-POST   /api/v1/iot/alerts/:id/acknowledge       - Acknowledge alert
-POST   /api/v1/iot/alerts/:id/resolve           - Resolve alert
-GET    /api/v1/iot/alerts/stats                  - Alert statistics
-```
-
-### 7.4 Automation API
-
-```
-GET    /api/v1/iot/automations                  - List automation rules
-POST   /api/v1/iot/automations                  - Create automation
-PUT    /api/v1/iot/automations/:id              - Update automation
-DELETE /api/v1/iot/automations/:id              - Delete automation
-POST   /api/v1/iot/automations/:id/test         - Test automation
-GET    /api/v1/iot/automations/:id/logs         - Execution logs
-```
+**Per Codex OS:**
+- Revenue ricorrente (IoT monitoring service)
+- Differenziazione competitiva
+- Data moat (più dati → AI migliore)
+- Upsell su servizi professionali
 
 ---
 
-## 8. Dashboard & Visualization
+## Vendor Recommendations
 
-### 8.1 Property Dashboard
+**Leak Sensors:**
+- Aqara Water Leak Sensor (Zigbee, economico)
+- Fibaro Flood Sensor (Z-Wave, premium)
+- Shelly Water Leak (WiFi, direct)
 
-**Real-time Overview:**
-- Device status (online/offline)
-- Current readings (temp, humidity, energy)
-- Active alerts
-- Energy consumption (real-time + trends)
-- Security status
-- Automation activity
+**Energy Monitors:**
+- Shelly EM (WiFi, dual channel)
+- Tasmota + CT (open source)
+- Modbus energy meters (industrial)
 
-**Historical Analytics:**
-- Temperature/humidity trends
-- Energy consumption patterns
-- Alert history
-- Device uptime
-- Maintenance timeline
+**HVAC Controllers:**
+- Nest Learning Thermostat
+- Ecobee SmartThermostat
+- Tado Smart Radiator Thermostats
 
-### 8.2 Mobile App Features
+**Environmental:**
+- Aqara Temperature/Humidity
+- Netatmo Weather Station
+- PurpleAir (PM2.5)
 
-**Push Notifications:**
-- Critical alerts (immediate)
-- Warning alerts (digest)
-- Maintenance reminders
-- Automation triggers
-- Security events
-
-**Remote Control:**
-- Thermostat adjustment
-- Light control
-- Lock/unlock doors
-- Camera viewing
-- Alarm arming/disarming
+**Gateways:**
+- Hubitat Elevation (Zigbee + Z-Wave)
+- Home Assistant Green (open source)
+- SmartThings Hub (Samsung)
 
 ---
 
-## 9. Predictive Maintenance
+## Cost Estimates
 
-### 9.1 ML Models
+**Hardware (per property):**
+- Leak sensors (3×): €90
+- Energy monitor (1×): €60
+- HVAC controller (1×): €150
+- Environmental (2×): €60
+- **Totale: €360/property**
 
-**Failure Prediction:**
-- HVAC compressor failure (7-day forecast)
-- Water pump bearing wear
-- Battery degradation
-- Filter clogging prediction
-- Security camera storage failure
+**Cloud/Infrastructure:**
+- MQTT Broker: €50/month (1000 devices)
+- Data storage: €100/month
+- Processing: €200/month
+- **Totale: €350/month**
 
-**Anomaly Detection:**
-- Unusual energy consumption
-- Abnormal vibration patterns
-- Temperature deviations
-- Water flow anomalies
-- Network connectivity issues
-
-### 9.2 Maintenance Scheduling
-
-**Automated Scheduling:**
-```json
-{
-  "device_id": "hvac_001",
-  "maintenance_type": "filter_replacement",
-  "scheduled_date": "2026-06-15",
-  "priority": "Medium",
-  "estimated_duration_minutes": 30,
-  "parts_required": ["filter_type_a"],
-  "technician_skills": ["hvac_basic"],
-  "auto_created_ticket": true,
-  "ticket_id": "ticket_456"
-}
-```
+**Revenue Model:**
+- IoT Monitoring Service: €9.99/property/month
+- 100 properties = €999/month
+- Break-even: ~4 mesi
 
 ---
 
-## 10. Implementation Roadmap
+## Next Steps
 
-### Phase 1: Foundation (Q3 2026)
-- [ ] IoTDevice entity extensions
-- [ ] IoTTelemetry entity
-- [ ] IoTAlert entity
-- [ ] Basic device registration API
-- [ ] Telemetry ingestion (MQTT)
-- [ ] Simple alert system
+1. **Pilot Program**: 3 properties, 10 devices each
+2. **Data Collection**: 3 mesi di telemetria
+3. **ML Training**: Baseline e anomaly detection
+4. **Scale**: Rollout a tutto il portafoglio
 
-### Phase 2: Integration (Q4 2026)
-- [ ] Home Passport IoT dashboard
-- [ ] Guardian IoT monitoring tier
-- [ ] Property IoT features
-- [ ] Mobile app notifications
-- [ ] Basic automation rules
-
-### Phase 3: Advanced (Q1 2027)
-- [ ] Predictive maintenance ML
-- [ ] Energy analytics
-- [ ] Advanced automation
-- [ ] Third-party integrations
-- [ ] Voice assistant integration
-
-### Phase 4: Scale (Q2 2027)
-- [ ] Multi-property management
-- [ ] Enterprise features
-- [ ] White-label IoT dashboards
-- [ ] Partner integrations
-- [ ] Advanced security features
-
----
-
-## 11. Third-Party Integrations
-
-### 11.1 Smart Home Platforms
-
-**Supported Platforms:**
-- Amazon Alexa
-- Google Home
-- Apple HomeKit
-- Samsung SmartThings
-- Home Assistant
-- IFTTT
-
-### 11.2 Energy Providers
-
-**Integrations:**
-- Enel X (Italy)
-- Tesla Energy
-- Sonnen
-- LG Energy Solution
-- SolarEdge
-
-### 11.3 Security Services
-
-**Integrations:**
-- Verisure
-- Securitas Direct
-- Ajax Systems
-- Ring Alarm
-- Arlo Security
-
----
-
-## 12. Cost Model
-
-### 12.1 Infrastructure Costs
-
-| Component | Cost/Month | Notes |
-|-----------|------------|-------|
-| IoT Gateway | €50-200 | Per property |
-| Message Queue | €100-500 | Based on volume |
-| Time-series DB | €200-1000 | Based on retention |
-| Compute (processing) | €100-300 | Auto-scaling |
-| Storage | €50-200 | Cold + hot storage |
-
-### 12.2 Device Costs (Customer)
-
-| Device Type | Cost Range | Installation |
-|-------------|------------|--------------|
-| Smart Thermostat | €150-300 | Included |
-| Leak Sensor (pack of 3) | €100-200 | Included |
-| Energy Monitor | €200-400 | Included |
-| Security Camera | €100-300 | Optional |
-| Smart Lock | €200-400 | Optional |
-| Hub/Gateway | €100-200 | Included |
-
-### 12.3 Service Pricing
-
-**Guardian IoT Tiers:**
-- Basic: €29/mo (leak + smoke/CO)
-- Smart: €79/mo (+ HVAC + energy)
-- Premium: €149/mo (full automation)
-- Enterprise: Custom (SLA + custom)
-
-**Installation Package:**
-- Basic Setup: €499 (up to 10 devices)
-- Standard: €999 (up to 25 devices)
-- Premium: €1999 (up to 50 devices)
-- Custom: Quote (50+ devices)
-
----
-
-## 13. Success Metrics
-
-### 13.1 Technical KPIs
-
-- Device uptime: >99.5%
-- Alert delivery latency: <5 seconds
-- Telemetry ingestion rate: >10,000 msg/sec
-- False positive rate: <1%
-- System availability: 99.9%
-
-### 13.2 Business KPIs
-
-- IoT-enabled properties: Target 500 in Year 1
-- Guardian IoT adoption: 30% of existing customers
-- Average devices per property: 15-25
-- Customer satisfaction: >4.5/5
-- Reduction in emergency calls: 40%
-- Energy savings for customers: 15-25%
-
----
-
-## 14. Risk Mitigation
-
-### 14.1 Technical Risks
-
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Device incompatibility | High | Strict certification process |
-| Network outages | Medium | Local processing + 4G backup |
-| Data breaches | Critical | End-to-end encryption, regular audits |
-| False alerts | Medium | ML-based validation, human review |
-| Scale limitations | Medium | Cloud-native architecture, auto-scaling |
-
-### 14.2 Business Risks
-
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Low adoption | High | Competitive pricing, education |
-| High support costs | Medium | Self-service, AI support |
-| Regulatory changes | Medium | Compliance monitoring, legal review |
-| Competition | Medium | Differentiation via integration |
-
----
-
-**Version:** 1.0.0  
-**Status:** Architecture Ready - Pre-Implementation  
-**Last Updated:** 2026-05-27  
-**Next Review:** Q3 2026
+**Timeline:** 8-12 settimane per MVP
+**Budget:** €5,000 (hardware + development)
