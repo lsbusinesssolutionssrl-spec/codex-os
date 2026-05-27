@@ -326,7 +326,7 @@ export function GlobalContextProvider({ children }) {
     setPermissions(perms);
 
     // STEP 6: Load enabled modules
-    const modules = computeEnabledModules(subscription, membership.tenant_role);
+    const modules = await computeEnabledModules(subscription, membership.tenant_role);
     setEnabledModules(modules);
 
     // Set context type
