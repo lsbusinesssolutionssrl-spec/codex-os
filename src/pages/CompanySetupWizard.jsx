@@ -100,23 +100,28 @@ export default function CompanySetupWizard() {
       };
 
       let companyId = activeTenant?.id;
-      
+      const currentUser = await base44.auth.me();
+
       if (companyId) {
         // Update existing company
-        await base44.entities.Company.update(companyId, companyData);
+        await base44.entities.Company.update(companyId, { ...companyData, setup_completed: true });
         toast.success('Azienda aggiornata');
       } else {
         // Create new company
-        const result = await base44.entities.Company.create(companyData);
+        const result = await base44.entities.Company.create({ ...companyData, setup_completed: true });
         companyId = result.id;
+
+        // Create TenantMembership for current user as admin
+        await base44.entities.TenantMembership.create({
+          user_id: currentUser.id,
+          tenant_id: companyId,
+          tenant_role: 'tenant_admin',
+          status: 'active',
+          is_primary: true,
+        });
+
         toast.success('Azienda creata');
       }
-
-      // Update tenant onboarding status
-      await base44.functions.invoke('updateTenantStatus', {
-        companyId,
-        status: 'active',
-      });
 
       toast.success('Configurazione azienda completata!');
       
