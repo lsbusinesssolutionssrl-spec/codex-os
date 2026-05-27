@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import {
-  Building2, Users, TrendingUp, DollarSign, AlertTriangle,
-  CheckCircle, Clock, BarChart2, Activity, Shield, Eye, Globe, CreditCard
-} from 'lucide-react';
+import { Building2, Users, TrendingUp, DollarSign, AlertTriangle, CheckCircle, Clock, BarChart2, Activity, Shield, Eye, Globe, CreditCard, LogOut, RefreshCw, Play } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
@@ -20,50 +17,20 @@ export default function SuperAdminDashboard() {
     });
   }, []);
 
-  const { data: companies = [] } = useQuery({
-    queryKey: ['superadmin-companies'],
-    queryFn: () => base44.entities.Company.list(),
-    enabled: isSuperAdmin,
-  });
+  const { data: companies = [] } = useQuerySafe(['superadmin-companies'], () => base44.entities.Company.list());
+  const { data: subscriptions = [] } = useQuerySafe(['superadmin-subscriptions'], () => base44.entities.CompanySubscription.list());
+  const { data: plans = [] } = useQuerySafe(['superadmin-plans'], () => base44.entities.SubscriptionPlan.list());
+  const { data: users = [] } = useQuerySafe(['superadmin-users'], () => base44.entities.User.list());
+  const { data: allProjects = [] } = useQuerySafe(['superadmin-projects'], () => base44.entities.Project.list(undefined, 200));
+  const { data: allEstimates = [] } = useQuerySafe(['superadmin-estimates'], () => base44.entities.Estimate.list(undefined, 200));
+  const { data: allTickets = [] } = useQuerySafe(['superadmin-tickets'], () => base44.entities.SupportTicket.list(undefined, 200));
+  const { data: allMemories = [] } = useQuerySafe(['superadmin-memories'], () => base44.entities.AIMemory.list(undefined, 200));
 
-  const { data: subscriptions = [] } = useQuery({
-    queryKey: ['superadmin-subscriptions'],
-    queryFn: () => base44.entities.CompanySubscription.list(),
-    enabled: isSuperAdmin,
-  });
-
-  const { data: plans = [] } = useQuery({
-    queryKey: ['superadmin-plans'],
-    queryFn: () => base44.entities.SubscriptionPlan.list(),
-    enabled: isSuperAdmin,
-  });
-
-  const { data: users = [] } = useQuery({
-    queryKey: ['superadmin-users'],
-    queryFn: () => base44.entities.User.list(),
-    enabled: isSuperAdmin,
-  });
-
-  const { data: allProjects = [] } = useQuery({
-    queryKey: ['superadmin-projects'],
-    queryFn: () => base44.entities.Project.list(undefined, 200),
-    enabled: isSuperAdmin,
-  });
-
-  const { data: allEstimates = [] } = useQuery({
-    queryKey: ['superadmin-estimates'],
-    queryFn: () => base44.entities.Estimate.list(undefined, 200),
-    enabled: isSuperAdmin,
-  });
-
-  if (!authChecked) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
-    </div>
-  );
+  if (!authChecked) return <LoadingSpinner />;
 
   const activeSubscriptions = subscriptions.filter(s => s.status === 'active');
   const trialSubscriptions = subscriptions.filter(s => s.status === 'trial');
+  const expiredTrials = subscriptions.filter(s => s.status === 'trial_expired');
   const churnRisk = subscriptions.filter(s => s.status === 'past_due' || s.cancel_at_period_end);
   const mrr = activeSubscriptions.reduce((sum, s) => sum + (s.mrr || 0), 0);
   const arr = mrr * 12;
@@ -78,15 +45,32 @@ export default function SuperAdminDashboard() {
       projectCount: allProjects.filter(p => p.company_id === c.id).length,
       estimateCount: allEstimates.filter(e => e.company_id === c.id).length,
       userCount: users.filter(u => u.company_id === c.id).length,
+      ticketCount: allTickets.filter(t => t.company_id === c.id).length,
+      aiUsage: allMemories.filter(m => m.created_by?.includes(c.id)).length,
     };
   });
 
   const statusColor = {
     active: 'text-green-600 bg-green-50',
     trial: 'text-blue-600 bg-blue-50',
+    trial_expired: 'text-orange-600 bg-orange-50',
     past_due: 'text-red-600 bg-red-50',
     suspended: 'text-gray-600 bg-gray-100',
     cancelled: 'text-red-600 bg-red-50',
+  };
+
+  const healthScore = (c) => {
+    let score = 0;
+    if (c.subscription?.status === 'active') score += 40;
+    if (c.subscription?.status === 'trial') score += 20;
+    if (c.projectCount > 5) score += 20;
+    if (c.userCount > 2) score += 15;
+    if (c.estimateCount > 3) score += 15;
+    if (c.aiUsage > 0) score += 10;
+    if (score >= 80) return 'Healthy';
+    if (score >= 60) return 'Needs Attention';
+    if (score >= 40) return 'At Risk';
+    return 'Inactive';
   };
 
   return (
@@ -101,14 +85,23 @@ export default function SuperAdminDashboard() {
           </div>
           <p className="text-sm text-gray-500">Platform-wide analytics and tenant management</p>
         </div>
-        <button
-          onClick={() => navigate('/tenant-onboarding')}
-          className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium"
-          style={{ backgroundColor: '#1147FF' }}
-        >
-          <Building2 className="w-4 h-4" />
-          New Tenant
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate('/product-analytics')}
+            className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
+          >
+            <BarChart2 className="w-4 h-4" />
+            Analytics
+          </button>
+          <button
+            onClick={() => navigate('/tenant-onboarding')}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium"
+            style={{ backgroundColor: '#1147FF' }}
+          >
+            <Building2 className="w-4 h-4" />
+            New Tenant
+          </button>
+        </div>
       </div>
 
       {/* Platform KPIs */}
@@ -121,64 +114,16 @@ export default function SuperAdminDashboard() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <KpiCard label="Trials" value={trialSubscriptions.length} icon={Clock} color="#3B82F6" />
+        <KpiCard label="Expired Trials" value={expiredTrials.length} icon={AlertTriangle} color="#F59E0B" />
         <KpiCard label="Churn Risk" value={churnRisk.length} icon={AlertTriangle} color="#EF4444" />
         <KpiCard label="Platform Users" value={users.length} icon={Users} color="#0B2341" />
-        <KpiCard label="Total Projects" value={allProjects.length} icon={Activity} color="#10B981" />
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-gray-500" />
-            Subscription Breakdown
-          </h3>
-          <div className="space-y-2">
-            {['active', 'trial', 'past_due', 'suspended', 'cancelled'].map(s => {
-              const count = subscriptions.filter(sub => sub.status === s).length;
-              if (!count) return null;
-              return (
-                <div key={s} className="flex items-center justify-between">
-                  <span className={`text-xs font-medium px-2 py-1 rounded-full capitalize ${statusColor[s] || 'bg-gray-100 text-gray-600'}`}>{s.replace('_', ' ')}</span>
-                  <span className="font-bold text-gray-900">{count}</span>
-                </div>
-              );
-            })}
-            {subscriptions.length === 0 && <p className="text-xs text-gray-400">No subscriptions yet</p>}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <Globe className="w-4 h-4 text-gray-500" />
-            Platform Activity
-          </h3>
-          <div className="space-y-3">
-            <MetricRow label="Total Estimates" value={allEstimates.length} />
-            <MetricRow label="Total Projects" value={allProjects.length} />
-            <MetricRow label="Avg Projects / Tenant" value={companies.length ? (allProjects.length / companies.length).toFixed(1) : 0} />
-            <MetricRow label="Avg Users / Tenant" value={companies.length ? (users.length / companies.length).toFixed(1) : 0} />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <BarChart2 className="w-4 h-4 text-gray-500" />
-            Plans Distribution
-          </h3>
-          <div className="space-y-2">
-            {plans.map(plan => {
-              const count = subscriptions.filter(s => s.plan_id === plan.id).length;
-              return (
-                <div key={plan.id} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">{plan.name}</span>
-                  <span className="font-bold text-gray-900">{count}</span>
-                </div>
-              );
-            })}
-            {plans.length === 0 && <p className="text-xs text-gray-400">No plans configured</p>}
-          </div>
-        </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <KpiCard label="Total Projects" value={allProjects.length} icon={Activity} color="#10B981" />
+        <KpiCard label="Total Estimates" value={allEstimates.length} icon={BarChart2} color="#8B5CF6" />
+        <KpiCard label="Total Tickets" value={allTickets.length} icon={CheckCircle} color="#EF4444" />
+        <KpiCard label="AI Usage" value={allMemories.length} icon={Shield} color="#F59E0B" />
       </div>
 
       {/* Tenant Table */}
@@ -192,6 +137,7 @@ export default function SuperAdminDashboard() {
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
                 <th className="text-left py-3 px-4 font-medium text-gray-600">Company</th>
+                <th className="text-center py-3 px-4 font-medium text-gray-600">Health</th>
                 <th className="text-center py-3 px-4 font-medium text-gray-600">Plan</th>
                 <th className="text-center py-3 px-4 font-medium text-gray-600">Status</th>
                 <th className="text-center py-3 px-4 font-medium text-gray-600">Users</th>
@@ -219,6 +165,16 @@ export default function SuperAdminDashboard() {
                     </div>
                   </td>
                   <td className="text-center py-3 px-4">
+                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                      healthScore(c) === 'Healthy' ? 'bg-green-100 text-green-700' :
+                      healthScore(c) === 'Needs Attention' ? 'bg-yellow-100 text-yellow-700' :
+                      healthScore(c) === 'At Risk' ? 'bg-orange-100 text-orange-700' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      {healthScore(c)}
+                    </span>
+                  </td>
+                  <td className="text-center py-3 px-4">
                     <span className="text-xs text-gray-600">{c.plan?.name || '—'}</span>
                   </td>
                   <td className="text-center py-3 px-4">
@@ -234,19 +190,21 @@ export default function SuperAdminDashboard() {
                     {c.subscription?.mrr ? `€${c.subscription.mrr}` : '—'}
                   </td>
                   <td className="text-center py-3 px-4">
-                    <button
-                      onClick={() => navigate(`/company-settings`)}
-                      className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
-                      title="View Settings"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => navigate(`/company-settings`)}
+                        className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+                        title="View Settings"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
               {companies.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="text-center py-10 text-gray-400 text-sm">No tenants yet</td>
+                  <td colSpan={8} className="text-center py-10 text-gray-400 text-sm">No tenants yet</td>
                 </tr>
               )}
             </tbody>
@@ -290,11 +248,18 @@ function KpiCard({ label, value, icon: Icon, color }) {
   );
 }
 
-function MetricRow({ label, value }) {
+function LoadingSpinner() {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-gray-500">{label}</span>
-      <span className="font-semibold text-gray-900">{value}</span>
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
     </div>
   );
+}
+
+function useQuerySafe(queryKey, queryFn) {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    queryFn().then(setData).catch(() => setData([]));
+  }, [queryKey, queryFn]);
+  return { data: data || [] };
 }

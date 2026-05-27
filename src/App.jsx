@@ -81,6 +81,9 @@ import Extensions from './pages/Extensions';
 import Marketplace from './pages/Marketplace';
 import WhiteLabelSettings from './pages/WhiteLabelSettings';
 import PropertyIntelligence from './pages/PropertyIntelligence';
+import Landing from './pages/Landing';
+import RequestDemo from './pages/RequestDemo';
+import ProductAnalytics from './pages/ProductAnalytics';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -110,7 +113,10 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<Landing />} />
+      <Route path="/request-demo" element={<RequestDemo />} />
+      <Route path="/product-analytics" element={<ProductAnalytics />} />
+      <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/clients/:id" element={<ClientDetail />} />
         <Route path="/properties" element={<Properties />} />
