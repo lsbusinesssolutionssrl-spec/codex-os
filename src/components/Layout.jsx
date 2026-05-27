@@ -17,6 +17,7 @@ import { useGlobalContext } from '@/lib/GlobalContextEngine';
 import SessionDebugPanel from './SessionDebugPanel';
 import ContextBanner from './tenant/ContextBanner';
 import LayoutInspector from './LayoutInspector';
+import ModuleEntitlementDebug from './ModuleEntitlementDebug';
 
 // Tenant navigation - modules enabled dynamically based on plan
 const TENANT_NAV_ITEMS = [
@@ -266,6 +267,16 @@ export default function Layout() {
         </main>
         <SessionDebugPanel />
         <LayoutInspector />
+        {userRole === 'admin' || userRole === 'developer' ? (
+          <div className="fixed bottom-4 right-4 z-50">
+            <details className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-md max-h-96 overflow-auto">
+              <summary className="px-4 py-2 text-xs font-semibold text-gray-700 cursor-pointer bg-gray-50 border-b border-gray-200">
+                🔧 Module Entitlement Debug
+              </summary>
+              <ModuleEntitlementDebug />
+            </details>
+          </div>
+        ) : null}
       </div>
     </div>
   );

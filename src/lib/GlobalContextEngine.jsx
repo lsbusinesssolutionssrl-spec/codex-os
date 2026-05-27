@@ -405,18 +405,18 @@ export function GlobalContextProvider({ children }) {
 
   const computeEnabledModules = async (subscription, tenantRole) => {
     // Core modules always available
-    const modules = ['projects', 'estimates', 'clients', 'documents'];
+    const modules = ['projects', 'estimates', 'clients', 'documents', 'properties', 'checklists', 'tickets', 'calendar', 'report', 'documents', 'sop', 'maintenance', 'guardian'];
     
     // Role-based restrictions
     if (tenantRole === 'technician') {
-      return ['projects', 'checklists', 'tickets', 'documents'];
+      return ['projects', 'checklists', 'tickets', 'documents', 'maintenance'];
     }
     
     if (tenantRole === 'sales') {
-      return ['clients', 'properties', 'estimates', 'documents'];
+      return ['clients', 'properties', 'estimates', 'documents', 'report'];
     }
     
-    // Subscription-based modules
+    // Subscription-based modules - Enterprise/Professional get all premium features
     if (subscription) {
       // Load plan details to check quotas
       let quotas = {};
@@ -439,30 +439,73 @@ export function GlobalContextProvider({ children }) {
       
       console.log('Computing modules - Quotas:', quotas);
       
-      if (quotas?.guardian_subscriptions > 0) {
-        modules.push('guardian');
-      }
-      
+      // Financial Control - enabled by custom_reports OR financial_control quota
       if (quotas?.custom_reports || quotas?.financial_control) {
         modules.push('financial_control');
+        console.log('Financial Control enabled');
       }
       
+      // AI Copilot - enabled by AI requests quota
       if (quotas?.ai_requests_per_month > 0) {
         modules.push('ai_copilot');
+        console.log('AI Copilot enabled');
       }
       
-      // Intelligence module - requires advanced_analytics quota
-      if (quotas?.advanced_analytics) {
+      // Intelligence - enabled by advanced_analytics OR intelligence quota
+      if (quotas?.advanced_analytics || quotas?.intelligence) {
         modules.push('intelligence');
-        console.log('Intelligence module enabled via advanced_analytics quota');
+        console.log('Intelligence enabled');
       }
       
+      // Workflows - enabled by workflow_automation quota
       if (quotas?.workflow_automation) {
         modules.push('workflows');
+        console.log('Workflows enabled');
+      }
+      
+      // Executive Insights / Business Intelligence
+      if (quotas?.advanced_analytics || quotas?.custom_reports) {
+        modules.push('executive_insights');
+        modules.push('business_intelligence');
+        console.log('Executive Insights & Business Intelligence enabled');
+      }
+      
+      // Team Performance
+      if (quotas?.max_users > 5 || quotas?.advanced_analytics) {
+        modules.push('team_performance');
+        console.log('Team Performance enabled');
+      }
+      
+      // Risk Monitoring
+      if (quotas?.advanced_analytics || quotas?.guardian_subscriptions > 0) {
+        modules.push('risk_monitoring');
+        console.log('Risk Monitoring enabled');
       }
     }
     
-    console.log('Enabled modules:', modules);
+    // Load feature flags for this company
+    if (activeTenant?.id) {
+      try {
+        const featureFlags = await base44.entities.TenantFeatureFlag.filter({
+          company_id: activeTenant.id,
+          enabled: true
+        });
+        
+        console.log('Feature flags:', featureFlags);
+        
+        // Add modules from feature flags
+        featureFlags.forEach(flag => {
+          if (flag.enabled && !modules.includes(flag.feature_name)) {
+            modules.push(flag.feature_name);
+            console.log(`Module ${flag.feature_name} enabled via feature flag`);
+          }
+        });
+      } catch (error) {
+        console.error('Error loading feature flags:', error);
+      }
+    }
+    
+    console.log('Final enabled modules:', modules);
     return modules;
   };
 
