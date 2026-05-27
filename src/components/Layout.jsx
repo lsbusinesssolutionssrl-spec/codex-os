@@ -24,16 +24,16 @@ const navItems = [
   { path: '/guardian', label: 'Guardian', icon: Shield },
   { path: '/documents', label: 'Documenti', icon: Archive },
   { path: '/ai', label: 'AI Copilot', icon: Bot },
-  { path: '/financial-control', label: 'Financial', icon: TrendingUp },
-  { path: '/company-settings', label: 'Settings', icon: Building2 },
+  { path: '/financial-control', label: 'Controllo Finanziario', icon: TrendingUp },
+  { path: '/company-settings', label: 'Impostazioni', icon: Building2 },
   // Platform tools - visible only to admin
   { path: '/super-admin', label: 'Platform', icon: Shield, adminOnly: true },
-  { path: '/platform-settings', label: 'Platform Settings', icon: Shield, adminOnly: true },
-  { path: '/subscription-plans', label: 'SaaS Plans', icon: CreditCard, adminOnly: true },
+  { path: '/platform-settings', label: 'Impostazioni Platform', icon: Shield, adminOnly: true },
+  { path: '/subscription-plans', label: 'Piani SaaS', icon: CreditCard, adminOnly: true },
   { path: '/developer', label: 'Developer', icon: Database, adminOnly: true },
-  { path: '/integrations', label: 'Integrations', icon: Globe, adminOnly: true },
+  { path: '/integrations', label: 'Integrazioni', icon: Globe, adminOnly: true },
   { path: '/brand-approval', label: 'White Label', icon: Palette, adminOnly: true },
-  { path: '/system-status', label: 'System Health', icon: Activity, adminOnly: true },
+  { path: '/system-status', label: 'Stato Sistema', icon: Activity, adminOnly: true },
 ];
 
 export default function Layout() {
@@ -153,7 +153,7 @@ export default function Layout() {
             className="flex items-center gap-2 text-white/50 hover:text-white text-sm transition-colors"
           >
             <Building2 className="w-4 h-4" />
-            Settings
+            Impostazioni
           </Link>
           <button
             onClick={() => base44.auth.logout()}
