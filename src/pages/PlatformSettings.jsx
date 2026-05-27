@@ -47,14 +47,14 @@ export default function PlatformSettings() {
       title: 'Gestione Tenant', 
       description: 'Crea e gestisci le company tenant',
       icon: Building2, 
-      path: '/super-admin',
+      path: '/platform/tenants',
       color: '#7C3AED'
     },
     { 
       title: 'Piani SaaS', 
       description: 'Configura piani e funzionalità',
       icon: CreditCard, 
-      path: '/subscription-plans',
+      path: '/saas-plans-admin',
       color: '#F59E0B'
     },
     { 

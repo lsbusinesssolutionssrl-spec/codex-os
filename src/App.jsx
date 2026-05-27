@@ -118,6 +118,7 @@ import TenantMembershipRepair from './pages/TenantMembershipRepair';
 import TenantMembershipDebug from './pages/TenantMembershipDebug';
 import RouteIntegrityTest from './pages/RouteIntegrityTest';
 import ProvisioningValidator from './pages/ProvisioningValidator';
+import TenantDetail from './pages/TenantDetail';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -257,6 +258,8 @@ const AuthenticatedApp = () => {
       <Route path="/tenant-membership-debug" element={<TenantMembershipDebug />} />
       <Route path="/route-test" element={<RouteIntegrityTest />} />
       <Route path="/provisioning-validator" element={<ProvisioningValidator />} />
+      <Route path="/platform/tenants" element={<TenantManagement />} />
+      <Route path="/platform/tenants/:tenantId" element={<TenantDetail />} />
 
       </Route>
       <Route element={<PortalLayout />}>
