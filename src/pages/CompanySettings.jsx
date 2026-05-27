@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Building2, Palette, Users, CreditCard, Save, Shield, Zap, Brain, Globe, CheckCircle2 } from 'lucide-react';
+import { Building2, Palette, Users, CreditCard, Save, Shield, Zap, Brain, Globe, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-
 import { useGlobalContext } from '@/lib/GlobalContextEngine';
 
 export default function CompanySettings() {
@@ -187,39 +186,78 @@ export default function CompanySettings() {
       );
     }
     
-    // No membership - show repair option for admins
-    if (user?.role === 'admin') {
+    // No membership - show repair option for ANY user (they might be tenant admin)
+    if (user) {
       return (
         <div className="p-6 max-w-2xl mx-auto mt-10 space-y-6">
           <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-            <h2 className="font-bold text-gray-900 flex items-center gap-2">
-              <Shield className="w-6 h-6" />
-              Ripristino Tenant Membership
-            </h2>
-            <p className="text-sm text-gray-500">
-              Il tuo utente admin non ha una TenantMembership attiva. Usa il pannello di riparazione per collegarti a un tenant esistente.
-            </p>
-            <div className="flex gap-2">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h2 className="font-bold text-gray-900">Tenant Membership Non Trovata</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Il tuo utente (<strong>{user.email}</strong>) non ha una TenantMembership attiva. Questo significa che non sei collegato a nessun tenant/company.
+                </p>
+              </div>
+            </div>
+            
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <h3 className="font-semibold text-orange-900 text-sm mb-2">Perché vedi questo errore?</h3>
+              <ul className="text-xs text-orange-800 space-y-1 list-disc list-inside">
+                <li>Il tuo account esiste ma non è collegato a nessun tenant</li>
+                <li>Un Super Admin ha creato un tenant ma non ti ha aggiunto come membro</li>
+                <li>La membership è stata rimossa o è in stato non attivo</li>
+              </ul>
+            </div>
+            
+            <div className="flex gap-2 flex-wrap">
+              {user?.role === 'admin' && (
+                <>
+                  <button 
+                    onClick={() => window.location.href = '/tenant-membership-repair'} 
+                    className="px-4 py-2 text-sm text-white rounded-lg font-medium"
+                    style={{ backgroundColor: '#F59E0B' }}
+                  >
+                    Apri Repair Center
+                  </button>
+                  <button 
+                    onClick={() => window.location.href = '/super-admin'} 
+                    className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
+                  >
+                    Super Admin Dashboard
+                  </button>
+                </>
+              )}
               <button 
-                onClick={() => window.location.href = '/tenant-membership-repair'} 
-                className="px-4 py-2 text-sm text-white rounded-lg font-medium"
-                style={{ backgroundColor: '#F59E0B' }}
+                onClick={() => window.location.href = '/tenant-membership-debug'} 
+                className="px-4 py-2 text-sm text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50"
               >
-                Apri Repair Center
+                Debug Membership
               </button>
               <button 
-                onClick={() => window.location.href = '/super-admin'} 
-                className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
+                onClick={() => base44.auth.logout()} 
+                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
               >
-                Super Admin Dashboard
+                Logout
               </button>
             </div>
+            
+            {user?.role !== 'admin' && (
+              <div className="text-xs text-gray-500 border-t border-gray-100 pt-3">
+                <p className="font-medium">Contatta un amministratore per:</p>
+                <ul className="list-disc list-inside mt-1 space-y-0.5">
+                  <li>Creare una TenantMembership per il tuo utente</li>
+                  <li>Collegarti al tenant corretto</li>
+                  <li>Assegnarti il ruolo appropriato (Tenant Admin, Project Manager, etc.)</li>
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       );
     }
     
-    // Regular user with no membership - contact admin
+    // Fallback
     return (
       <div className="p-6 max-w-md mx-auto mt-20 bg-white rounded-2xl border border-gray-200 shadow-lg text-center space-y-4">
         <Building2 className="w-12 h-12 text-gray-300 mx-auto" />
