@@ -79,6 +79,7 @@ import DeveloperSettings from './pages/DeveloperSettings';
 import PlatformCore from './pages/PlatformCore';
 import Extensions from './pages/Extensions';
 import Marketplace from './pages/Marketplace';
+import WhiteLabelSettings from './pages/WhiteLabelSettings';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -180,6 +181,7 @@ const AuthenticatedApp = () => {
       <Route path="/platform-core" element={<PlatformCore />} />
       <Route path="/extensions" element={<Extensions />} />
       <Route path="/marketplace" element={<Marketplace />} />
+      <Route path="/white-label" element={<WhiteLabelSettings />} />
 
       </Route>
       <Route element={<PortalLayout />}>
