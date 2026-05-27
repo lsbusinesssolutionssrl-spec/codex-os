@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, AlertCircle, CheckCircle2, DollarSign, Calendar, Users, BarChart3, FileText, Download, Package } from 'lucide-react';
+import { TrendingUp, AlertCircle, CheckCircle2, DollarSign, Calendar, Users, BarChart3, FileText, Download, Package, Sparkles } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 import { hasRole } from '../lib/roleUtils';
+import AIMeetingReportGenerator from '../components/ai/AIMeetingReportGenerator';
 
 export default function FinancialControl() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function FinancialControl() {
   });
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     // SECURITY: Only admins can access financial control
@@ -82,6 +84,9 @@ export default function FinancialControl() {
           <p className="text-sm text-gray-500 mt-0.5">Profitabilità in tempo reale</p>
         </div>
         <div className="flex gap-2">
+          <button onClick={() => setShowReportModal(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+            <Sparkles className="w-3.5 h-3.5" /> Report AI
+          </button>
           <button onClick={() => navigate('/cash-flow')} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
             <DollarSign className="w-3.5 h-3.5" /> Cash Flow
           </button>
@@ -125,7 +130,7 @@ export default function FinancialControl() {
       {/* Projects Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100">
-          <h2 className="text-sm font-semibold text-gray-900">Progetti & Profitabilità</h2>
+          <h2 className="text-sm font-semibold text-gray-900">Progetti e Profitabilità</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -174,6 +179,9 @@ export default function FinancialControl() {
           </table>
         </div>
       </div>
+
+      {/* AI Report Modal */}
+      {showReportModal && <AIMeetingReportGenerator projectId={null} onClose={() => setShowReportModal(false)} />}
     </div>
   );
 }

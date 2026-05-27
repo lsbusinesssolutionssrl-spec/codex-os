@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit2, Save, X, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Brain } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
+import ContextualAIPanel from '../components/ai/ContextualAIPanel';
 
 const STATUSES = ['Active', 'Paused', 'Cancelled'];
 
@@ -17,6 +18,7 @@ export default function GuardianDetail() {
   const [form, setForm] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [creatingTicket, setCreatingTicket] = useState(false);
+  const [showAIPanel, setShowAIPanel] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -193,6 +195,9 @@ export default function GuardianDetail() {
           </div>
         )}
       </div>
+
+      {/* AI Copilot Panel */}
+      {showAIPanel && <ContextualAIPanel entityType="guardian" entityId={id} onClose={() => setShowAIPanel(false)} />}
     </div>
   );
 }
