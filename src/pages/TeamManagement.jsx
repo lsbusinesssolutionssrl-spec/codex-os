@@ -24,6 +24,7 @@ export default function TeamManagement() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: '', role: 'project_manager' });
   const [showDebug, setShowDebug] = useState(false);
+  const [repairing, setRepairing] = useState(false);
 
   useEffect(() => {
     loadTeam();
@@ -100,6 +101,29 @@ export default function TeamManagement() {
       loadTeam();
     } catch (error) {
       toast.error('Errore nella rimozione');
+    }
+  };
+
+  const repairCurrentAdminMembership = async () => {
+    setRepairing(true);
+    try {
+      const result = await base44.functions.invoke('repairCurrentTenantMembership', {});
+      
+      if (result.data.success) {
+        toast.success(result.data.message);
+        // Refresh team data
+        await loadTeam();
+        // Refresh global context
+        if (window.__globalContextRefresh) {
+          window.__globalContextRefresh();
+        }
+      } else {
+        toast.error(result.data.error || 'Repair failed');
+      }
+    } catch (error) {
+      toast.error('Errore repair: ' + error.message);
+    } finally {
+      setRepairing(false);
     }
   };
 
@@ -193,7 +217,26 @@ export default function TeamManagement() {
       {/* Debug Panel */}
       {showDebug && (
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <h3 className="font-semibold text-gray-900 mb-3">🔍 Team Debug</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-gray-900">🔍 Team Debug</h3>
+            {allMemberships.length === 0 && (
+              <button
+                onClick={repairCurrentAdminMembership}
+                disabled={repairing}
+                className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {repairing ? '⏳ Riparazione...' : '🔧 Repair Admin Membership'}
+              </button>
+            )}
+          </div>
+          {allMemberships.length === 0 && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm font-semibold text-red-800 mb-1">⚠️ CRITICAL: No Tenant Memberships Found</p>
+              <p className="text-xs text-red-600">
+                Current tenant admin has no TenantMembership record. Click "Repair" to create it.
+              </p>
+            </div>
+          )}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
             <DebugItem label="Tenant ID" value={activeTenant?.id?.slice(0, 8) + '...'} />
             <DebugItem label="Total Memberships" value={allMemberships.length} />

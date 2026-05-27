@@ -50,7 +50,7 @@ export default function TenantAdminDashboard() {
       const steps = [
         { id: 'company', label: 'Dati Aziendali', completed: !!(company?.name && company?.tax_id), icon: Building2 },
         { id: 'logo', label: 'Logo & Branding', completed: !!company?.logo_url, icon: Shield },
-        { id: 'team', label: 'Team (min 2)', completed: teamSummary.totalCount >= 2, icon: Users },
+        { id: 'team', label: 'Team (min 2)', completed: teamSummary.totalCount >= 2 && teamSummary.totalCount > 0, icon: Users },
         { id: 'client', label: 'Primo Cliente', completed: clients.length >= 1, icon: Users },
         { id: 'project', label: 'Primo Progetto', completed: projects.length >= 1, icon: FolderKanban },
         { id: 'estimate', label: 'Primo Preventivo', completed: estimates.length >= 1, icon: FileText },
