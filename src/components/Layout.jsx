@@ -50,6 +50,7 @@ const navItems = [
   { path: '/notifications', icon: Bell, label: 'Notifiche' },
   { path: '/maintenance', icon: Wrench, label: 'Manutenzioni Programmate' },
   { path: '/operations', icon: Zap, label: 'Operations Dashboard', roles: ['admin', 'company_admin', 'project_manager'] },
+  { path: '/schedule', icon: CalendarDays, label: 'Scheduling' },
 ];
 
 export default function Layout() {

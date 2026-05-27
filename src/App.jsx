@@ -60,6 +60,7 @@ import ActivityFeed from './pages/ActivityFeed';
 import NotificationCenter from './pages/NotificationCenter';
 import MaintenancePlanning from './pages/MaintenancePlanning';
 import OperationsDashboard from './pages/OperationsDashboard';
+import ProjectSchedule from './pages/ProjectSchedule';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -141,6 +142,7 @@ const AuthenticatedApp = () => {
         <Route path="/notifications" element={<NotificationCenter />} />
         <Route path="/maintenance" element={<MaintenancePlanning />} />
         <Route path="/operations" element={<OperationsDashboard />} />
+        <Route path="/schedule" element={<ProjectSchedule />} />
       </Route>
       <Route element={<PortalLayout />}>
         <Route path="/portal" element={<ClientPortal />} />
