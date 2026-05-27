@@ -41,6 +41,12 @@ export default function CompanySettings() {
           const plans = await base44.entities.SubscriptionPlan.filter({ id: res.data.subscription.plan_id });
           if (plans.length > 0) setPlan(plans[0]);
         }
+        
+        // Se la company esiste ma non ha setup_completed, reindirizza alla wizard
+        if (res.data.company && !res.data.company.setup_completed) {
+          navigate('/company-setup');
+          return;
+        }
       } catch (error) {
         console.error('Error loading company settings:', error);
         toast.error('Impossibile caricare le impostazioni company');
@@ -102,13 +108,24 @@ export default function CompanySettings() {
             <p className="text-sm text-gray-500">
               Il tuo utente è associato al tenant <strong>{activeMembership.tenant_id}</strong> ma le impostazioni company non sono state completate.
             </p>
-            <button 
-              onClick={() => navigate('/company-setup')} 
-              className="px-4 py-2 text-sm text-white rounded-lg font-medium"
-              style={{ backgroundColor: '#1147FF' }}
-            >
-              Completa Configurazione
-            </button>
+            <div className="flex gap-2 justify-center">
+              <button 
+                onClick={() => navigate('/company-setup')} 
+                className="px-4 py-2 text-sm text-white rounded-lg font-medium"
+                style={{ backgroundColor: '#1147FF' }}
+              >
+                Completa Configurazione
+              </button>
+              <button 
+                onClick={async () => {
+                  await globalContext.refreshContext();
+                  window.location.reload();
+                }} 
+                className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg font-medium hover:bg-gray-200"
+              >
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
       );
