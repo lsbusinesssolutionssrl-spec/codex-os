@@ -11,13 +11,20 @@ export default function SubscriptionPlans() {
 
   useEffect(() => {
     const load = async () => {
-      const [plansData, companyRes] = await Promise.all([
-        base44.entities.SubscriptionPlan.filter({ is_active: true }),
-        base44.functions.invoke('getCurrentCompany', {})
-      ]);
-      setPlans(plansData);
-      setCurrentSubscription(companyRes.data.subscription);
-      setLoading(false);
+      try {
+        const [plansData, companyRes] = await Promise.all([
+          base44.entities.SubscriptionPlan.filter({ is_active: true }),
+          base44.functions.invoke('getCurrentCompany', {})
+        ]);
+        setPlans(plansData || []);
+        setCurrentSubscription(companyRes.data?.subscription || null);
+      } catch (error) {
+        console.error('Load error:', error);
+        setPlans([]);
+        setCurrentSubscription(null);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
@@ -27,15 +34,27 @@ export default function SubscriptionPlans() {
     try {
       // In production, this would redirect to Stripe checkout
       // For now, simulate upgrade
-      await base44.entities.CompanySubscription.update(currentSubscription.id, {
-        plan_id: planId,
-        billing_cycle: billingCycle,
-        status: 'active'
-      });
+      if (currentSubscription?.id) {
+        await base44.entities.CompanySubscription.update(currentSubscription.id, {
+          plan_id: planId,
+          billing_cycle: billingCycle,
+          status: 'active'
+        });
+      } else {
+        // Create new subscription if none exists
+        const companyRes = await base44.functions.invoke('getCurrentCompany', {});
+        await base44.entities.CompanySubscription.create({
+          company_id: companyRes.data.company.id,
+          plan_id: planId,
+          billing_cycle: billingCycle,
+          status: 'active'
+        });
+      }
       toast.success('Piano attivato con successo!');
       setCurrentSubscription(prev => ({ ...prev, plan_id: planId, billing_cycle: billingCycle }));
     } catch (error) {
-      toast.error('Errore nell\'upgrade');
+      console.error('Upgrade error:', error);
+      toast.error('Errore nell\'upgrade: ' + (error.message || 'Unknown error'));
     } finally {
       setUpgrading(null);
     }
