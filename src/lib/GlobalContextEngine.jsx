@@ -326,7 +326,9 @@ export function GlobalContextProvider({ children }) {
     setPermissions(perms);
 
     // STEP 6: Load enabled modules
+    console.log('Loading enabled modules for subscription:', subscription?.plan_id);
     const modules = await computeEnabledModules(subscription, membership.tenant_role);
+    console.log('Final enabled modules:', modules);
     setEnabledModules(modules);
 
     // Set context type
@@ -401,7 +403,7 @@ export function GlobalContextProvider({ children }) {
     return basePerms;
   };
 
-  const computeEnabledModules = (subscription, tenantRole) => {
+  const computeEnabledModules = async (subscription, tenantRole) => {
     // Core modules always available
     const modules = ['projects', 'estimates', 'clients', 'documents'];
     
@@ -416,7 +418,26 @@ export function GlobalContextProvider({ children }) {
     
     // Subscription-based modules
     if (subscription) {
-      const quotas = subscription.plan_id ? {} : {};
+      // Load plan details to check quotas
+      let quotas = {};
+      if (subscription.plan_id) {
+        try {
+          const plans = await base44.entities.SubscriptionPlan.filter({ id: subscription.plan_id });
+          if (plans.length > 0) {
+            quotas = plans[0].quotas || {};
+            console.log('Loaded plan quotas:', quotas);
+          }
+        } catch (error) {
+          console.error('Error loading subscription plan:', error);
+        }
+      }
+      
+      // Also check subscription-level quotas
+      if (subscription.quotas) {
+        quotas = { ...quotas, ...subscription.quotas };
+      }
+      
+      console.log('Computing modules - Quotas:', quotas);
       
       if (quotas?.guardian_subscriptions > 0) {
         modules.push('guardian');
@@ -430,8 +451,10 @@ export function GlobalContextProvider({ children }) {
         modules.push('ai_copilot');
       }
       
+      // Intelligence module - requires advanced_analytics quota
       if (quotas?.advanced_analytics) {
         modules.push('intelligence');
+        console.log('Intelligence module enabled via advanced_analytics quota');
       }
       
       if (quotas?.workflow_automation) {
@@ -439,6 +462,7 @@ export function GlobalContextProvider({ children }) {
       }
     }
     
+    console.log('Enabled modules:', modules);
     return modules;
   };
 
