@@ -18,7 +18,7 @@ export default function TenantAdminDashboard() {
 
   const loadDashboard = async () => {
     try {
-      const [clients, projects, estimates, documents, team, company] = await Promise.all([
+      const [clients, projects, estimates, documents, memberships, company] = await Promise.all([
         base44.entities.Client.filter({ company_id: activeTenant.id }),
         base44.entities.Project.filter({ company_id: activeTenant.id }),
         base44.entities.Estimate.filter({ company_id: activeTenant.id }),
@@ -29,6 +29,10 @@ export default function TenantAdminDashboard() {
 
       const activeProjects = projects.filter(p => ['Approved', 'In Progress', 'Testing'].includes(p.status));
       const openEstimates = estimates.filter(e => ['Draft', 'To Review', 'Sent'].includes(e.status));
+      
+      // Count only active/pending/invited memberships (same as Team page)
+      const activeMembers = memberships.filter(m => m.status === 'active');
+      const pendingInvites = memberships.filter(m => ['invited', 'pending'].includes(m.status));
 
       setStats({
         clients: clients.length,
@@ -36,15 +40,17 @@ export default function TenantAdminDashboard() {
         estimates: estimates.length,
         activeProjects: activeProjects.length,
         documents: documents.length,
-        team: team.length,
+        team: activeMembers.length,
         openEstimates: openEstimates.length,
+        pendingInvites: pendingInvites.length,
+        totalMemberships: memberships.length,
       });
 
       // Calculate onboarding steps
       const steps = [
         { id: 'company', label: 'Dati Aziendali', completed: !!(company?.name && company?.tax_id), icon: Building2 },
         { id: 'logo', label: 'Logo & Branding', completed: !!company?.logo_url, icon: Shield },
-        { id: 'team', label: 'Team (min 2)', completed: team.length >= 2, icon: Users },
+        { id: 'team', label: 'Team (min 2)', completed: activeMembers.length >= 2, icon: Users },
         { id: 'client', label: 'Primo Cliente', completed: clients.length >= 1, icon: Users },
         { id: 'project', label: 'Primo Progetto', completed: projects.length >= 1, icon: FolderKanban },
         { id: 'estimate', label: 'Primo Preventivo', completed: estimates.length >= 1, icon: FileText },
@@ -142,7 +148,7 @@ export default function TenantAdminDashboard() {
         <StatCard label="Progetti Attivi" value={stats?.activeProjects || 0} icon={FolderKanban} color="#10B981" />
         <StatCard label="Preventivi" value={stats?.openEstimates || 0} icon={FileText} color="#F59E0B" />
         <StatCard label="Documenti" value={stats?.documents || 0} icon={Archive} color="#06B6D4" />
-        <StatCard label="Team" value={stats?.team || 0} icon={Users} color="#7C3AED" />
+        <StatCard label="Team" value={stats?.team || 0} icon={Users} color="#7C3AED" subtitle={stats?.pendingInvites > 0 ? `${stats.pendingInvites} inviti` : undefined} />
         <StatCard label="Moduli" value={enabledModules.length} icon={Zap} color="#EF4444" />
       </div>
 
@@ -225,7 +231,7 @@ export default function TenantAdminDashboard() {
   );
 }
 
-function StatCard({ label, value, icon: Icon, color }) {
+function StatCard({ label, value, icon: Icon, color, subtitle }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4">
       <div className="flex items-center gap-2 mb-2">
@@ -233,6 +239,7 @@ function StatCard({ label, value, icon: Icon, color }) {
         <span className="text-xs text-gray-500 font-medium">{label}</span>
       </div>
       <p className="text-2xl font-bold text-gray-900">{value}</p>
+      {subtitle && <p className="text-xs text-orange-600 mt-1">{subtitle}</p>}
     </div>
   );
 }

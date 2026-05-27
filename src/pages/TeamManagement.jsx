@@ -18,9 +18,11 @@ export default function TeamManagement() {
   const { activeTenant } = useGlobalContext();
   const [members, setMembers] = useState([]);
   const [invitations, setInvitations] = useState([]);
+  const [allMemberships, setAllMemberships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: '', role: 'project_manager' });
+  const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
     loadTeam();
@@ -38,8 +40,23 @@ export default function TeamManagement() {
         user: users.find(u => u.id === m.user_id),
       }));
 
+      // Store all memberships for debug
+      setAllMemberships(membersWithUsers);
+      
+      // Show active members
       setMembers(membersWithUsers.filter(m => m.status === 'active'));
+      // Show pending invitations
       setInvitations(membersWithUsers.filter(m => ['invited', 'pending'].includes(m.status)));
+      
+      console.log('[TeamManagement] Debug:', {
+        totalMemberships: memberships.length,
+        activeMembers: membersWithUsers.filter(m => m.status === 'active').length,
+        pendingInvites: membersWithUsers.filter(m => ['invited', 'pending'].includes(m.status)).length,
+        removedMembers: membersWithUsers.filter(m => m.status === 'removed').length,
+        suspendedMembers: membersWithUsers.filter(m => m.status === 'suspended').length,
+        usersLoaded: users.length,
+        membershipsMissingUser: membersWithUsers.filter(m => !m.user).length,
+      });
     } catch (error) {
       console.error('Error loading team:', error);
       toast.error('Errore nel caricamento team');
@@ -109,13 +126,21 @@ export default function TeamManagement() {
           <h1 className="text-2xl font-bold text-gray-900">Team & Ruoli</h1>
           <p className="text-sm text-gray-500 mt-0.5">Gestisci membri e permessi</p>
         </div>
-        <button
-          onClick={() => setShowInviteModal(true)}
-          className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="w-4 h-4" />
-          Invita Membro
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowDebug(!showDebug)}
+            className="px-3 py-2 text-xs text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
+          >
+            🔍 Debug
+          </button>
+          <button
+            onClick={() => setShowInviteModal(true)}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="w-4 h-4" />
+            Invita Membro
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -171,6 +196,35 @@ export default function TeamManagement() {
           )}
         </div>
       </div>
+
+      {/* Debug Panel */}
+      {showDebug && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <h3 className="font-semibold text-gray-900 mb-3">🔍 Team Debug</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            <DebugItem label="Tenant ID" value={activeTenant?.id?.slice(0, 8) + '...'} />
+            <DebugItem label="Total Memberships" value={allMemberships.length} />
+            <DebugItem label="Active Members" value={members.length} />
+            <DebugItem label="Pending Invites" value={invitations.length} />
+            <DebugItem label="Removed" value={allMemberships.filter(m => m.status === 'removed').length} />
+            <DebugItem label="Suspended" value={allMemberships.filter(m => m.status === 'suspended').length} />
+            <DebugItem label="Missing User Profile" value={allMemberships.filter(m => !m.user).length} />
+            <DebugItem label="Users Loaded" value={allMemberships.filter(m => m.user).length} />
+          </div>
+          {allMemberships.length > 0 && (
+            <div className="mt-3 text-xs text-gray-500">
+              <p className="font-medium mb-1">All Memberships:</p>
+              <ul className="list-disc list-inside space-y-0.5">
+                {allMemberships.map(m => (
+                  <li key={m.id}>
+                    {m.user?.email || 'No user'} - {m.tenant_role} - {m.status}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Invitations */}
       {invitations.length > 0 && (
@@ -267,6 +321,15 @@ function StatCard({ label, value, icon: Icon, color }) {
         <span className="text-xs text-gray-500 font-medium">{label}</span>
       </div>
       <p className="text-2xl font-bold text-gray-900">{value}</p>
+    </div>
+  );
+}
+
+function DebugItem({ label, value }) {
+  return (
+    <div className="p-2 bg-gray-50 rounded border border-gray-200">
+      <p className="text-xs text-gray-500">{label}</p>
+      <p className="font-semibold text-gray-900">{value}</p>
     </div>
   );
 }
