@@ -80,6 +80,7 @@ import PlatformCore from './pages/PlatformCore';
 import Extensions from './pages/Extensions';
 import Marketplace from './pages/Marketplace';
 import WhiteLabelSettings from './pages/WhiteLabelSettings';
+import PropertyIntelligence from './pages/PropertyIntelligence';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -182,6 +183,7 @@ const AuthenticatedApp = () => {
       <Route path="/extensions" element={<Extensions />} />
       <Route path="/marketplace" element={<Marketplace />} />
       <Route path="/white-label" element={<WhiteLabelSettings />} />
+      <Route path="/property-intelligence" element={<PropertyIntelligence />} />
 
       </Route>
       <Route element={<PortalLayout />}>

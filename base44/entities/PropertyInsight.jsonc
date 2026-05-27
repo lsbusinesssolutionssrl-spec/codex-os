@@ -1,0 +1,129 @@
+{
+  "name": "PropertyInsight",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "property_id": {
+      "type": "string",
+      "title": "Property"
+    },
+    "insight_type": {
+      "type": "string",
+      "title": "Tipo Insight",
+      "enum": [
+        "Predictive Maintenance",
+        "Cost Optimization",
+        "Risk Reduction",
+        "Efficiency Improvement",
+        "Lifecycle Planning",
+        "Upgrade Recommendation",
+        "Compliance Alert"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "title": "Titolo"
+    },
+    "description": {
+      "type": "string",
+      "title": "Descrizione"
+    },
+    "ai_reasoning": {
+      "type": "string",
+      "title": "Ragionamento AI"
+    },
+    "priority": {
+      "type": "string",
+      "title": "Priorit\u00e0",
+      "enum": [
+        "Low",
+        "Medium",
+        "High"
+      ],
+      "default": "Medium"
+    },
+    "estimated_impact": {
+      "type": "string",
+      "title": "Impatto Stimato",
+      "enum": [
+        "Low",
+        "Medium",
+        "High"
+      ]
+    },
+    "estimated_cost_savings": {
+      "type": "number",
+      "title": "Risparmio Stimato (\u20ac)"
+    },
+    "time_horizon": {
+      "type": "string",
+      "title": "Orizzonte Temporale",
+      "enum": [
+        "Immediate (0-30 days)",
+        "Short-term (1-6 months)",
+        "Medium-term (6-12 months)",
+        "Long-term (1+ years)"
+      ]
+    },
+    "actionable": {
+      "type": "boolean",
+      "title": "Azionabile",
+      "default": false
+    },
+    "suggested_action": {
+      "type": "string",
+      "title": "Azione Suggerita"
+    },
+    "status": {
+      "type": "string",
+      "title": "Stato",
+      "enum": [
+        "New",
+        "Reviewed",
+        "Actioned",
+        "Dismissed"
+      ],
+      "default": "New"
+    },
+    "generated_date": {
+      "type": "string",
+      "title": "Data Generazione"
+    },
+    "reviewed_date": {
+      "type": "string",
+      "title": "Data Revisione"
+    },
+    "reviewed_by": {
+      "type": "string",
+      "title": "Revisionato da"
+    },
+    "linked_entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "entity_type": {
+            "type": "string"
+          },
+          "entity_id": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Entit\u00e0 Collegate"
+    },
+    "metadata": {
+      "type": "object",
+      "title": "Metadati"
+    }
+  },
+  "required": [
+    "property_id",
+    "insight_type",
+    "title",
+    "description"
+  ]
+}

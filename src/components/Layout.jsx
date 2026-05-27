@@ -63,6 +63,7 @@ const navItems = [
   { path: '/extensions', icon: Puzzle, label: 'Extensions', roles: ['admin', 'company_admin'] },
   { path: '/marketplace', icon: Store, label: 'Marketplace', roles: ['admin', 'company_admin'] },
   { path: '/white-label', icon: Palette, label: 'White Label', roles: ['admin', 'company_admin'] },
+  { path: '/property-intelligence', icon: Brain, label: 'Property Intelligence', roles: ['admin', 'company_admin', 'project_manager'] },
 ];
 
 export default function Layout() {

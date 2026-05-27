@@ -1,0 +1,142 @@
+{
+  "name": "PropertyMaintenance",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "property_id": {
+      "type": "string",
+      "title": "Property"
+    },
+    "equipment_id": {
+      "type": "string",
+      "title": "Equipment"
+    },
+    "maintenance_type": {
+      "type": "string",
+      "title": "Tipo Manutenzione",
+      "enum": [
+        "Preventive",
+        "Corrective",
+        "Predictive",
+        "Inspection",
+        "Emergency"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "title": "Titolo"
+    },
+    "description": {
+      "type": "string",
+      "title": "Descrizione"
+    },
+    "category": {
+      "type": "string",
+      "title": "Categoria",
+      "enum": [
+        "HVAC",
+        "Electrical",
+        "Plumbing",
+        "Roofing",
+        "Security",
+        "Networking",
+        "Structural",
+        "Other"
+      ]
+    },
+    "priority": {
+      "type": "string",
+      "title": "Priorit\u00e0",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "default": "Medium"
+    },
+    "status": {
+      "type": "string",
+      "title": "Stato",
+      "enum": [
+        "Scheduled",
+        "In Progress",
+        "Completed",
+        "Cancelled",
+        "Overdue"
+      ],
+      "default": "Scheduled"
+    },
+    "scheduled_date": {
+      "type": "string",
+      "title": "Data Programmata"
+    },
+    "completed_date": {
+      "type": "string",
+      "title": "Data Completamento"
+    },
+    "assigned_to": {
+      "type": "string",
+      "title": "Assegnato a"
+    },
+    "duration_hours": {
+      "type": "number",
+      "title": "Durata (ore)"
+    },
+    "cost": {
+      "type": "number",
+      "title": "Costo (\u20ac)"
+    },
+    "supplier_id": {
+      "type": "string",
+      "title": "Fornitore"
+    },
+    "checklist": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "string"
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Checklist"
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Foto"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Note"
+    },
+    "ai_generated": {
+      "type": "boolean",
+      "title": "Generato da AI",
+      "default": false
+    },
+    "ai_reasoning": {
+      "type": "string",
+      "title": "Ragionamento AI"
+    }
+  },
+  "required": [
+    "property_id",
+    "maintenance_type",
+    "title",
+    "scheduled_date"
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "name": "PropertyEquipment",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "property_id": {
+      "type": "string",
+      "title": "Property"
+    },
+    "name": {
+      "type": "string",
+      "title": "Nome Equipaggiamento"
+    },
+    "category": {
+      "type": "string",
+      "title": "Categoria",
+      "enum": [
+        "HVAC",
+        "Electrical",
+        "Plumbing",
+        "Security",
+        "Networking",
+        "Renewable Energy",
+        "Appliances",
+        "Other"
+      ]
+    },
+    "type": {
+      "type": "string",
+      "title": "Tipo"
+    },
+    "manufacturer": {
+      "type": "string",
+      "title": "Produttore"
+    },
+    "model": {
+      "type": "string",
+      "title": "Modello"
+    },
+    "serial_number": {
+      "type": "string",
+      "title": "Numero Seriale"
+    },
+    "installation_date": {
+      "type": "string",
+      "title": "Data Installazione"
+    },
+    "warranty_expiration": {
+      "type": "string",
+      "title": "Scadenza Garanzia"
+    },
+    "expected_lifespan_years": {
+      "type": "number",
+      "title": "Vita Utile Attesa (anni)"
+    },
+    "maintenance_interval_months": {
+      "type": "number",
+      "title": "Intervallo Manutenzione (mesi)"
+    },
+    "last_maintenance_date": {
+      "type": "string",
+      "title": "Ultima Manutenzione"
+    },
+    "next_maintenance_due": {
+      "type": "string",
+      "title": "Prossima Manutenzione"
+    },
+    "status": {
+      "type": "string",
+      "title": "Stato",
+      "enum": [
+        "Operational",
+        "Needs Maintenance",
+        "Degraded",
+        "Failed",
+        "Decommissioned"
+      ],
+      "default": "Operational"
+    },
+    "linked_documents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Documenti Collegati"
+    },
+    "linked_tickets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Ticket Collegati"
+    },
+    "replacement_cost_estimate": {
+      "type": "number",
+      "title": "Costo Sostituzione Stimato (\u20ac)"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Note"
+    }
+  },
+  "required": [
+    "property_id",
+    "name",
+    "category"
+  ]
+}

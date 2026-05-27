@@ -1,0 +1,116 @@
+{
+  "name": "PropertyRisk",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company"
+    },
+    "property_id": {
+      "type": "string",
+      "title": "Property"
+    },
+    "risk_type": {
+      "type": "string",
+      "title": "Tipo Rischio",
+      "enum": [
+        "Water Leak",
+        "Electrical Hazard",
+        "Structural",
+        "HVAC Failure",
+        "Security",
+        "Fire Hazard",
+        "Mold/Humidity",
+        "Equipment Failure",
+        "Warranty Expiration",
+        "Compliance"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "title": "Severit\u00e0",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "default": "Medium"
+    },
+    "confidence_level": {
+      "type": "number",
+      "title": "Livello Confidenza (%)",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "title": {
+      "type": "string",
+      "title": "Titolo"
+    },
+    "description": {
+      "type": "string",
+      "title": "Descrizione"
+    },
+    "ai_reasoning": {
+      "type": "string",
+      "title": "Ragionamento AI"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence (IDs: tickets, projects, etc.)"
+    },
+    "recommended_actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Azioni Raccomandate"
+    },
+    "estimated_cost_impact": {
+      "type": "number",
+      "title": "Impatto Economico Stimato (\u20ac)"
+    },
+    "status": {
+      "type": "string",
+      "title": "Stato",
+      "enum": [
+        "Identified",
+        "Monitoring",
+        "Mitigating",
+        "Resolved",
+        "Archived"
+      ],
+      "default": "Identified"
+    },
+    "detected_date": {
+      "type": "string",
+      "title": "Data Rilevamento"
+    },
+    "resolved_date": {
+      "type": "string",
+      "title": "Data Risoluzione"
+    },
+    "linked_maintenance_id": {
+      "type": "string",
+      "title": "Manutenzione Collegata"
+    },
+    "linked_ticket_id": {
+      "type": "string",
+      "title": "Ticket Collegato"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Note"
+    }
+  },
+  "required": [
+    "property_id",
+    "risk_type",
+    "title",
+    "severity",
+    "confidence_level"
+  ]
+}

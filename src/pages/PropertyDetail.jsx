@@ -4,6 +4,7 @@ import { ArrowLeft, Home, Zap, Droplets, Thermometer, Wifi, Shield, DoorOpen, Ed
 import { base44 } from '@/api/base44Client';
 import ContextualAIPanel from '../components/ai/ContextualAIPanel';
 import PropertyHealthScore from '../components/ai/PropertyHealthScore';
+import PredictivePropertyHealth from '../components/ai/PredictivePropertyHealth';
 import OperationalTimeline from '../components/ai/OperationalTimeline';
 import WarrantyTracker from '../components/ai/WarrantyTracker';
 import AICommunicationGenerator from '../components/ai/AICommunicationGenerator';
@@ -115,6 +116,15 @@ export default function PropertyDetail() {
           Property Health
         </button>
         <button
+          onClick={() => setShowHealthScore(!showHealthScore)}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+            showHealthScore ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Brain className="w-3.5 h-3.5" />
+          Predictive AI
+        </button>
+        <button
           onClick={() => setShowWarranties(!showWarranties)}
           className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
             showWarranties ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
@@ -154,6 +164,9 @@ export default function PropertyDetail() {
 
       {/* Property Health Score */}
       {showHealthScore && <PropertyHealthScore propertyId={id} clientId={property.client_id} />}
+      
+      {/* Predictive Property Health */}
+      {showHealthScore && <PredictivePropertyHealth propertyId={id} clientId={property.client_id} />}
 
       {/* Warranty Tracker */}
       {showWarranties && <WarrantyTracker propertyId={id} />}
