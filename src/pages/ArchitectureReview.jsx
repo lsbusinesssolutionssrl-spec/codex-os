@@ -199,6 +199,7 @@ export default function ArchitectureReview() {
         Document: { records: documents.length, fields: 9, issues: 0, status: 'good' },
       },
     };
+    setAudit(auditResult);
   } catch (error) {
     console.error('Audit failed:', error);
     setAudit({
