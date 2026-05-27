@@ -121,6 +121,9 @@ import ProvisioningValidator from './pages/ProvisioningValidator';
 import TenantDetail from './pages/TenantDetail';
 import RouteHealthDashboard from './pages/RouteHealthDashboard';
 import ModuleActivationManager from './pages/ModuleActivationManager';
+import BusinessIntelligence from './pages/BusinessIntelligence';
+import Insights from './pages/Insights';
+import TeamPerformance from './pages/TeamPerformance';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -264,6 +267,9 @@ const AuthenticatedApp = () => {
       <Route path="/platform/tenants/:tenantId" element={<TenantDetail />} />
       <Route path="/platform/route-health" element={<RouteHealthDashboard />} />
       <Route path="/company-settings/modules" element={<ModuleActivationManager />} />
+      <Route path="/business-intelligence" element={<BusinessIntelligence />} />
+      <Route path="/insights" element={<Insights />} />
+      <Route path="/team-performance" element={<TeamPerformance />} />
 
       </Route>
       <Route element={<PortalLayout />}>

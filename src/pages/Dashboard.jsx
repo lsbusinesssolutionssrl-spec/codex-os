@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Activity, AlertTriangle, Clock, CheckCircle, TrendingUp, AlertCircle, Zap, Calendar, Users, FileText, FolderKanban, Home } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import StrumentiDirezionaliCard from '../components/StrumentiDirezionaliCard';
 
 export default function LiveCommandCenter() {
   const navigate = useNavigate();
@@ -118,6 +119,9 @@ export default function LiveCommandCenter() {
           <span className="text-sm font-semibold text-red-700">{totalIssues} issue attivi</span>
         </div>
       </div>
+
+      {/* Strumenti Direzionali */}
+      <StrumentiDirezionaliCard />
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
