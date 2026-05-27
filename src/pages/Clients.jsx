@@ -17,10 +17,16 @@ export default function Clients() {
 
   useEffect(() => {
     const load = async () => {
-      const filtersRes = await base44.functions.invoke('getUserFilters', {});
-      const filters = filtersRes.data.filters;
-      const data = await base44.entities.Client.filter(filters.Client || {}, '-created_date');
-      setClients(data);
+      try {
+        const filtersRes = await base44.functions.invoke('getUserFilters', {});
+        const filters = filtersRes.data.filters;
+        const data = await base44.entities.Client.filter(filters.Client || {}, '-created_date');
+        setClients(data);
+      } catch (error) {
+        // Fallback: load all clients if getUserFilters fails (e.g., permission issues)
+        const data = await base44.entities.Client.list('-created_date');
+        setClients(data);
+      }
     };
     load();
   }, []);
