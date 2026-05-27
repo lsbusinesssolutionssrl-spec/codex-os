@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, TrendingUp, Sparkles } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 import StatusBadge from '../components/StatusBadge';
 import Breadcrumb from '../components/Breadcrumb';
 
@@ -21,7 +22,7 @@ export default function Estimates() {
       try {
         // Get user-specific filters for RLS
         const filtersRes = await base44.functions.invoke('getUserFilters', {});
-        const estimateFilters = filtersRes.data.filters.Estimate || {};
+        const estimateFilters = filtersRes.data.filters.Estimate || { company_id: null };
         
         const [ests, clientsData] = await Promise.all([
           base44.entities.Estimate.filter(estimateFilters, '-created_date'),
@@ -30,13 +31,10 @@ export default function Estimates() {
         setEstimates(ests);
         cls = clientsData;
       } catch (error) {
-        // Fallback: load all estimates if getUserFilters fails (e.g., permission issues)
-        const [ests, clientsData] = await Promise.all([
-          base44.entities.Estimate.list('-created_date'),
-          base44.entities.Client.list(),
-        ]);
-        setEstimates(ests);
-        cls = clientsData;
+        console.error('Failed to load estimates:', error);
+        setEstimates([]);
+        toast.error('Errore nel caricamento preventivi');
+        cls = [];
       }
       const map = {};
       cls.forEach(c => { map[c.id] = c.name + (c.company_name ? ` ${c.company_name}` : ''); });

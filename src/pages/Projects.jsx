@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, LayoutList, BarChart2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 import StatusBadge from '../components/StatusBadge';
 import GanttChart from '../components/GanttChart';
 import Breadcrumb from '../components/Breadcrumb';
@@ -18,18 +19,24 @@ export default function Projects() {
 
   useEffect(() => {
     const load = async () => {
-      // Get user-specific filters for RLS
-      const filtersRes = await base44.functions.invoke('getUserFilters', {});
-      const projectFilters = filtersRes.data.filters.Project || {};
-      
-      const [projs, cls] = await Promise.all([
-        base44.entities.Project.filter(projectFilters, '-created_date'),
-        base44.entities.Client.list(),
-      ]);
-      setProjects(projs);
-      const map = {};
-      cls.forEach(c => { map[c.id] = c.name + (c.company_name ? ` ${c.company_name}` : ''); });
-      setClients(map);
+      try {
+        // Get user-specific filters for RLS
+        const filtersRes = await base44.functions.invoke('getUserFilters', {});
+        const projectFilters = filtersRes.data.filters.Project || { company_id: null };
+        
+        const [projs, cls] = await Promise.all([
+          base44.entities.Project.filter(projectFilters, '-created_date'),
+          base44.entities.Client.list(),
+        ]);
+        setProjects(projs);
+        const map = {};
+        cls.forEach(c => { map[c.id] = c.name + (c.company_name ? ` ${c.company_name}` : ''); });
+        setClients(map);
+      } catch (error) {
+        console.error('Failed to load projects:', error);
+        setProjects([]);
+        toast.error('Errore nel caricamento progetti');
+      }
     };
     load();
   }, []);

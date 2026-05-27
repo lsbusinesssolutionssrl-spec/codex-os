@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Search, User, Building2, Phone, Mail } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 import StatusBadge from '../components/StatusBadge';
 
 const TYPE_OPTS = ['', 'Private', 'Business', 'Public Administration', 'Partner'];
@@ -20,12 +21,14 @@ export default function Clients() {
       try {
         const filtersRes = await base44.functions.invoke('getUserFilters', {});
         const filters = filtersRes.data.filters;
-        const data = await base44.entities.Client.filter(filters.Client || {}, '-created_date');
+        const clientFilter = filters.Client || { company_id: null };
+        const data = await base44.entities.Client.filter(clientFilter, '-created_date');
         setClients(data);
       } catch (error) {
-        // Fallback: load all clients if getUserFilters fails (e.g., permission issues)
-        const data = await base44.entities.Client.list('-created_date');
-        setClients(data);
+        console.error('Failed to load clients with filters:', error);
+        // Security: return empty array instead of leaking cross-tenant data
+        setClients([]);
+        toast.error('Errore nel caricamento clienti');
       }
     };
     load();

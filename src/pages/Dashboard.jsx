@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Activity, AlertTriangle, Clock, CheckCircle, TrendingUp, AlertCircle, Zap, Calendar, Users, FileText, FolderKanban, Home } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 
 export default function LiveCommandCenter() {
   const navigate = useNavigate();
@@ -24,12 +25,16 @@ export default function LiveCommandCenter() {
   useEffect(() => {
     const loadOperations = async () => {
       try {
+        // Get user-specific filters for RLS
+        const filtersRes = await base44.functions.invoke('getUserFilters', {});
+        const filters = filtersRes.data.filters;
+        
         const [projects, tickets, tasks, estimates, insights] = await Promise.all([
-          base44.entities.Project.list(),
-          base44.entities.SupportTicket.list(),
-          base44.entities.Task.list(),
-          base44.entities.Estimate.list(),
-          base44.entities.IntelligenceInsight.list().catch(() => []),
+          base44.entities.Project.filter(filters.Project || { company_id: null }, '-created_date'),
+          base44.entities.SupportTicket.filter(filters.SupportTicket || { company_id: null }, '-created_date'),
+          base44.entities.Task.filter(filters.ChecklistItem || { company_id: null }, '-created_date'),
+          base44.entities.Estimate.filter(filters.Estimate || { company_id: null }, '-created_date'),
+          base44.entities.IntelligenceInsight.filter(filters.IntelligenceInsight || { company_id: null }, '-created_date').catch(() => []),
         ]);
 
         const now = new Date();

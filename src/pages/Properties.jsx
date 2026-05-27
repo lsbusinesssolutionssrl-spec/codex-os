@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Home, MapPin } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 
 const TYPE_OPTS = ['', 'Apartment', 'Villa', 'Office', 'Industrial Building', 'Commercial Space'];
 
@@ -17,25 +18,29 @@ export default function Properties() {
 
   useEffect(() => {
     const load = async () => {
-      const [filtersRes, props, cls] = await Promise.all([
-        base44.functions.invoke('getUserFilters', {}),
-        base44.entities.Property.list('-created_date'),
-        base44.entities.Client.list(),
-      ]);
-      // Apply RLS filters
-      const filters = filtersRes.data.filters;
-      const filteredProps = props.filter(p => {
-        if (!filters.Property || Object.keys(filters.Property).length === 0) return true;
-        if (filters.Property.client_id?.$in) {
-          return filters.Property.client_id.$in.includes(p.client_id);
-        }
-        return true;
-      });
-      setProperties(filteredProps);
-      setClientList(cls);
-      const map = {};
-      cls.forEach(c => { map[c.id] = c.name + (c.company_name ? ` ${c.company_name}` : ''); });
-      setClients(map);
+      try {
+        const [filtersRes, props, cls] = await Promise.all([
+          base44.functions.invoke('getUserFilters', {}),
+          base44.entities.Property.list('-created_date'),
+          base44.entities.Client.list(),
+        ]);
+        // Apply RLS filters properly
+        const filters = filtersRes.data.filters;
+        const propertyFilter = filters.Property || { company_id: null };
+        
+        // Use filter() API instead of manual filtering
+        const filteredProps = await base44.entities.Property.filter(propertyFilter, '-created_date');
+        
+        setProperties(filteredProps);
+        setClientList(cls);
+        const map = {};
+        cls.forEach(c => { map[c.id] = c.name + (c.company_name ? ` ${c.company_name}` : ''); });
+        setClients(map);
+      } catch (error) {
+        console.error('Failed to load properties:', error);
+        setProperties([]);
+        toast.error('Errore nel caricamento proprietà');
+      }
     };
     load();
   }, []);
