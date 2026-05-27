@@ -76,6 +76,7 @@ import IntegrationHub from './pages/IntegrationHub';
 import NotificationSettings from './pages/NotificationSettings';
 import SystemStatus from './pages/SystemStatus';
 import DeveloperSettings from './pages/DeveloperSettings';
+import PlatformCore from './pages/PlatformCore';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -174,6 +175,7 @@ const AuthenticatedApp = () => {
       <Route path="/system-status" element={<SystemStatus />} />
       <Route path="/developer" element={<DeveloperSettings />} />
       <Route path="/api-keys" element={<ApiKeys />} />
+      <Route path="/platform-core" element={<PlatformCore />} />
 
       </Route>
       <Route element={<PortalLayout />}>
