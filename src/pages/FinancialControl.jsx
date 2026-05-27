@@ -85,6 +85,53 @@ function FinancialControlContent() {
 
   if (loading) return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
 
+  // Empty state - module enabled but no data
+  if (projects.length === 0) {
+    return (
+      <div className="p-6 max-w-4xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Controllo Finanziario Progetti</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Profitabilità in tempo reale</p>
+          </div>
+        </div>
+
+        {/* Empty State */}
+        <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-4">
+            <TrendingUp className="w-8 h-8 text-gray-300" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Nessun Dato Finanziario</h2>
+          <p className="text-gray-500 mb-6 max-w-md mx-auto">
+            Il controllo finanziario è abilitato ma non ci sono ancora progetti o costi inseriti. 
+            Inizia creando progetti e registrando i costi per visualizzare margini e profitabilità.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-2xl mx-auto">
+            <EmptyStateButton
+              icon={DollarSign}
+              title="Crea Progetto"
+              description="Aggiungi il primo progetto"
+              onClick={() => navigate('/projects')}
+            />
+            <EmptyStateButton
+              icon={BarChart3}
+              title="Registra Costi"
+              description="Inserisci costi progetto"
+              onClick={() => navigate('/purchase-orders')}
+            />
+            <EmptyStateButton
+              icon={Calendar}
+              title="Timesheet"
+              description="Traccia ore lavoro"
+              onClick={() => navigate('/timesheets')}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
@@ -205,5 +252,18 @@ function KpiCard({ label, value, icon: Icon, color }) {
       </div>
       <p className="text-xl font-bold" style={{ color }}>{value}</p>
     </div>
+  );
+}
+
+function EmptyStateButton({ icon: Icon, title, description, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="p-4 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-colors text-left"
+    >
+      <Icon className="w-6 h-6 text-gray-400 mb-2" />
+      <p className="text-sm font-semibold text-gray-900 mb-1">{title}</p>
+      <p className="text-xs text-gray-500">{description}</p>
+    </button>
   );
 }

@@ -6,7 +6,7 @@ import {
   Activity, Sparkles, Loader2, BarChart3, Award, Target, Users, Package,
   Eye, RefreshCw, Filter, ChevronRight, Clock, DollarSign, Zap,
   AlertTriangle, XCircle, ArrowUpRight, ArrowDownRight, Minus,
-  BookOpen, PieChart
+  BookOpen, PieChart, Calendar
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useGlobalContext } from '@/lib/GlobalContextEngine';
@@ -275,6 +275,19 @@ function InsightCard({ insight, onMarkRead }) {
   );
 }
 
+function EmptyStateAction({ icon: Icon, title, description, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="p-4 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-colors text-left"
+    >
+      <Icon className="w-6 h-6 text-gray-400 mb-2" />
+      <p className="text-sm font-semibold text-gray-900 mb-1">{title}</p>
+      <p className="text-xs text-gray-500">{description}</p>
+    </button>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function CodexIntelligence() {
   const navigate = useNavigate();
@@ -425,7 +438,59 @@ export default function CodexIntelligence() {
 
   const FILTER_TYPES = ['all', ...Object.keys(INSIGHT_TYPE_CONFIG)];
 
-  // Wrap entire module in ContextGate
+  // Empty state - module enabled but no operational data
+  if (!isPlatformMode && metrics.totalProjects === 0 && localInsights.length === 0 && aiInsights.length === 0) {
+    return (
+      <ContextGate requiredContext="any" requiredModule="intelligence">
+        <div className="p-6 max-w-4xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm"
+              style={{ background: 'linear-gradient(135deg, #0B2341 0%, #1147FF 100%)' }}>
+              <Brain className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Codex Intelligence</h1>
+              <p className="text-sm text-gray-500">AI Insights Engine — analisi operativa automatica</p>
+            </div>
+          </div>
+
+          {/* Empty State */}
+          <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-4">
+              <Brain className="w-8 h-8 text-gray-300" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Nessun Dato Operativo</h2>
+            <p className="text-gray-500 mb-6 max-w-md mx-auto">
+              L'intelligence AI è abilitata ma non ci sono ancora dati operativi da analizzare. 
+              Crea progetti, registra costi e timesheet per attivare gli insight.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-2xl mx-auto">
+              <EmptyStateAction
+                icon={BarChart3}
+                title="Crea Progetti"
+                description="Aggiungi progetti per analisi"
+                onClick={() => navigate('/projects')}
+              />
+              <EmptyStateAction
+                icon={Package}
+                title="Registra Costi"
+                description="Traccia costi progetto"
+                onClick={() => navigate('/purchase-orders')}
+              />
+              <EmptyStateAction
+                icon={Calendar}
+                title="Timesheet"
+                description="Registra ore lavoro"
+                onClick={() => navigate('/timesheets')}
+              />
+            </div>
+          </div>
+        </div>
+      </ContextGate>
+    );
+  }
+
   return (
     <ContextGate requiredContext="any" requiredModule="intelligence">
       <div className="p-6 max-w-7xl mx-auto space-y-6">

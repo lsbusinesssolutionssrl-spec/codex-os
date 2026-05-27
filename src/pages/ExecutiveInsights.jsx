@@ -284,53 +284,7 @@ export default function ExecutiveInsights() {
     </div>
   );
 
-  // Module gate - show proper error with debug info
-  if (!enabledModules.includes('intelligence') && !isPlatformMode) {
-    console.log('[ExecutiveInsights] Module check:', {
-      enabledModules,
-      isPlatformMode,
-      activeTenant,
-    });
-    
-    return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl border-2 border-dashed border-amber-200 p-12 text-center">
-          <Brain className="w-16 h-16 text-amber-300 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Intelligence Non Abilitata</h2>
-          <p className="text-gray-500 mb-6 max-w-md mx-auto">
-            Il modulo Intelligence richiede il piano Enterprise o il flag advanced_analytics abilitato.
-          </p>
-          <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left max-w-md mx-auto">
-            <p className="text-xs font-mono text-gray-600 mb-2">Debug Info:</p>
-            <p className="text-xs text-gray-500">Tenant: {activeTenant?.name || 'N/A'}</p>
-            <p className="text-xs text-gray-500">Moduli abilitati: {enabledModules.join(', ') || 'Nessuno'}</p>
-          </div>
-          <div className="space-y-3">
-            <button
-              onClick={() => navigate('/company-settings')}
-              className="px-6 py-2.5 text-sm font-semibold text-white rounded-xl hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: '#1147FF' }}
-            >
-              Vai su Impostazioni Company
-            </button>
-            <button
-              onClick={async () => {
-                // Debug: force enable intelligence for testing
-                const filtersRes = await base44.functions.invoke('getUserFilters', {});
-                console.log('[Debug] User Filters:', filtersRes.data);
-                alert('Controlla la console per i debug logs');
-              }}
-              className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-opacity"
-            >
-              Debug: Controlla Console
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Empty state - no real data
+  // Empty state - no real data (module is enabled, just empty)
   if (execData?.isEmpty) {
     return (
       <div className="p-6 max-w-4xl mx-auto">
