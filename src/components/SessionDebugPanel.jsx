@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useGlobalContext, CONTEXT_TYPE, TENANT_STATE } from '@/lib/GlobalContextEngine';
 import { 
-  Shield, Building2, User, Activity, AlertTriangle, CheckCircle, 
-  XCircle, Clock, ChevronRight, ChevronDown, RefreshCw, Terminal
+  Shield, Building2, User, Activity, AlertTriangle, CheckCircle, CheckCircle2,
+  XCircle, Clock, ChevronRight, ChevronDown, RefreshCw, Terminal, Maximize2, Minimize2
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -14,6 +14,7 @@ import { base44 } from '@/api/base44Client';
  */
 
 export default function SessionDebugPanel() {
+  const [minimized, setMinimized] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const globalContext = useGlobalContext();
@@ -77,7 +78,7 @@ export default function SessionDebugPanel() {
     return (
       <button
         onClick={() => setExpanded(true)}
-        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg shadow-lg hover:bg-gray-800 transition-colors"
+        className="fixed bottom-32 left-4 z-[100] flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg shadow-lg hover:bg-gray-800 transition-colors"
       >
         <Terminal className="w-4 h-4" />
         <span className="text-sm font-medium">Session Debug</span>
@@ -86,7 +87,7 @@ export default function SessionDebugPanel() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-[450px] max-h-[80vh] overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-200">
+    <div className="fixed bottom-32 left-4 z-[100] w-[450px] max-h-[80vh] overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-200">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50 rounded-t-xl">
         <div className="flex items-center gap-2">

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useGlobalContext } from '@/lib/GlobalContextEngine';
 import { RBACResolver } from '@/lib/RBACResolver';
-import { Shield, CheckCircle2, XCircle, AlertCircle, Key, Zap, UserCheck } from 'lucide-react';
+import { Shield, CheckCircle2, XCircle, AlertCircle, Key, Zap, UserCheck, Minimize2, Maximize2 } from 'lucide-react';
 
 /**
  * RBAC DEBUG PANEL
@@ -11,6 +11,7 @@ import { Shield, CheckCircle2, XCircle, AlertCircle, Key, Zap, UserCheck } from 
  */
 
 export default function RBACDebugPanel() {
+  const [minimized, setMinimized] = useState(false);
   const { 
     user, 
     activeTenantRole, 
@@ -35,11 +36,31 @@ export default function RBACDebugPanel() {
   if (!user) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 z-50 max-w-md max-h-96 overflow-auto bg-white rounded-lg shadow-lg border border-gray-200 text-xs">
-      <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center gap-2 sticky top-0">
-        <Shield className="w-3.5 h-3.5 text-blue-600" />
-        <span className="font-semibold text-gray-700">RBAC Debug Panel</span>
-      </div>
+    <div className="fixed bottom-4 left-4 z-50">
+      {minimized ? (
+        <button
+          onClick={() => setMinimized(false)}
+          className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+        >
+          <Shield className="w-4 h-4 text-blue-600" />
+          <span className="text-xs font-semibold text-gray-700">RBAC</span>
+          <span className="text-xs text-gray-500">{permissions.length} perms</span>
+          <Maximize2 className="w-3 h-3 text-gray-400" />
+        </button>
+      ) : (
+        <div className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-md max-h-96 overflow-auto text-xs">
+          <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between sticky top-0">
+            <div className="flex items-center gap-2">
+              <Shield className="w-3.5 h-3.5 text-blue-600" />
+              <span className="font-semibold text-gray-700">RBAC Debug Panel</span>
+            </div>
+            <button
+              onClick={() => setMinimized(true)}
+              className="p-1 hover:bg-gray-200 rounded transition-colors"
+            >
+              <Minimize2 className="w-3.5 h-3.5 text-gray-500" />
+            </button>
+          </div>
       
       <div className="p-3 space-y-3">
         {/* Context IDs - CRITICAL */}
@@ -169,6 +190,7 @@ export default function RBACDebugPanel() {
               label="Intelligence Access"
             />
           </div>
+        </div>
         </div>
       </div>
     </div>

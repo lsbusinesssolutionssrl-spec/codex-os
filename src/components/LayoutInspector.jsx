@@ -1,13 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Box, Eye, EyeOff, Maximize2, Columns, LayoutDashboard } from 'lucide-react';
+import { Box, Eye, EyeOff, Maximize2, Columns, LayoutDashboard, Minimize2 } from 'lucide-react';
 import { useGlobalContext } from '@/lib/GlobalContextEngine';
 
-/**
- * LAYOUT INSPECTOR - Developer Tool
- * Shows mounted layout components, active panels, and ghost containers
- */
-
 export default function LayoutInspector() {
+  const [minimized, setMinimized] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [layoutData, setLayoutData] = useState({
     mountedPanels: [],
@@ -16,6 +12,14 @@ export default function LayoutInspector() {
     activeLayouts: [],
   });
   const globalContext = useGlobalContext();
+  const { isPlatformMode } = globalContext;
+
+/**
+ * LAYOUT INSPECTOR - Developer Tool
+ * Shows mounted layout components, active panels, and ghost containers
+ */
+
+
 
   useEffect(() => {
     if (isOpen && globalContext.user?.role === 'admin') {
@@ -58,28 +62,30 @@ export default function LayoutInspector() {
     });
   };
 
-  if (!isOpen) {
+  if (minimized) {
     return (
       <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 right-4 z-50 p-2 bg-purple-900 text-white rounded-lg shadow-lg hover:bg-purple-800 transition-colors"
-        title="Layout Inspector"
+        onClick={() => setMinimized(false)}
+        className="fixed top-4 left-4 z-[100] flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
       >
-        <LayoutDashboard className="w-4 h-4" />
+        <LayoutDashboard className="w-4 h-4 text-purple-600" />
+        <span className="text-xs font-semibold text-gray-700">Layout</span>
+        <span className="text-xs text-gray-500">{isPlatformMode ? 'Platform' : 'Tenant'}</span>
+        <Maximize2 className="w-3 h-3 text-gray-400" />
       </button>
     );
   }
 
   return (
-    <div className="fixed bottom-20 right-4 z-50 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden">
+    <div className="fixed top-4 left-4 z-[100] w-80 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-purple-900 text-white">
         <div className="flex items-center gap-2">
           <LayoutDashboard className="w-4 h-4" />
           <h3 className="text-sm font-bold">Layout Inspector</h3>
         </div>
-        <button onClick={() => setIsOpen(false)} className="text-white/80 hover:text-white">
-          <EyeOff className="w-4 h-4" />
+        <button onClick={() => setMinimized(true)} className="text-white/80 hover:text-white">
+          <Minimize2 className="w-4 h-4" />
         </button>
       </div>
 
