@@ -78,6 +78,7 @@ import SystemStatus from './pages/SystemStatus';
 import DeveloperSettings from './pages/DeveloperSettings';
 import PlatformCore from './pages/PlatformCore';
 import Extensions from './pages/Extensions';
+import Marketplace from './pages/Marketplace';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -178,6 +179,7 @@ const AuthenticatedApp = () => {
       <Route path="/api-keys" element={<ApiKeys />} />
       <Route path="/platform-core" element={<PlatformCore />} />
       <Route path="/extensions" element={<Extensions />} />
+      <Route path="/marketplace" element={<Marketplace />} />
 
       </Route>
       <Route element={<PortalLayout />}>
