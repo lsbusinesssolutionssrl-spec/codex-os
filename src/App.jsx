@@ -115,6 +115,8 @@ import PlatformSettings from './pages/PlatformSettings';
 import SaasPlansAdmin from './pages/SaasPlansAdmin';
 import TenantIntegrityAudit from './pages/TenantIntegrityAudit';
 import TenantIsolationAudit from './pages/TenantIntegrityAudit';
+import TenantMembershipRepair from './pages/TenantMembershipRepair';
+import TenantMembershipDebug from './pages/TenantMembershipDebug';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -250,6 +252,8 @@ const AuthenticatedApp = () => {
       <Route path="/saas-plans-admin" element={<SaasPlansAdmin />} />
       <Route path="/tenant-integrity" element={<TenantIntegrityAudit />} />
       <Route path="/tenant-isolation-audit" element={<TenantIsolationAudit />} />
+      <Route path="/tenant-membership-repair" element={<TenantMembershipRepair />} />
+      <Route path="/tenant-membership-debug" element={<TenantMembershipDebug />} />
 
       </Route>
       <Route element={<PortalLayout />}>

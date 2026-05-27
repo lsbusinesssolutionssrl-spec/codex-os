@@ -5,6 +5,7 @@ import {
   ChevronRight, ChevronLeft, Check, Loader2
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 
 const STEPS = [
   { id: 1, label: 'Dati Azienda', icon: Building2 },
@@ -91,7 +92,64 @@ export default function TenantOnboarding() {
       trial_end: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
     });
 
+    // CRITICAL: Create TenantMembership for the admin user
+    // This ensures the user is properly bound to the tenant
+    if (form.admin_email) {
+      // First, find or create the admin user
+      let adminUser;
+      const existingUsers = await base44.entities.User.filter({ email: form.admin_email });
+      
+      if (existingUsers.length > 0) {
+        adminUser = existingUsers[0];
+        // Update existing user
+        await base44.entities.User.update(adminUser.id, {
+          company_id: company.id,
+          role: 'company_admin',
+        });
+      } else {
+        // Note: We can't create users directly, so we'll create an invitation
+        // The user will be created when they accept the invitation
+        await base44.users.inviteUser(form.admin_email, 'company_admin');
+        adminUser = { id: 'pending', email: form.admin_email };
+      }
+
+      // Create TenantMembership (only if user exists)
+      if (adminUser.id !== 'pending') {
+        await base44.entities.TenantMembership.create({
+          user_id: adminUser.id,
+          tenant_id: company.id,
+          tenant_role: 'tenant_admin',
+          status: 'active',
+          invited_by: (await base44.auth.me())?.email || 'system',
+          invited_at: new Date().toISOString(),
+          joined_at: new Date().toISOString(),
+          is_primary: true,
+          default_workspace: 'executive',
+          permissions: {
+            can_create_projects: true,
+            can_create_estimates: true,
+            can_view_financials: true,
+            can_manage_team: true,
+            can_access_api: true,
+          },
+        });
+      }
+    }
+
+    // Log the tenant creation
+    await base44.entities.TenantActivationLog.create({
+      company_id: company.id,
+      event_type: 'tenant_created',
+      description: `Tenant created: ${company.name}`,
+      performed_by: (await base44.auth.me())?.email || 'system',
+      metadata: {
+        admin_email: form.admin_email,
+        plan: selectedPlan.name,
+      },
+    });
+
     setSaving(false);
+    toast.success('Tenant creato con successo!');
     navigate('/super-admin');
   };
 

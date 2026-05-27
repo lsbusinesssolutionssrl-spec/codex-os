@@ -34,12 +34,26 @@ export function TenantProvider({ children }) {
           setActiveTenant(null);
           setEnabledModules([]);
         } else {
-          // Tenant users MUST have a company_id
-          const companyId = user.company_id;
+          // Tenant users MUST have a company_id OR a TenantMembership
+          let companyId = user.company_id;
+          
+          // Try to find active membership if no company_id
+          if (!companyId) {
+            const memberships = await base44.entities.TenantMembership.filter({
+              user_id: user.id,
+              status: 'active',
+            });
+            
+            // Use primary membership or first active one
+            const primaryMembership = memberships.find(m => m.is_primary) || memberships[0];
+            if (primaryMembership) {
+              companyId = primaryMembership.tenant_id;
+            }
+          }
           
           if (!companyId) {
-            console.error('User has no company_id - this is a data integrity issue');
-            toast.error('Errore: utente non associato a nessun tenant');
+            console.error('User has no company_id or TenantMembership - this is a data integrity issue');
+            toast.error('Il tuo utente non è associato a nessuna company');
             setLoading(false);
             return;
           }

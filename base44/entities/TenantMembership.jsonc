@@ -1,0 +1,107 @@
+{
+  "name": "TenantMembership",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "title": "User ID"
+    },
+    "tenant_id": {
+      "type": "string",
+      "title": "Tenant ID (Company)"
+    },
+    "tenant_role": {
+      "type": "string",
+      "title": "Tenant Role",
+      "enum": [
+        "tenant_admin",
+        "project_manager",
+        "technician",
+        "sales",
+        "viewer"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "title": "Membership Status",
+      "enum": [
+        "invited",
+        "pending",
+        "active",
+        "suspended",
+        "removed"
+      ],
+      "default": "pending"
+    },
+    "invited_by": {
+      "type": "string",
+      "title": "Invited By (User Email)"
+    },
+    "invited_at": {
+      "type": "string",
+      "title": "Invited At"
+    },
+    "joined_at": {
+      "type": "string",
+      "title": "Joined At"
+    },
+    "permissions": {
+      "type": "object",
+      "title": "Permissions",
+      "properties": {
+        "can_create_projects": {
+          "type": "boolean",
+          "default": false
+        },
+        "can_create_estimates": {
+          "type": "boolean",
+          "default": false
+        },
+        "can_view_financials": {
+          "type": "boolean",
+          "default": false
+        },
+        "can_manage_team": {
+          "type": "boolean",
+          "default": false
+        },
+        "can_access_api": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "default_workspace": {
+      "type": "string",
+      "title": "Default Workspace",
+      "enum": [
+        "executive",
+        "operations",
+        "sales",
+        "financial",
+        "guardian",
+        "technician"
+      ],
+      "default": "operations"
+    },
+    "language": {
+      "type": "string",
+      "title": "Language",
+      "default": "it"
+    },
+    "is_primary": {
+      "type": "boolean",
+      "title": "Is Primary Membership",
+      "default": false
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "user_id",
+    "tenant_id",
+    "tenant_role"
+  ]
+}

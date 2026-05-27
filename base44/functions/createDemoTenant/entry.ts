@@ -28,9 +28,51 @@ Deno.serve(async (req) => {
 
     // Create demo admin user (if doesn't exist)
     const existingDemoUsers = await base44.entities.User.filter({ email: 'demo@codex.platform' });
+    let demoUserId = null;
+    
     if (existingDemoUsers.length === 0) {
-      // Note: Can't create users directly, this would need to be done via invite
-      console.log('Demo company created. Invite demo@codex.platform as admin.');
+      // Invite the demo user
+      try {
+        await base44.users.inviteUser('demo@codex.platform', 'company_admin');
+        console.log('Demo user invited. They will be created upon acceptance.');
+      } catch (error) {
+        console.warn('Could not invite demo user:', error.message);
+      }
+    } else {
+      demoUserId = existingDemoUsers[0].id;
+      
+      // Update user with company binding
+      await base44.entities.User.update(demoUserId, {
+        company_id: demoCompany.id,
+        role: 'company_admin',
+      });
+      
+      // Create TenantMembership
+      const existingMembership = await base44.entities.TenantMembership.filter({
+        user_id: demoUserId,
+        tenant_id: demoCompany.id,
+      });
+      
+      if (existingMembership.length === 0) {
+        await base44.entities.TenantMembership.create({
+          user_id: demoUserId,
+          tenant_id: demoCompany.id,
+          tenant_role: 'tenant_admin',
+          status: 'active',
+          invited_by: user.email,
+          invited_at: new Date().toISOString(),
+          joined_at: new Date().toISOString(),
+          is_primary: true,
+          default_workspace: 'executive',
+          permissions: {
+            can_create_projects: true,
+            can_create_estimates: true,
+            can_view_financials: true,
+            can_manage_team: true,
+            can_access_api: true,
+          },
+        });
+      }
     }
 
     // Find all records without company_id and move them to demo tenant
