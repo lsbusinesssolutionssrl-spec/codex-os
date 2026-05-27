@@ -107,16 +107,23 @@ export default function TeamManagement() {
   const repairCurrentAdminMembership = async () => {
     setRepairing(true);
     try {
+      // Use dedicated repair function
       const result = await base44.functions.invoke('repairCurrentTenantMembership', {});
       
       if (result.data.success) {
-        toast.success(result.data.message);
-        // Refresh team data
+        const actionText = result.data.action === 'created' ? 'creata' : 'aggiornata';
+        toast.success(`Membership ${actionText} con successo per ${result.data.membership.user_email}`);
+        
+        // Refresh team data immediately
         await loadTeam();
-        // Refresh global context
-        if (window.__globalContextRefresh) {
-          window.__globalContextRefresh();
-        }
+        
+        // Force context refresh
+        window.dispatchEvent(new CustomEvent('context_refresh', { detail: { force: true } }));
+        
+        // Reload page after 2 seconds to ensure context is fully updated
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } else {
         toast.error(result.data.error || 'Repair failed');
       }

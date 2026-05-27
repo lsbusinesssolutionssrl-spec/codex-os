@@ -5,6 +5,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
  * 
  * Creates missing TenantMembership for the current authenticated user.
  * This fixes the root cause where tenant_admin role exists without actual membership record.
+ * 
+ * IMPORTANT: This function uses service role to bypass permission checks,
+ * as it's meant to repair broken tenant data.
  */
 
 Deno.serve(async (req) => {
@@ -17,14 +20,30 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get active tenant from context
-    const currentCompany = await base44.functions.invoke('getCurrentCompany', {});
-    const activeTenant = currentCompany.data?.company;
+    // Get active tenant from user's company_id (legacy but still used)
+    let activeTenant;
+    
+    // Try to get tenant from user's company_id first
+    if (user.company_id) {
+      activeTenant = await base44.entities.Company.get(user.company_id);
+    }
+    
+    // If no company_id, try to find from existing memberships
+    if (!activeTenant) {
+      const memberships = await base44.entities.TenantMembership.filter({
+        user_id: user.id,
+        status: 'active',
+      });
+      
+      if (memberships.length > 0) {
+        activeTenant = await base44.entities.Company.get(memberships[0].tenant_id);
+      }
+    }
     
     if (!activeTenant) {
       return Response.json({ 
         error: 'No active tenant found',
-        details: 'User is not associated with any tenant'
+        details: 'User is not associated with any tenant. Check company_id or create membership first.'
       }, { status: 400 });
     }
 
@@ -35,11 +54,12 @@ Deno.serve(async (req) => {
     });
 
     if (existingMemberships.length > 0) {
-      // Membership exists, just update it to active
+      // Membership exists, just update it to active and primary
       const membership = existingMemberships[0];
       await base44.entities.TenantMembership.update(membership.id, {
         status: 'active',
         is_primary: true,
+        tenant_role: membership.tenant_role || 'tenant_admin',
         joined_at: membership.joined_at || new Date().toISOString(),
       });
       
@@ -70,6 +90,7 @@ Deno.serve(async (req) => {
       invited_by: 'system',
       invited_at: new Date().toISOString(),
       joined_at: new Date().toISOString(),
+      default_workspace: 'executive',
       permissions: {
         can_create_projects: true,
         can_create_estimates: true,
@@ -77,6 +98,12 @@ Deno.serve(async (req) => {
         can_manage_team: true,
         can_access_api: true,
       },
+    });
+
+    // Also update user's company_id for backward compatibility
+    await base44.entities.User.update(user.id, {
+      company_id: activeTenant.id,
+      role: 'admin',
     });
 
     return Response.json({
