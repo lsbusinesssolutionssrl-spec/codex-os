@@ -284,6 +284,7 @@ export default function CodexIntelligence() {
   const [activeSeverity, setActiveSeverity] = useState('all');
   const [metrics, setMetrics] = useState({});
   const [lastGenerated, setLastGenerated] = useState(null);
+  const [isPlatformMode, setIsPlatformMode] = useState(false);
 
   useEffect(() => { loadAll(); }, []);
 
@@ -293,7 +294,28 @@ export default function CodexIntelligence() {
     // Get user filters for tenant isolation
     const filtersRes = await base44.functions.invoke('getUserFilters', {});
     const company_id = filtersRes.data.filters?.Project?.company_id || filtersRes.data.filters?.company_id;
+    const isPlatformMode = filtersRes.data.is_platform_mode;
+    setIsPlatformMode(!!isPlatformMode);
     
+    // Platform mode - show diagnostics only
+    if (isPlatformMode && !company_id) {
+      setMetrics({
+        totalProjects: 0,
+        completed: 0,
+        avgMargin: '0',
+        delayed: 0,
+        openTickets: 0,
+        kbArticles: 0,
+        unreadInsights: 0,
+        suppliersCount: 0,
+      });
+      setLocalInsights([]);
+      setAiInsights([]);
+      setLoading(false);
+      return;
+    }
+    
+    // Tenant mode without company_id - error
     if (!company_id) {
       toast.error('Nessun tenant attivo - impossibile caricare Intelligence');
       setLoading(false);
@@ -411,11 +433,18 @@ export default function CodexIntelligence() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Codex Intelligence</h1>
-            <p className="text-sm text-gray-500">
-              {unreadCount > 0
-                ? <span className="text-blue-600 font-medium">{unreadCount} nuovi insight disponibili</span>
-                : 'AI Insights Engine — analisi operativa automatica'}
-            </p>
+            {isPlatformMode && !metrics.totalProjects ? (
+              <p className="text-sm text-orange-600 font-medium flex items-center gap-1 mt-1">
+                <AlertCircle className="w-3 h-3" />
+                Platform Mode — Select a tenant to view operational intelligence
+              </p>
+            ) : (
+              <p className="text-sm text-gray-500">
+                {unreadCount > 0
+                  ? <span className="text-blue-600 font-medium">{unreadCount} nuovi insight disponibili</span>
+                  : 'AI Insights Engine — analisi operativa automatica'}
+              </p>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -438,26 +467,40 @@ export default function CodexIntelligence() {
       </div>
 
       {/* ── KPI Cards ────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-        {[
-          { label: 'Progetti', value: metrics.totalProjects, icon: BarChart3, color: '#1147FF' },
-          { label: 'Completati', value: metrics.completed, icon: CheckCircle2, color: '#10B981' },
-          { label: 'Margine Medio', value: `${metrics.avgMargin}%`, icon: PieChart, color: parseFloat(metrics.avgMargin) >= 30 ? '#10B981' : parseFloat(metrics.avgMargin) >= 20 ? '#F59E0B' : '#EF4444' },
-          { label: 'In Ritardo', value: metrics.delayed, icon: AlertTriangle, color: metrics.delayed > 0 ? '#EF4444' : '#10B981' },
-          { label: 'Ticket Aperti', value: metrics.openTickets, icon: AlertCircle, color: metrics.openTickets > 5 ? '#F97316' : '#10B981' },
-          { label: 'Fornitori', value: metrics.suppliersCount, icon: Package, color: '#8B5CF6' },
-          { label: 'Knowledge Base', value: metrics.kbArticles, icon: BookOpen, color: '#06B6D4' },
-          { label: 'Insights Nuovi', value: unreadCount, icon: Lightbulb, color: unreadCount > 0 ? '#1147FF' : '#10B981' },
-        ].map((kpi, i) => (
-          <div key={i} className="bg-white rounded-xl border border-gray-200 p-3 flex flex-col gap-1">
-            <div className="flex items-center gap-1.5">
-              <kpi.icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: kpi.color }} />
-              <span className="text-xs text-gray-500 truncate">{kpi.label}</span>
+      {isPlatformMode && !metrics.totalProjects ? (
+        <div className="rounded-2xl p-8 border-2 border-dashed border-orange-200 bg-orange-50 text-center">
+          <AlertCircle className="w-12 h-12 text-orange-600 mx-auto mb-3" />
+          <h3 className="font-bold text-orange-900 mb-1">Platform Mode — No Tenant Selected</h3>
+          <p className="text-sm text-orange-700 max-w-2xl mx-auto">
+            You're viewing Intelligence as a platform administrator. To see operational metrics and AI insights, 
+            use the tenant switcher to select a specific company, or switch to a tenant workspace.
+          </p>
+          <p className="text-xs text-orange-600 mt-3">
+            Platform users can access all tenant data for diagnostics and support purposes.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+          {[
+            { label: 'Progetti', value: metrics.totalProjects, icon: BarChart3, color: '#1147FF' },
+            { label: 'Completati', value: metrics.completed, icon: CheckCircle2, color: '#10B981' },
+            { label: 'Margine Medio', value: `${metrics.avgMargin}%`, icon: PieChart, color: parseFloat(metrics.avgMargin) >= 30 ? '#10B981' : parseFloat(metrics.avgMargin) >= 20 ? '#F59E0B' : '#EF4444' },
+            { label: 'In Ritardo', value: metrics.delayed, icon: AlertTriangle, color: metrics.delayed > 0 ? '#EF4444' : '#10B981' },
+            { label: 'Ticket Aperti', value: metrics.openTickets, icon: AlertCircle, color: metrics.openTickets > 5 ? '#F97316' : '#10B981' },
+            { label: 'Fornitori', value: metrics.suppliersCount, icon: Package, color: '#8B5CF6' },
+            { label: 'Knowledge Base', value: metrics.kbArticles, icon: BookOpen, color: '#06B6D4' },
+            { label: 'Insights Nuovi', value: unreadCount, icon: Lightbulb, color: unreadCount > 0 ? '#1147FF' : '#10B981' },
+          ].map((kpi, i) => (
+            <div key={i} className="bg-white rounded-xl border border-gray-200 p-3 flex flex-col gap-1">
+              <div className="flex items-center gap-1.5">
+                <kpi.icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: kpi.color }} />
+                <span className="text-xs text-gray-500 truncate">{kpi.label}</span>
+              </div>
+              <p className="text-lg font-bold" style={{ color: kpi.color }}>{kpi.value}</p>
             </div>
-            <p className="text-lg font-bold" style={{ color: kpi.color }}>{kpi.value}</p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* ── Generate banner (when no AI insights yet) ──────────────────────── */}
       {aiInsights.length === 0 && (
