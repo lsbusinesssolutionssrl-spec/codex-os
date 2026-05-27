@@ -16,15 +16,21 @@ export default function CompanySettings() {
 
   useEffect(() => {
     const load = async () => {
-      const res = await base44.functions.invoke('getCurrentCompany', {});
-      setCompany(res.data.company);
-      setForm(res.data.company);
-      setSubscription(res.data.subscription);
-      if (res.data.subscription?.plan_id) {
-        const plans = await base44.entities.SubscriptionPlan.filter({ id: res.data.subscription.plan_id });
-        if (plans.length > 0) setPlan(plans[0]);
+      try {
+        const res = await base44.functions.invoke('getCurrentCompany', {});
+        setCompany(res.data.company);
+        setForm(res.data.company);
+        setSubscription(res.data.subscription);
+        if (res.data.subscription?.plan_id) {
+          const plans = await base44.entities.SubscriptionPlan.filter({ id: res.data.subscription.plan_id });
+          if (plans.length > 0) setPlan(plans[0]);
+        }
+      } catch (error) {
+        console.error('Error loading company settings:', error);
+        toast.error('Impossibile caricare le impostazioni company');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     load();
   }, []);
@@ -59,7 +65,22 @@ export default function CompanySettings() {
   };
 
   if (loading) return <div className="p-6 text-center text-gray-400">Caricamento...</div>;
-  if (!company) return <div className="p-6 text-center text-red-500">Nessuna company trovata</div>;
+  if (!company) return (
+    <div className="p-6 max-w-md mx-auto mt-20 bg-white rounded-2xl border border-gray-200 shadow-lg text-center space-y-4">
+      <Building2 className="w-12 h-12 text-gray-300 mx-auto" />
+      <h2 className="font-bold text-gray-900">Company Non Trovata</h2>
+      <p className="text-sm text-gray-500">
+        Il tuo utente non è associato a nessuna company. Contatta l'amministratore per creare o assegnare una company.
+      </p>
+      <button 
+        onClick={() => base44.auth.logout()} 
+        className="px-4 py-2 text-sm text-white rounded-lg font-medium"
+        style={{ backgroundColor: '#1147FF' }}
+      >
+        Logout
+      </button>
+    </div>
+  );
 
   const tabs = [
     { id: 'general', label: 'Generale', icon: Building2 },

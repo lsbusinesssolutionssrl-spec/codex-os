@@ -11,11 +11,25 @@ Deno.serve(async (req) => {
 
     // Get user's company_id from User entity
     const users = await base44.entities.User.filter({ email: user.email });
-    if (users.length === 0 || !users[0].company_id) {
-      return Response.json({ error: 'User not associated with any company' }, { status: 404 });
+    if (users.length === 0) {
+      return Response.json({ error: 'User not found' }, { status: 404 });
+    }
+    
+    if (!users[0].company_id) {
+      return Response.json({ 
+        error: 'User not associated with any company. Please create or assign a company first.',
+        user_email: user.email,
+        user_role: user.role,
+      }, { status: 404 });
     }
 
     const company = await base44.entities.Company.get(users[0].company_id);
+    if (!company) {
+      return Response.json({ 
+        error: 'Company not found. The company_id may be invalid.',
+        company_id: users[0].company_id,
+      }, { status: 404 });
+    }
     const subscription = await base44.entities.CompanySubscription.filter({ 
       company_id: users[0].company_id,
       status: 'active'
