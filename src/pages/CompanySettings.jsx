@@ -22,7 +22,13 @@ export default function CompanySettings() {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
       
-      // Super Admin / Developer - show platform settings
+      // Super Admin viewing specific tenant - skip platform mode
+      if (currentUser?.role === 'admin' && company) {
+        setLoading(false);
+        return;
+      }
+      
+      // Super Admin without specific tenant - show platform settings
       if (currentUser?.role === 'admin') {
         setLoading(false);
         return;

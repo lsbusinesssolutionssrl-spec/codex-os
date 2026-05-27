@@ -245,16 +245,16 @@ export default function SuperAdminDashboard() {
                     <td className="text-center py-3 px-4">
                       <div className="flex items-center justify-center gap-1">
                         <button
-                          onClick={() => navigate(`/company-settings`)}
+                          onClick={() => navigate(`/tenant/${t.id}`)}
                           className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
-                          title="Vedi Impostazioni"
+                          title="Gestione Tenant"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => navigate(`/tenant-onboarding`)}
                           className="p-1.5 text-gray-400 hover:text-green-600 rounded-lg hover:bg-green-50 transition-colors"
-                          title="Impersona"
+                          title="Nuovo Tenant"
                         >
                           <Play className="w-4 h-4" />
                         </button>
