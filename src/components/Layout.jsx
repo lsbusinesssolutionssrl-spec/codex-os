@@ -109,15 +109,30 @@ export default function Layout() {
 
   useEffect(() => {
     if (!userRole) return;
+    
+    // CLIENT: force portal
     if (userRole === 'client') {
       if (!location.pathname.startsWith('/portal')) navigate('/portal', { replace: true });
       return;
     }
+    
+    // PLATFORM OWNER: block tenant routes unless impersonating
+    const isPlatformOwner = ['super_admin', 'developer', 'platform_owner'].includes(userRole);
+    const isTenantRoute = location.pathname.startsWith('/app') || 
+                          ['/clients', '/projects', '/estimates', '/documents', '/team', '/financial-control', '/ai', '/intelligence', '/workflows'].some(p => location.pathname.startsWith(p));
+    
+    if (isPlatformOwner && !isImpersonating && isTenantRoute) {
+      console.log('[Layout] Platform owner on tenant route without impersonation - redirecting to /super-admin');
+      navigate('/super-admin', { replace: true });
+      return;
+    }
+    
+    // Role-based restrictions for non-platform users
     const allowed = NAV_BY_ROLE[userRole];
     if (!allowed) return;
     const ok = allowed.some(p => p === '/' ? location.pathname === '/' : location.pathname.startsWith(p));
     if (!ok) navigate('/', { replace: true });
-  }, [userRole, location.pathname]);
+  }, [userRole, location.pathname, isImpersonating]);
 
   // Show loading while context initializes
   if (contextLoading) {

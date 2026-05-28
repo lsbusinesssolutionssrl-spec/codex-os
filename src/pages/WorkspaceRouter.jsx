@@ -15,16 +15,26 @@ export default function WorkspaceRouter() {
 
   useEffect(() => {
     if (loading) return;
+    
     // Redirect Platform users to platform dashboard
     if (isPlatformMode) {
       navigate('/super-admin', { replace: true });
       return;
     }
+    
     // Redirect Tenant Admin to dedicated console
     if (activeTenantRole === 'tenant_admin') {
       navigate('/app/admin/dashboard', { replace: true });
+      return;
     }
-  }, [activeTenantRole, loading, navigate, isPlatformMode]);
+    
+    // CRITICAL: If workspaceType is undefined but we're not in platform mode, force platform dashboard
+    if (!workspaceType && !isPlatformMode) {
+      console.log('[WorkspaceRouter] No workspaceType, not platform mode - redirecting to platform');
+      navigate('/super-admin', { replace: true });
+      return;
+    }
+  }, [activeTenantRole, loading, navigate, isPlatformMode, workspaceType]);
 
   if (loading) {
     return (
