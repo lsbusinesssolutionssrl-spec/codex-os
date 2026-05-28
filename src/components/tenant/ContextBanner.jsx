@@ -10,6 +10,8 @@ export default function ContextBanner() {
     impersonatedUserEmail,
     clearImpersonation,
     user,
+    platformRole,
+    contextType,
   } = useGlobalContext();
 
   if (loading) return null;
@@ -21,7 +23,7 @@ export default function ContextBanner() {
         <div className="flex items-center gap-2">
           <UserX className="w-4 h-4" />
           <span className="font-medium">
-            Stai impersonando <strong>{impersonatedUserEmail}</strong>
+            🎭 Stai impersonando <strong>{impersonatedUserEmail}</strong>
           </span>
         </div>
         <button
@@ -31,6 +33,23 @@ export default function ContextBanner() {
           <LogOut className="w-4 h-4" />
           Esci da impersonation
         </button>
+      </div>
+    );
+  }
+
+  // Show Platform Mode banner for platform owners
+  if (isPlatformMode && platformRole) {
+    return (
+      <div className="bg-purple-600 text-white px-4 py-2 text-sm flex items-center justify-between shadow-lg">
+        <div className="flex items-center gap-2">
+          <Shield className="w-4 h-4" />
+          <span className="font-medium">
+            🏢 Platform Mode — <strong>{user?.email}</strong>
+          </span>
+        </div>
+        <span className="text-xs text-white/80">
+          {platformRole}
+        </span>
       </div>
     );
   }

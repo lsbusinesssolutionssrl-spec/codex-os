@@ -155,11 +155,11 @@ export function GlobalContextProvider({ children }) {
         // CRITICAL: Platform owners use platform context BY DEFAULT, even if they have tenant memberships
         // Tenant context is only used when explicitly impersonating or selecting a tenant
         
-        // CRITICAL: Clear stale tenant context for platform owners
+        // CRITICAL: Clear ALL stale tenant context for platform owners
         const PLATFORM_OWNER_EMAILS = ['lsbusiness.solutions.srl@gmail.com'];
         const isPlatformOwner = PLATFORM_OWNER_EMAILS.includes(authenticatedUser.email);
         
-        // Clean ALL stale localStorage for platform owners (impersonation is handled separately)
+        // Aggressively clean ALL tenant-related localStorage for platform owners
         if (isPlatformOwner) {
           const staleKeys = [
             'selectedTenantId',
@@ -167,6 +167,8 @@ export function GlobalContextProvider({ children }) {
             'tenant_preview_mode',
             'active_membership_id',
             'impersonated_user_email',
+            'lastTenantId',
+            'preferredTenantId',
           ];
           staleKeys.forEach(key => {
             const val = localStorage.getItem(key);
@@ -176,7 +178,7 @@ export function GlobalContextProvider({ children }) {
             }
           });
           
-          // CRITICAL: Also clear impersonate_tenant_id if no valid impersonation membership exists
+          // CRITICAL: Clear impersonate_tenant_id UNLESS valid active impersonation membership exists
           const impersonateId = localStorage.getItem('impersonate_tenant_id');
           if (impersonateId) {
             const impersonatedMembership = await base44.entities.TenantMembership.filter({
@@ -186,10 +188,14 @@ export function GlobalContextProvider({ children }) {
             }).then(m => m[0] || null);
             
             if (!impersonatedMembership) {
-              console.log('[GlobalContextEngine] Clearing stale impersonation:', impersonateId);
+              console.log('[GlobalContextEngine] Clearing STALE impersonation (no valid membership):', impersonateId);
               localStorage.removeItem('impersonate_tenant_id');
+            } else {
+              console.log('[GlobalContextEngine] Valid impersonation found:', impersonateId);
             }
           }
+          
+          console.log('[GlobalContextEngine] Platform owner detected - forcing platform context by default');
         }
         
         // Check for explicit impersonation FIRST

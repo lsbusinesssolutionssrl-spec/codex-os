@@ -5,6 +5,7 @@ import {
   XCircle, Clock, ChevronRight, ChevronDown, RefreshCw, Terminal, Maximize2, Minimize2
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import StaleStateCleaner from './StaleStateCleaner';
 
 /**
  * SESSION DEBUG PANEL
@@ -149,8 +150,8 @@ export default function SessionDebugPanel() {
           </div>
         </DebugSection>
 
-        {/* User Context */}
-        <DebugSection title="User Context">
+        {/* User Context - CRITICAL */}
+        <DebugSection title="User Context (CRITICAL)">
           <div className="space-y-2 text-xs">
             <div className="flex items-center justify-between">
               <span className="text-gray-500">Real User</span>
@@ -160,6 +161,11 @@ export default function SessionDebugPanel() {
               <span className="text-gray-500">Effective User</span>
               <span className="font-mono text-gray-900">{effectiveUser?.email || '—'}</span>
             </div>
+            {realUser?.email !== effectiveUser?.email && (
+              <div className="p-2 bg-red-50 border border-red-200 rounded text-red-700 font-medium">
+                ⚠️ MISMATCH: realUser ≠ effectiveUser
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-gray-500">Platform Role</span>
               <span className={`px-2 py-0.5 rounded text-xs font-medium ${
@@ -194,6 +200,13 @@ export default function SessionDebugPanel() {
               <span className="font-mono text-gray-900">{workspaceType || '—'}</span>
             </div>
             <div className="flex items-center justify-between">
+              <span className="text-gray-500">Context Reason</span>
+              <span className="text-gray-700 text-right text-[10px]">
+                {tenantMemberships.length > 0 && !isPlatformMode ? 'Has TenantMembership' : 
+                 platformRole === 'admin' || platformRole === 'developer' ? 'Platform role' : 'No context'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
               <span className="text-gray-500">Is Impersonating</span>
               <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                 isImpersonating ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
@@ -219,6 +232,11 @@ export default function SessionDebugPanel() {
             <LocalStorageKey label="tenant_preview_mode" />
             <LocalStorageKey label="active_membership_id" />
             <LocalStorageKey label="impersonated_user_email" />
+            <LocalStorageKey label="lastTenantId" />
+            <LocalStorageKey label="preferredTenantId" />
+          </div>
+          <div className="mt-3">
+            <StaleStateCleaner />
           </div>
         </DebugSection>
 
