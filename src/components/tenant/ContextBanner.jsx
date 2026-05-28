@@ -2,16 +2,16 @@ import { useGlobalContext } from '@/lib/GlobalContextEngine';
 import { Shield, Building2, CheckCircle, UserX, LogOut } from 'lucide-react';
 
 export default function ContextBanner() {
-  const { 
-    activeTenant, 
-    isPlatformMode, 
+  const {
+    activeTenant,
+    isPlatformMode,
     loading,
     isImpersonating,
     impersonatedUserEmail,
     clearImpersonation,
     user,
     platformRole,
-    contextType,
+    contextType
   } = useGlobalContext();
 
   if (loading) return null;
@@ -28,19 +28,19 @@ export default function ContextBanner() {
         </div>
         <button
           onClick={clearImpersonation}
-          className="flex items-center gap-2 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-        >
+          className="flex items-center gap-2 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-colors">
+          
           <LogOut className="w-4 h-4" />
           Esci da impersonation
         </button>
-      </div>
-    );
+      </div>);
+
   }
 
   // Show Platform Mode banner for platform owners
   if (isPlatformMode && platformRole) {
     return (
-      <div className="bg-purple-600 text-white px-4 py-2 text-sm flex items-center justify-between shadow-lg">
+      <div className="bg-purple-600 text-white px-4 py-2 text-sm flex items-center justify-between shadow-lg hidden">
         <div className="flex items-center gap-2">
           <Shield className="w-4 h-4" />
           <span className="font-medium">
@@ -50,8 +50,8 @@ export default function ContextBanner() {
         <span className="text-xs text-white/80">
           {platformRole}
         </span>
-      </div>
-    );
+      </div>);
+
   }
 
   return null;
