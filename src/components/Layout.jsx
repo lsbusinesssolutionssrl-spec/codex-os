@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Home, FileText, FolderKanban,
-  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2, BookOpen, TrendingUp, Crown, Clock, Package, DollarSign, Brain, Database, Building2, CreditCard, ListTodo, Wrench, Activity, Bell, Zap, Command, Plus, Globe, Palette
+  CheckSquare, Shield, Archive, Users2, Bot, Menu, X, LogOut, Wifi, WifiOff, Ticket, CalendarDays, BarChart2, BookOpen, TrendingUp, Crown, Clock, Package, DollarSign, Brain, Database, Building2, CreditCard, ListTodo, Wrench, Activity, Bell, Zap, Command, Plus, Globe, Palette, Flag, Key
 } from 'lucide-react';
 
 import { base44 } from '@/api/base44Client';
@@ -44,17 +44,35 @@ const TENANT_NAV_ITEMS = [
 
 // Platform navigation - only for Super Admin / Developer
 const PLATFORM_NAV_ITEMS = [
-  { path: '/super-admin', icon: Shield, label: 'Dashboard' },
-  { path: '/tenant-onboarding', icon: Building2, label: 'Nuovo Tenant' },
-  { path: '/platform/tenants', icon: Building2, label: 'Gestione Tenant' },
-  { path: '/platform/tenant-cleanup', icon: Activity, label: 'Tenant Cleanup' },
+  // Main
+  { path: '/super-admin', icon: LayoutDashboard, label: 'Dashboard' },
+  { path: '/platform/tenants', icon: Building2, label: 'Tenant' },
+  { path: '/tenant-onboarding', icon: Plus, label: 'Nuovo Tenant' },
   { path: '/saas-plans-admin', icon: CreditCard, label: 'Piani SaaS' },
-  { path: '/platform-settings', icon: Shield, label: 'Impostazioni' },
+  { path: '/platform-settings', icon: Shield, label: 'Impostazioni Platform' },
   { path: '/brand-approval', icon: Palette, label: 'White Label' },
   { path: '/developer', icon: Database, label: 'Developer' },
   { path: '/integrations', icon: Globe, label: 'Integrazioni' },
   { path: '/system-status', icon: Activity, label: 'Stato Sistema' },
-  { path: '/product-analytics', icon: TrendingUp, label: 'Analytics' },
+  { path: '/product-analytics', icon: BarChart2, label: 'Analytics' },
+  // Governance
+  { path: '/platform/tenant-cleanup', icon: Activity, label: 'Tenant Cleanup' },
+  { path: '/provisioning-validator', icon: CheckSquare, label: 'Provisioning Validator' },
+  { path: '/platform/route-health', icon: Wifi, label: 'Route Health' },
+  { path: '/company-settings/modules', icon: Zap, label: 'Module Registry' },
+  { path: '/platform/feature-flags', icon: Flag, label: 'Feature Flags' },
+  { path: '/platform/ai-providers', icon: Brain, label: 'AI Providers' },
+  { path: '/api-keys', icon: Key, label: 'API Keys' },
+  { path: '/platform/webhooks', icon: Zap, label: 'Webhooks' },
+  { path: '/platform/audit-logs', icon: BookOpen, label: 'Audit Logs' },
+  { path: '/platform/billing', icon: DollarSign, label: 'Billing / MRR' },
+  { path: '/platform/subscriptions', icon: CreditCard, label: 'Subscription Management' },
+  // Debug
+  { path: '/platform/session-debug', icon: Activity, label: 'Session Debug' },
+  { path: '/platform/rbac-debug', icon: Shield, label: 'RBAC Debug' },
+  { path: '/platform/context-debug', icon: Brain, label: 'Context Debug' },
+  { path: '/platform/module-entitlement', icon: Zap, label: 'Module Entitlement Debug' },
+  { path: '/platform/layout-inspector', icon: LayoutDashboard, label: 'Layout Inspector' },
 ];
 
 // SECURITY: Platform routes are ONLY shown to platform users
