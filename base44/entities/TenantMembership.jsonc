@@ -21,6 +21,17 @@
         "viewer"
       ]
     },
+    "membership_type": {
+      "type": "string",
+      "title": "Membership Type",
+      "enum": [
+        "customer_member",
+        "internal_support",
+        "platform_impersonation",
+        "system"
+      ],
+      "default": "customer_member"
+    },
     "status": {
       "type": "string",
       "title": "Membership Status",

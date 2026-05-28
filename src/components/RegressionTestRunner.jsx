@@ -11,8 +11,10 @@ import { CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function RegressionTestRunner() {
   const [tests, setTests] = useState([]);
+  const [platformTests, setPlatformTests] = useState([]);
   const [running, setRunning] = useState(false);
   const [summary, setSummary] = useState({ pass: 0, fail: 0, total: 0 });
+  const [platformSummary, setPlatformSummary] = useState({ pass: 0, fail: 0, total: 0 });
   const globalContext = useGlobalContext();
   const { 
     user,
@@ -32,13 +34,11 @@ export default function RegressionTestRunner() {
   // CRITICAL: Show ONLY to platform users (admin/developer/platform_owner) in platform mode
   const isInternalUser = ['super_admin', 'developer', 'platform_owner', 'admin'].includes(platformRole) && isPlatformMode;
   
-  // In platform mode: only run tenant tests when impersonating, otherwise show platform status
-  const showPlatformMode = isPlatformMode && !isImpersonating;
-  
-  // Check if current user is platform owner (not tenant admin)
-  const isPlatformOwner = user?.email === 'lsbusiness.solutions.srl@gmail.com';
+  // Determine which test suite to run
+  const isTenantContext = contextType === 'tenant' || isImpersonating;
+  const isPlatformContext = contextType === 'platform' && !isImpersonating;
 
-  const runTests = async () => {
+  const runTenantTests = async () => {
     setRunning(true);
     const results = [];
     let passCount = 0;
@@ -143,7 +143,7 @@ export default function RegressionTestRunner() {
     if (testCPass) passCount++; else failCount++;
     results.push(testC);
 
-    // TEST D — TENANT ROUTES (basic check)
+    // TEST D — TENANT ROUTES
     const testD = {
       name: 'Test D: Tenant Routes Available',
       checks: [
@@ -171,53 +171,99 @@ export default function RegressionTestRunner() {
     setRunning(false);
   };
 
-  // Auto-run tests on mount (only when in tenant mode)
+  const runPlatformTests = async () => {
+    setRunning(true);
+    const results = [];
+    let passCount = 0;
+    let failCount = 0;
+
+    // TEST P1 — PLATFORM CONTEXT
+    const testP1 = {
+      name: 'Test P1: Platform Context',
+      checks: [
+        { 
+          name: 'context_type = platform', 
+          pass: contextType === 'platform',
+          expected: 'platform',
+          actual: contextType,
+        },
+        { 
+          name: 'platform_role valid', 
+          pass: ['super_admin', 'developer', 'platform_owner'].includes(platformRole),
+          expected: 'super_admin|developer|platform_owner',
+          actual: platformRole || 'none',
+        },
+        { 
+          name: 'isPlatformMode = true', 
+          pass: isPlatformMode,
+          expected: 'true',
+          actual: isPlatformMode ? '✓' : '✗',
+        },
+      ],
+    };
+    const testP1Pass = testP1.checks.every(c => c.pass);
+    testP1.pass = testP1Pass;
+    if (testP1Pass) passCount++; else failCount++;
+    results.push(testP1);
+
+    // TEST P2 — PLATFORM VISIBILITY
+    const testP2 = {
+      name: 'Test P2: Platform Tools Visible',
+      checks: [
+        { 
+          name: 'no tenant workspace forced', 
+          pass: !activeTenant || isImpersonating,
+          expected: 'no activeTenant',
+          actual: activeTenant ? 'activeTenant exists' : '✓',
+        },
+        { 
+          name: 'no stale impersonation', 
+          pass: !isImpersonating || !!localStorage.getItem('impersonate_tenant_id'),
+          expected: 'clean or valid impersonation',
+          actual: isImpersonating && !localStorage.getItem('impersonate_tenant_id') ? 'STALE' : '✓',
+        },
+      ],
+    };
+    const testP2Pass = testP2.checks.every(c => c.pass);
+    testP2.pass = testP2Pass;
+    if (testP2Pass) passCount++; else failCount++;
+    results.push(testP2);
+
+    setPlatformTests(results);
+    setPlatformSummary({ pass: passCount, fail: failCount, total: passCount + failCount });
+    setRunning(false);
+  };
+
+  // Auto-run appropriate test suite on mount
   useEffect(() => {
-    if (!showPlatformMode && !isPlatformOwner) {
-      runTests();
+    if (isPlatformContext) {
+      runPlatformTests();
+    } else if (isTenantContext) {
+      runTenantTests();
     }
-  }, []);
+  }, [contextType, isImpersonating]);
 
   // Don't render if not internal user
   if (!isInternalUser) return null;
-  
-  // Show platform mode message for platform owner or when in platform mode
-  if (showPlatformMode || isPlatformOwner) {
-    return (
-      <div className="fixed bottom-4 left-4 z-50 bg-white rounded-lg shadow-xl border-2 border-blue-200 max-w-md px-4 py-3">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-sm font-bold text-blue-700">🏢 Platform Mode</span>
-          <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-600 font-medium">ACTIVE</span>
-        </div>
-        <p className="text-xs text-gray-500 mb-2">
-          Logged in as: <strong className="text-gray-700">{user?.email}</strong>
-        </p>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
-          <p className="text-xs text-yellow-800">
-            <strong>⚠️ Regression tests require tenant admin login.</strong>
-          </p>
-          <p className="text-xs text-yellow-700 mt-1">
-            Please login as <strong>amministrazione@lsbusiness.it</strong> to run tenant regression tests.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
-  const allPass = summary.fail === 0;
+  const allPass = isPlatformContext 
+    ? platformSummary.fail === 0 
+    : summary.fail === 0;
 
   return (
     <div className="fixed bottom-4 left-4 z-50 bg-white rounded-lg shadow-xl border-2 border-gray-200 max-w-md max-h-96 overflow-auto">
       <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-        <h3 className="font-bold text-gray-900">🧪 Regression Tests</h3>
+        <h3 className="font-bold text-gray-900">
+          {isPlatformContext ? '🏢 Platform Tests' : '🏢 Tenant Tests'}
+        </h3>
         <div className="flex items-center gap-2">
           <span className={`text-xs font-bold px-2 py-1 rounded ${
             allPass ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
           }`}>
-            {summary.pass}/{summary.total} PASS
+            {isPlatformContext ? platformSummary.pass : summary.pass}/{isPlatformContext ? platformSummary.total : summary.total} PASS
           </span>
           <button
-            onClick={runTests}
+            onClick={() => isPlatformContext ? runPlatformTests() : runTenantTests()}
             disabled={running}
             className="p-1.5 text-gray-600 hover:bg-gray-100 rounded"
             title="Re-run tests"
@@ -260,11 +306,67 @@ export default function RegressionTestRunner() {
         ))}
       </div>
 
+      {isPlatformContext && (
+        <div className="p-3 space-y-3">
+          {platformTests.map(test => (
+            <div key={test.name} className="border border-gray-200 rounded-lg">
+              <div className={`px-3 py-2 flex items-center justify-between ${
+                test.pass ? 'bg-green-50' : 'bg-red-50'
+              }`}>
+                <span className={`text-sm font-bold ${
+                  test.pass ? 'text-green-700' : 'text-red-700'
+                }`}>
+                  {test.pass ? '✓' : '✗'} {test.name}
+                </span>
+              </div>
+              {!test.pass && (
+                <div className="p-2 bg-white">
+                  {test.checks.filter(c => !c.pass).map((check, i) => (
+                    <div key={i} className="text-xs text-red-600 mb-1">
+                      <AlertCircle className="w-3 h-3 inline mr-1" />
+                      {check.name}: expected <strong>{check.expected}</strong>, got <strong>{check.actual}</strong>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isTenantContext && (
+        <div className="p-3 space-y-3">
+          {tests.map(test => (
+            <div key={test.name} className="border border-gray-200 rounded-lg">
+              <div className={`px-3 py-2 flex items-center justify-between ${
+                test.pass ? 'bg-green-50' : 'bg-red-50'
+              }`}>
+                <span className={`text-sm font-bold ${
+                  test.pass ? 'text-green-700' : 'text-red-700'
+                }`}>
+                  {test.pass ? '✓' : '✗'} {test.name}
+                </span>
+              </div>
+              {!test.pass && (
+                <div className="p-2 bg-white">
+                  {test.checks.filter(c => !c.pass).map((check, i) => (
+                    <div key={i} className="text-xs text-red-600 mb-1">
+                      <AlertCircle className="w-3 h-3 inline mr-1" />
+                      {check.name}: expected <strong>{check.expected}</strong>, got <strong>{check.actual}</strong>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {allPass && (
         <div className="px-4 py-2 bg-green-50 border-t border-green-200">
           <p className="text-xs text-green-700 font-medium flex items-center gap-1">
             <CheckCircle className="w-3 h-3" />
-            All regression tests passed - system stable
+            All {isPlatformContext ? 'platform' : 'tenant'} tests passed - system stable
           </p>
         </div>
       )}
@@ -276,7 +378,7 @@ export default function RegressionTestRunner() {
             Regression detected - DO NOT DEPLOY
           </p>
           <p className="text-xs text-red-600 mt-1">
-            {summary.fail} test(s) failed. Rollback required.
+            {isPlatformContext ? platformSummary.fail : summary.fail} test(s) failed. Rollback required.
           </p>
         </div>
       )}

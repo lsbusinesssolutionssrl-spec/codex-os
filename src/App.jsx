@@ -109,6 +109,7 @@ import ExecutionIntelligenceDashboard from './pages/ExecutionIntelligenceDashboa
 import ActivationWizard from './pages/ActivationWizard';
 import CompanySetupWizard from './pages/CompanySetupWizard';
 import TenantManagement from './pages/TenantManagement';
+import TenantCleanupCenter from './pages/TenantCleanupCenter';
 import WhiteLabelCenter from './pages/WhiteLabelCenter';
 import BrandApprovalQueue from './pages/BrandApprovalQueue';
 import PlatformSettings from './pages/PlatformSettings';
@@ -278,6 +279,7 @@ const AuthenticatedApp = () => {
       <Route path="/provisioning-validator" element={<ProvisioningValidator />} />
       <Route path="/platform/tenants" element={<TenantManagement />} />
       <Route path="/platform/tenants/:tenantId" element={<TenantDetail />} />
+      <Route path="/platform/tenant-cleanup" element={<TenantCleanupCenter />} />
       <Route path="/platform/route-health" element={<RouteHealthDashboard />} />
       <Route path="/company-settings/modules" element={<ModuleActivationManager />} />
       <Route path="/business-intelligence" element={<CodexIntelligence />} />
