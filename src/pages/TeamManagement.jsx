@@ -59,10 +59,11 @@ export default function TeamManagement() {
       }
       
       // Store all memberships for debug
-      setAllMemberships(data.members);
+      setAllMemberships(data.all_memberships || data.members);
       
-      // Show active members
-      const activeMembers = data.members.filter(m => m.status === 'active');
+      // Show only customer members (excludes internal support)
+      const customerMembers = data.members || [];
+      const activeMembers = customerMembers.filter(m => m.status === 'active');
       setMembers(activeMembers);
       
       // Show pending invitations
@@ -393,6 +394,40 @@ export default function TeamManagement() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Internal Support Section - Developer Only */}
+      {showDebug && allMemberships.some(m => m.membership_type === 'internal_support') && (
+        <div className="bg-white rounded-xl border border-amber-200">
+          <div className="p-4 border-b border-amber-200 bg-amber-50">
+            <h2 className="font-semibold text-amber-900 flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              Accesso Platform / Supporto ({allMemberships.filter(m => m.membership_type === 'internal_support').length})
+            </h2>
+            <p className="text-xs text-amber-700 mt-1">
+              Utenti platform con accesso in supporto - non contati come membri customer
+            </p>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {allMemberships.filter(m => m.membership_type === 'internal_support').map(member => (
+              <div key={member.id} className="flex items-center justify-between p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                    <Shield className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{member.user?.full_name || member.user?.email || 'Support User'}</p>
+                    <p className="text-sm text-gray-500">{member.user?.email}</p>
+                    <p className="text-xs text-amber-600 font-medium">• {member.tenant_role} (Internal Support)</p>
+                  </div>
+                </div>
+                <span className="px-2 py-1 text-xs font-medium text-amber-700 bg-amber-100 rounded-full">
+                  Supporto
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

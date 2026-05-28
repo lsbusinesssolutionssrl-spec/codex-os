@@ -35,21 +35,33 @@ Deno.serve(async (req) => {
     // Load users
     const allUsers = await base44.asServiceRole.entities.User.list();
 
+    // Platform owner emails - treat as internal support unless explicitly customer
+    const PLATFORM_OWNER_EMAILS = ['lsbusiness.solutions.srl@gmail.com'];
+    
     // Join memberships with user data
-    const members = allMemberships.map(m => {
+    const allMemberData = allMemberships.map(m => {
       const matchedUser = allUsers.find(u => u.id === m.user_id);
       const userEmail = matchedUser?.email || m.user?.email || 'Unknown';
       const userFullName = matchedUser?.full_name || m.user?.full_name;
+      
+      // Determine membership type
+      let membershipType = m.membership_type || 'customer_member';
+      
+      // Auto-classify platform owners as internal_support
+      if (PLATFORM_OWNER_EMAILS.includes(userEmail)) {
+        membershipType = 'internal_support';
+      }
       
       return {
         id: m.id,
         user_id: m.user_id,
         user: {
           email: userEmail,
-          full_name: userFullName || userEmail.split('@')[0], // Fallback to email prefix if no name
+          full_name: userFullName || userEmail.split('@')[0],
         },
         tenant_id: m.tenant_id,
         tenant_role: m.tenant_role,
+        membership_type: membershipType,
         status: m.status,
         is_primary: m.is_primary,
         invited_by: m.invited_by,
@@ -64,25 +76,33 @@ Deno.serve(async (req) => {
       };
     });
 
-    // Categorize
-    const active = members.filter(m => m.status === 'active');
-    const pending = members.filter(m => ['invited', 'pending'].includes(m.status.toLowerCase()));
-    const removed = members.filter(m => m.status === 'removed');
-    const suspended = members.filter(m => m.status === 'suspended');
+    // Separate customer members from internal support
+    const customerMembers = allMemberData.filter(m => m.membership_type === 'customer_member');
+    const internalSupport = allMemberData.filter(m => m.membership_type === 'internal_support');
+    
+    // Categorize customer members only
+    const active = customerMembers.filter(m => m.status === 'active');
+    const pending = customerMembers.filter(m => ['invited', 'pending'].includes(m.status.toLowerCase()));
+    const removed = customerMembers.filter(m => m.status === 'removed');
+    const suspended = customerMembers.filter(m => m.status === 'suspended');
 
     return Response.json({
       success: true,
       tenant_id,
-      total_count: members.length,
+      total_count: customerMembers.length,
       active_count: active.length,
       pending_count: pending.length,
       removed_count: removed.length,
       suspended_count: suspended.length,
-      members,
+      members: active, // Return only active customer members by default
+      internal_support: internalSupport, // Separate section for platform/support
+      all_memberships: allMemberData, // Include all for debug
       debug: {
         raw_memberships_loaded: allMemberships.length,
         users_loaded: allUsers.length,
-        memberships_missing_user: members.filter(m => m.user_email === 'Unknown').length,
+        customer_members_count: customerMembers.length,
+        internal_support_count: internalSupport.length,
+        memberships_missing_user: allMemberData.filter(m => m.user?.email === 'Unknown').length,
       },
     });
   } catch (error) {
