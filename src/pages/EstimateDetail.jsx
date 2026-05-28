@@ -75,6 +75,7 @@ export default function EstimateDetail() {
       const updated = await base44.entities.Estimate.update(id, payload);
       setForm(updated);
       toast.success('Preventivo salvato correttamente.');
+      navigate('/estimates');
     } catch (err) {
       console.error('[EstimateDetail] Save error:', err);
       toast.error('Errore salvataggio preventivo: ' + (err.message || 'Riprova'));
