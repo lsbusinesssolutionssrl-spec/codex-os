@@ -50,6 +50,20 @@ export default function SuperAdminDashboard() {
         includeArchived: false,
       });
       setPlatformData(result.data);
+      
+      // Auto-run cleanup if tenants are unclassified
+      const hasUnclassified = result.data.tenants.some(t => !t.tenant_type || t.tenant_type === 'production_customer');
+      if (hasUnclassified && result.data.tenants.length > 1) {
+        console.log('Running auto-cleanup for unclassified tenants...');
+        await base44.functions.invoke('executeTenantCleanup', {});
+        // Reload after cleanup
+        const cleanedResult = await base44.functions.invoke('getPlatformMetrics', {
+          includeDemo: false,
+          includeInternal: false,
+          includeArchived: false,
+        });
+        setPlatformData(cleanedResult.data);
+      }
     } catch (error) {
       console.error('Error loading platform data:', error);
       toast.error('Errore nel caricamento dati platform: ' + error.message);
