@@ -7,11 +7,11 @@ import { toast } from 'sonner';
 import { TenantTeamService } from '@/lib/TenantTeamService';
 
 const ROLES = [
-  { value: 'tenant_admin', label: 'Executive', color: '#7C3AED' },
+  { value: 'tenant_admin', label: 'Tenant Admin', color: '#7C3AED' },
   { value: 'project_manager', label: 'Project Manager', color: '#1147FF' },
   { value: 'sales', label: 'Sales', color: '#F59E0B' },
   { value: 'finance', label: 'Finance', color: '#10B981' },
-  { value: 'technician', label: 'Technician', color: '#06B6D4' },
+  { value: 'technician', label: 'Tecnico', color: '#06B6D4' },
 ];
 
 export default function TeamManagement() {
@@ -204,15 +204,23 @@ export default function TeamManagement() {
           <h2 className="font-semibold text-gray-900">Membri del Team</h2>
         </div>
         <div className="divide-y divide-gray-100">
-          {members.map(member => (
+          {members.map(member => {
+            // FIX: Proper display name fallback - never show "Invitato" for active members
+            const displayName = member.user?.full_name || member.user?.email || 'Utente senza profilo';
+            const isCurrentUser = member.user?.email === user?.email;
+            
+            return (
             <div key={member.id} className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                  {member.user?.full_name?.[0]?.toUpperCase() || member.user?.email?.[0]?.toUpperCase()}
+                  {(displayName?.[0] || 'U').toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{member.user?.full_name || 'Invitato'}</p>
-                  <p className="text-sm text-gray-500">{member.user?.email}</p>
+                  <p className="font-medium text-gray-900">
+                    {displayName}
+                    {isCurrentUser && <span className="ml-2 text-xs text-blue-600 font-normal">(Tu)</span>}
+                  </p>
+                  <p className="text-sm text-gray-500">{member.user?.email || 'Email non disponibile'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -236,7 +244,8 @@ export default function TeamManagement() {
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
           {members.length === 0 && (
             <div className="p-8 text-center text-gray-500">
               Nessun membro nel team. Invita il primo membro!

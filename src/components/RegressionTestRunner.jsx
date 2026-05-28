@@ -35,28 +35,8 @@ export default function RegressionTestRunner() {
   // In platform mode: only run tenant tests when impersonating, otherwise show platform status
   const showPlatformMode = isPlatformMode && !isImpersonating;
   
-  useEffect(() => {
-    // Auto-run on mount (only when not in platform mode)
-    if (!showPlatformMode) {
-      runTests();
-    }
-  }, [showPlatformMode]);
-
-  if (!isInternalUser) return null;
-  
-  if (showPlatformMode) {
-    return (
-      <div className="fixed bottom-4 left-4 z-50 bg-white rounded-lg shadow-xl border-2 border-blue-200 max-w-xs px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-blue-700">🏢 Platform Mode</span>
-          <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-600 font-medium">ACTIVE</span>
-        </div>
-        <p className="text-xs text-gray-500 mt-1">
-          Tenant regression tests run only when impersonating a tenant user.
-        </p>
-      </div>
-    );
-  }
+  // Check if current user is platform owner (not tenant admin)
+  const isPlatformOwner = user?.email === 'lsbusiness.solutions.srl@gmail.com';
 
   const runTests = async () => {
     setRunning(true);
@@ -191,10 +171,38 @@ export default function RegressionTestRunner() {
     setRunning(false);
   };
 
+  // Auto-run tests on mount (only when in tenant mode)
   useEffect(() => {
-    // Auto-run on mount
-    runTests();
+    if (!showPlatformMode && !isPlatformOwner) {
+      runTests();
+    }
   }, []);
+
+  // Don't render if not internal user
+  if (!isInternalUser) return null;
+  
+  // Show platform mode message for platform owner or when in platform mode
+  if (showPlatformMode || isPlatformOwner) {
+    return (
+      <div className="fixed bottom-4 left-4 z-50 bg-white rounded-lg shadow-xl border-2 border-blue-200 max-w-md px-4 py-3">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-sm font-bold text-blue-700">🏢 Platform Mode</span>
+          <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-600 font-medium">ACTIVE</span>
+        </div>
+        <p className="text-xs text-gray-500 mb-2">
+          Logged in as: <strong className="text-gray-700">{user?.email}</strong>
+        </p>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+          <p className="text-xs text-yellow-800">
+            <strong>⚠️ Regression tests require tenant admin login.</strong>
+          </p>
+          <p className="text-xs text-yellow-700 mt-1">
+            Please login as <strong>amministrazione@lsbusiness.it</strong> to run tenant regression tests.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const allPass = summary.fail === 0;
 

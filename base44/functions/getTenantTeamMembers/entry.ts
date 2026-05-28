@@ -36,25 +36,30 @@ Deno.serve(async (req) => {
     const allUsers = await base44.asServiceRole.entities.User.list();
 
     // Join memberships with user data
-    const members = allMemberships.map(m => ({
-      id: m.id,
-      user_id: m.user_id,
-      user_email: m.user?.email || allUsers.find(u => u.id === m.user_id)?.email || 'Unknown',
-      user_full_name: m.user?.full_name || allUsers.find(u => u.id === m.user_id)?.full_name || 'Unknown',
-      tenant_id: m.tenant_id,
-      tenant_role: m.tenant_role,
-      status: m.status,
-      is_primary: m.is_primary,
-      invited_by: m.invited_by,
-      invited_at: m.invited_at,
-      joined_at: m.joined_at,
-      permissions: m.permissions,
-      default_workspace: m.default_workspace,
-      language: m.language,
-      notes: m.notes,
-      created_date: m.created_date,
-      updated_date: m.updated_date,
-    }));
+    const members = allMemberships.map(m => {
+      const matchedUser = allUsers.find(u => u.id === m.user_id);
+      return {
+        id: m.id,
+        user_id: m.user_id,
+        user: {
+          email: matchedUser?.email || m.user?.email || 'Unknown',
+          full_name: matchedUser?.full_name || m.user?.full_name,
+        },
+        tenant_id: m.tenant_id,
+        tenant_role: m.tenant_role,
+        status: m.status,
+        is_primary: m.is_primary,
+        invited_by: m.invited_by,
+        invited_at: m.invited_at,
+        joined_at: m.joined_at,
+        permissions: m.permissions,
+        default_workspace: m.default_workspace,
+        language: m.language,
+        notes: m.notes,
+        created_date: m.created_date,
+        updated_date: m.updated_date,
+      };
+    });
 
     // Categorize
     const active = members.filter(m => m.status === 'active');
