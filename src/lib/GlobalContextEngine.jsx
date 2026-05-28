@@ -101,16 +101,26 @@ export function GlobalContextProvider({ children }) {
         const VALID_PLATFORM_ROLES = ['super_admin', 'developer', 'platform_owner'];
         
         // LEGACY FIX: If user has "admin" role but has tenant membership, role is contaminated
-        // User should be "user" not "admin"
+        // User should be treated as "user" for context resolution (tenant takes precedence)
+        // SPECIAL CASE: App owner cannot have role updated - must handle in context logic
         if (role === 'admin') {
           console.log('[GlobalContextEngine] Detected legacy admin role - checking for contamination...');
           try {
             const fixResponse = await base44.functions.invoke('applyPlatformRoleFix', {});
             if (fixResponse.data.fix_required) {
-              console.log('[GlobalContextEngine] ROLE CONTAMINATION DETECTED - redirecting to logout...');
-              // Role is contaminated - need logout to refresh session
-              await base44.auth.logout();
-              return;
+              console.log('[GlobalContextEngine] ROLE CONTAMINATION DETECTED');
+              // For app owner, we can't change the role - must handle in context resolution
+              if (fixResponse.data.user.current_role === 'admin' && fixResponse.data.user.has_tenant_membership) {
+                console.log('[GlobalContextEngine] App owner with tenant membership - forcing tenant context');
+                // Override role for context purposes - tenant membership takes precedence
+                role = 'user';
+                setPlatformRole('user'); // Override for display purposes
+              } else {
+                // Regular user - logout to refresh session
+                console.log('[GlobalContextEngine] Regular user - logging out to refresh session');
+                await base44.auth.logout();
+                return;
+              }
             }
           } catch (error) {
             console.error('[GlobalContextEngine] Error checking role fix:', error);
