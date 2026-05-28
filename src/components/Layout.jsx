@@ -74,7 +74,15 @@ export default function Layout() {
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const { isOnline, queueCount } = useOfflineSync();
   const globalContext = useGlobalContext();
-  const { activeTenant, activeTenantRole, isPlatformMode, loading: contextLoading, enabledModules } = globalContext;
+  const { 
+    activeTenant, 
+    activeTenantRole, 
+    isPlatformMode, 
+    loading: contextLoading, 
+    enabledModules,
+    isImpersonating,
+    user,
+  } = globalContext;
   const [userRole, setUserRole] = useState(null);
 
   // All hooks must be called unconditionally at the top
@@ -122,20 +130,24 @@ export default function Layout() {
 
   const allowedPaths = userRole ? NAV_BY_ROLE[userRole] : null;
   
-  // SECURITY FIX: Determine which navigation to use based on context
-  const visibleNav = isPlatformMode ? PLATFORM_NAV_ITEMS : TENANT_NAV_ITEMS.filter(item => {
-    // Module-based items only appear if enabled
-    if (item.module && item.module !== 'core' && !enabledModules.includes(item.module)) {
-      return false;
-    }
-    
-    // Role-based filtering
-    if (allowedPaths && !allowedPaths.includes(item.path)) {
-      return false;
-    }
-    
-    return true;
-  });
+  // CRITICAL: Platform owner sees PLATFORM nav, NOT tenant nav
+  // Only show tenant nav if user is NOT a platform user OR is impersonating
+  const isPlatformUser = ['super_admin', 'developer', 'platform_owner'].includes(userRole);
+  const visibleNav = (isPlatformMode || (isPlatformUser && !isImpersonating)) 
+    ? PLATFORM_NAV_ITEMS 
+    : TENANT_NAV_ITEMS.filter(item => {
+        // Module-based items only appear if enabled
+        if (item.module && item.module !== 'core' && !enabledModules.includes(item.module)) {
+          return false;
+        }
+        
+        // Role-based filtering
+        if (allowedPaths && !allowedPaths.includes(item.path)) {
+          return false;
+        }
+        
+        return true;
+      });
 
   const isActive = (path) => path === '/'
     ? location.pathname === '/'
@@ -261,6 +273,9 @@ export default function Layout() {
                 </div>
               )}
               <span className="font-medium">{activeTenant.name}</span>
+              {isImpersonating && (
+                <span className="text-xs text-orange-600 font-medium ml-1">(Impersonation)</span>
+              )}
             </div>
           )}
           <NotificationBell />
@@ -277,22 +292,11 @@ export default function Layout() {
             <HydrationDebugPanel />
           </>
         )}
-        {/* Debug panels - only visible for platform developers in platform mode */}
-        {(userRole === 'admin' || userRole === 'developer') && isPlatformMode && (
-          <>
-            <SessionDebugPanel />
-            <LayoutInspector />
-            <RBACDebugPanel />
-            <div className="fixed bottom-4 right-4 z-50">
-              <details className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-md max-h-96 overflow-auto">
-                <summary className="px-4 py-2 text-xs font-semibold text-gray-700 cursor-pointer bg-gray-50 border-b border-gray-200">
-                  🔧 Module Entitlement Debug
-                </summary>
-                <ModuleEntitlementDebug />
-              </details>
-            </div>
-          </>
-        )}
+        {/* Debug panels - guard is inside each component (platform mode only) */}
+        <SessionDebugPanel />
+        <LayoutInspector />
+        <RBACDebugPanel />
+        <ModuleEntitlementDebug />
         {/* Regression tests - ALWAYS visible in development */}
         <RegressionTestRunner />
         {/* Quick membership repair for unresolved contexts */}

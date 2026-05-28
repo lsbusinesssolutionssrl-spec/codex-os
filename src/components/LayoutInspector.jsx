@@ -14,8 +14,8 @@ export default function LayoutInspector() {
   const globalContext = useGlobalContext();
   const { isPlatformMode, platformRole } = globalContext;
 
-  // CRITICAL: Show ONLY to super_admin / developer in platform mode
-  const isInternalUser = ['super_admin', 'developer', 'platform_owner'].includes(platformRole) && isPlatformMode;
+  // CRITICAL: Show ONLY to platform users in platform mode
+  const isInternalUser = ['super_admin', 'developer', 'platform_owner', 'admin'].includes(platformRole) && isPlatformMode;
 
 /**
  * LAYOUT INSPECTOR - Developer Tool

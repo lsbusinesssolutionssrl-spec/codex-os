@@ -25,8 +25,8 @@ export default function RBACDebugPanel() {
     platformRole,
   } = useGlobalContext();
 
-  // CRITICAL: Show ONLY to super_admin / developer in platform mode
-  const isInternalUser = ['super_admin', 'developer', 'platform_owner'].includes(platformRole) && isPlatformMode;
+  // CRITICAL: Show ONLY to platform users in platform mode
+  const isInternalUser = ['super_admin', 'developer', 'platform_owner', 'admin'].includes(platformRole) && isPlatformMode;
   
   const [debugInfo, setDebugInfo] = useState(null);
 

@@ -10,15 +10,21 @@ import GuardianWorkspace from '@/components/workspace/GuardianWorkspace';
 import { useEffect } from 'react';
 
 export default function WorkspaceRouter() {
-  const { workspaceType, loading, activeTenantRole } = useGlobalContext();
+  const { workspaceType, loading, activeTenantRole, isPlatformMode } = useGlobalContext();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect Tenant Admin to dedicated console
-    if (activeTenantRole === 'tenant_admin' && !loading) {
-      navigate('/admin/dashboard', { replace: true });
+    if (loading) return;
+    // Redirect Platform users to platform dashboard
+    if (isPlatformMode) {
+      navigate('/platform/tenants', { replace: true });
+      return;
     }
-  }, [activeTenantRole, loading, navigate]);
+    // Redirect Tenant Admin to dedicated console
+    if (activeTenantRole === 'tenant_admin') {
+      navigate('/app/admin/dashboard', { replace: true });
+    }
+  }, [activeTenantRole, loading, navigate, isPlatformMode]);
 
   if (loading) {
     return (

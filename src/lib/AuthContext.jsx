@@ -115,8 +115,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = (shouldRedirect = true) => {
+    console.log('[AuthContext] Logout - clearing all state...');
     setUser(null);
     setIsAuthenticated(false);
+    // Note: setIsImpersonating is managed by GlobalContextEngine, not AuthContext
+    
+    // CRITICAL: Clear ALL impersonation and tenant state on logout
+    localStorage.removeItem('impersonate_tenant_id');
+    localStorage.removeItem('impersonated_user_email');
+    localStorage.removeItem('selectedTenantId');
+    localStorage.removeItem('tenant_preview_mode');
+    localStorage.removeItem('active_membership_id');
     
     if (shouldRedirect) {
       // Use the SDK's logout method which handles token cleanup and redirect

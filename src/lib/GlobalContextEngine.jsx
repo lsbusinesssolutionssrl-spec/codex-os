@@ -56,6 +56,10 @@ export function GlobalContextProvider({ children }) {
   const [contextType, setContextType] = useState(CONTEXT_TYPE.UNRESOLVED);
   const [workspaceType, setWorkspaceType] = useState(null);
   
+  // Impersonation state (CRITICAL: separate real user from effective user)
+  const [isImpersonating, setIsImpersonating] = useState(false);
+  const [impersonatedUserEmail, setImpersonatedUserEmail] = useState(null);
+  
   // Capabilities
   const [enabledModules, setEnabledModules] = useState([]);
   const [permissions, setPermissions] = useState([]);
@@ -94,41 +98,17 @@ export function GlobalContextProvider({ children }) {
         setUser(authenticatedUser);
         setSessionValid(true);
 
-        // STEP 2: Load platform role with legacy cleanup
+        // STEP 2: Load platform role
         let role = authenticatedUser.role || 'user';
         
-        // CRITICAL: Only these are valid platform roles
-        const VALID_PLATFORM_ROLES = ['super_admin', 'developer', 'platform_owner'];
-        
-        // LEGACY FIX: If user has "admin" role but has tenant membership, role is contaminated
-        // User should be treated as "user" for context resolution (tenant takes precedence)
-        // SPECIAL CASE: App owner cannot have role updated - must handle in context logic
-        if (role === 'admin') {
-          console.log('[GlobalContextEngine] Detected legacy admin role - checking for contamination...');
-          try {
-            const fixResponse = await base44.functions.invoke('applyPlatformRoleFix', {});
-            if (fixResponse.data.fix_required) {
-              console.log('[GlobalContextEngine] ROLE CONTAMINATION DETECTED');
-              // For app owner, we can't change the role - must handle in context resolution
-              if (fixResponse.data.user.current_role === 'admin' && fixResponse.data.user.has_tenant_membership) {
-                console.log('[GlobalContextEngine] App owner with tenant membership - forcing tenant context');
-                // Override role for context purposes - tenant membership takes precedence
-                role = 'user';
-                setPlatformRole('user'); // Override for display purposes
-              } else {
-                // Regular user - logout to refresh session
-                console.log('[GlobalContextEngine] Regular user - logging out to refresh session');
-                await base44.auth.logout();
-                return;
-              }
-            }
-          } catch (error) {
-            console.error('[GlobalContextEngine] Error checking role fix:', error);
-          }
-        }
+        // CRITICAL: These are valid platform roles - they get PLATFORM context by default
+        // 'admin' is the Base44 app owner role - it IS a platform role
+        const VALID_PLATFORM_ROLES = ['super_admin', 'developer', 'platform_owner', 'admin'];
         
         setPlatformRole(role);
         const isPlatformUser = VALID_PLATFORM_ROLES.includes(role);
+        
+        console.log('[GlobalContextEngine] User role:', role, '| isPlatformUser:', isPlatformUser);
 
         // STEP 3: Load tenant memberships - ALWAYS load for all users
         let memberships = [];
@@ -171,9 +151,47 @@ export function GlobalContextProvider({ children }) {
           }
         }
 
-        // STEP 4: Resolve active context with strict priority
-        // PRIORITY 1: Tenant membership ALWAYS takes precedence over platform role
-        // This ensures tenant admins are not forced into platform mode
+        // STEP 4: Resolve active context with NEW priority logic
+        // CRITICAL: Platform owner/developer should see PLATFORM context by default
+        // unless explicitly impersonating a tenant user
+        
+        // Check for explicit impersonation FIRST
+        const impersonateId = localStorage.getItem('impersonate_tenant_id');
+        const isImpersonationActive = !!impersonateId && isPlatformUser;
+        
+        if (isImpersonationActive) {
+          console.log('[GlobalContextEngine] Impersonation detected:', impersonateId);
+          setIsImpersonating(true);
+          
+          // Load impersonated tenant membership
+          const impersonatedMembership = await base44.entities.TenantMembership.filter({
+            user_id: authenticatedUser.id,
+            tenant_id: impersonateId,
+          }).then(m => m[0] || null);
+          
+          if (impersonatedMembership) {
+            console.log('[GlobalContextEngine] Impersonating tenant:', impersonatedMembership.tenant_id);
+            setImpersonatedUserEmail(authenticatedUser.email);
+            await resolveTenantContext(impersonatedMembership, null, true);
+            return;
+          }
+        }
+        
+        // PRIORITY 1: Platform users (super_admin, developer, platform_owner) see PLATFORM context
+        // This is the DEFAULT for platform owner - they do NOT see tenant context automatically
+        if (isPlatformUser) {
+          console.log('[GlobalContextEngine] Platform user detected - using platform context');
+          setContextType(CONTEXT_TYPE.PLATFORM);
+          setWorkspaceType('platform_admin');
+          setEnabledModules([]);
+          setPermissions(['platform:read', 'platform:write', 'tenant:read', 'tenant:write']);
+          setIsImpersonating(false);
+          setImpersonatedUserEmail(null);
+          setLoading(false);
+          return;
+        }
+
+        // PRIORITY 2: Tenant users WITHOUT platform role - use tenant context
         if (memberships.length > 0) {
           // Filter for active memberships only at resolution time
           const activeMemberships = memberships.filter(m => m.status === 'active');
@@ -213,13 +231,12 @@ export function GlobalContextProvider({ children }) {
             return;
           }
 
-          await resolveTenantContext(primaryMembership, tenant);
+          await resolveTenantContext(primaryMembership, tenant, false);
           return;
         }
 
-        // PRIORITY 2: Platform users WITHOUT tenant membership
-        // Only users with valid platform roles AND no tenant membership get platform context
-        if (isPlatformUser && memberships.length === 0) {
+        // PRIORITY 3: Fallback for platform users checking impersonation
+        if (isPlatformUser && impersonateId) {
           // Check if impersonating a tenant
           const impersonateId = localStorage.getItem('impersonate_tenant_id');
           if (impersonateId) {
@@ -337,7 +354,7 @@ export function GlobalContextProvider({ children }) {
     init();
   }, []);
 
-  const resolveTenantContext = async (membership, tenant = null) => {
+  const resolveTenantContext = async (membership, tenant = null, isImpersonation = false) => {
     const failedChecksList = [];
     const hydrationSteps = {
       user_loaded: false,
@@ -350,6 +367,8 @@ export function GlobalContextProvider({ children }) {
       module_permissions_built: false,
       context_finalized: false,
     };
+
+    console.log('[resolveTenantContext] Is impersonation:', isImpersonation);
 
     try {
       // STEP 1: Load tenant if not provided
@@ -612,7 +631,17 @@ export function GlobalContextProvider({ children }) {
   };
 
   const clearImpersonation = () => {
+    console.log('[GlobalContextEngine] Clearing impersonation...');
     localStorage.removeItem('impersonate_tenant_id');
+    localStorage.removeItem('impersonated_user_email');
+    localStorage.removeItem('selectedTenantId');
+    localStorage.removeItem('tenant_preview_mode');
+    setIsImpersonating(false);
+    setImpersonatedUserEmail(null);
+    // Force context reload
+    const newId = `ctx_${Date.now()}`;
+    setContextId(newId);
+    window.dispatchEvent(new CustomEvent('context_refresh', { detail: { contextId: newId, clearImpersonation: true } }));
     window.location.reload();
   };
 
@@ -631,6 +660,12 @@ export function GlobalContextProvider({ children }) {
     activeTenantRole,
     contextType,
     workspaceType,
+    
+    // Impersonation state (CRITICAL for user separation)
+    isImpersonating,
+    impersonatedUserEmail,
+    realUser: user, // The actually logged-in user
+    effectiveUser: isImpersonating ? { ...user, email: impersonatedUserEmail } : user, // User being impersonated or real user
     
     // Capabilities
     enabledModules,
@@ -654,6 +689,14 @@ export function GlobalContextProvider({ children }) {
     // Actions
     switchTenant,
     clearImpersonation,
+    startImpersonation: (tenantId, userEmail) => {
+      console.log('[GlobalContextEngine] Starting impersonation:', tenantId, userEmail);
+      localStorage.setItem('impersonate_tenant_id', tenantId);
+      localStorage.setItem('impersonated_user_email', userEmail);
+      setIsImpersonating(true);
+      setImpersonatedUserEmail(userEmail);
+      window.location.reload();
+    },
     refreshContext: () => {
       const newId = `ctx_${Date.now()}`;
       setContextId(newId);

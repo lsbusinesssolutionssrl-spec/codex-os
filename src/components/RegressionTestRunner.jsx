@@ -18,6 +18,7 @@ export default function RegressionTestRunner() {
     user,
     platformRole,
     isPlatformMode,
+    isImpersonating,
     contextType, 
     activeTenant, 
     activeTenantRole, 
@@ -28,9 +29,34 @@ export default function RegressionTestRunner() {
     forceReload,
   } = globalContext;
 
-  // CRITICAL: Show ONLY to super_admin / developer in platform mode
-  const isInternalUser = ['super_admin', 'developer', 'platform_owner'].includes(platformRole) && isPlatformMode;
+  // CRITICAL: Show ONLY to platform users (admin/developer/platform_owner) in platform mode
+  const isInternalUser = ['super_admin', 'developer', 'platform_owner', 'admin'].includes(platformRole) && isPlatformMode;
+  
+  // In platform mode: only run tenant tests when impersonating, otherwise show platform status
+  const showPlatformMode = isPlatformMode && !isImpersonating;
+  
+  useEffect(() => {
+    // Auto-run on mount (only when not in platform mode)
+    if (!showPlatformMode) {
+      runTests();
+    }
+  }, [showPlatformMode]);
+
   if (!isInternalUser) return null;
+  
+  if (showPlatformMode) {
+    return (
+      <div className="fixed bottom-4 left-4 z-50 bg-white rounded-lg shadow-xl border-2 border-blue-200 max-w-xs px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-blue-700">🏢 Platform Mode</span>
+          <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-600 font-medium">ACTIVE</span>
+        </div>
+        <p className="text-xs text-gray-500 mt-1">
+          Tenant regression tests run only when impersonating a tenant user.
+        </p>
+      </div>
+    );
+  }
 
   const runTests = async () => {
     setRunning(true);
@@ -55,10 +81,10 @@ export default function RegressionTestRunner() {
           actual: activeTenantRole,
         },
         { 
-          name: 'platform_role != admin', 
-          pass: platformRole !== 'admin',
-          expected: 'NOT admin',
-          actual: platformRole,
+          name: 'isTenantMode = true', 
+          pass: isTenantMode,
+          expected: 'true',
+          actual: isTenantMode ? '✓' : '✗',
         },
         { 
           name: 'activeTenant exists', 

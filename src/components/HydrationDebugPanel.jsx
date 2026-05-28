@@ -21,8 +21,8 @@ export default function HydrationDebugPanel() {
     isPlatformMode,
   } = useGlobalContext();
 
-  // CRITICAL: Show ONLY to super_admin / developer in platform mode
-  const isInternalUser = ['super_admin', 'developer', 'platform_owner'].includes(platformRole) && isPlatformMode;
+  // CRITICAL: Show ONLY to platform users in platform mode
+  const isInternalUser = ['super_admin', 'developer', 'platform_owner', 'admin'].includes(platformRole) && isPlatformMode;
   if (!isInternalUser) return null;
 
   // Extract hydration steps from failed checks if available
