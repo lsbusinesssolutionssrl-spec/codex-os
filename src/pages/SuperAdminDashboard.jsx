@@ -138,7 +138,7 @@ export default function SuperAdminDashboard() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <KpiCard label="Tenant Totali" value={platformData.metrics.totalTenants} icon={Building2} color="#1147FF" />
             <KpiCard label="Attivi" value={platformData.metrics.activeTenants} icon={CheckCircle} color="#10B981" />
-            <KpiCard label="MRR" value={`€${platformData.metrics.mrr.toLocaleString('it-IT')}`} icon={TrendingUp} color="#F59E0B" />
+            <KpiCard label="MRR" value={`€${(platformData.metrics.mrr || 0).toLocaleString('it-IT')}`} icon={TrendingUp} color="#F59E0B" />
             <KpiCard label="A Rischio" value={platformData.metrics.atRisk} icon={AlertTriangle} color="#EF4444" />
           </div>
 
