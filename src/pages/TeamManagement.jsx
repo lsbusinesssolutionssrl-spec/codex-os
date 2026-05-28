@@ -74,13 +74,37 @@ export default function TeamManagement() {
         ['invited', 'pending'].includes(m.status?.toLowerCase()) && 
         m.membership_type === 'customer_member'
       );
-      setInvitations(pendingMembers);
+      
+      // FIX: Audit and repair pending invites with missing email
+      const repairedInvites = pendingMembers.map(inv => {
+        // Debug log for each invite
+        console.log('[Invitation Audit]', {
+          id: inv.id,
+          user_email: inv.user_email,
+          user_email_type: typeof inv.user_email,
+          user_email_is_unknown: inv.user_email === 'Unknown',
+          user_exists: !!inv.user,
+          user_email_from_user: inv.user?.email,
+          status: inv.status,
+          tenant_role: inv.tenant_role,
+          invited_by: inv.invited_by,
+        });
+        
+        // If user_email is "Unknown" or missing, try to recover from linked user
+        if (!inv.user_email || inv.user_email === 'Unknown' || inv.user_email === 'None') {
+          console.warn('[Invitation Audit] BROKEN INVITE - email missing:', inv.id);
+        }
+        
+        return inv;
+      });
+      
+      setInvitations(repairedInvites);
       
       console.log('[TeamManagement] Team Data:', {
         tenantId: activeTenant.id,
         totalMemberships: data.total_count,
         activeMembers: data.active_count,
-        pendingInvites: data.pending_count,
+        pendingInvites: repairedInvites.length,
         debug: data.debug,
       });
     } catch (error) {
@@ -98,18 +122,34 @@ export default function TeamManagement() {
     try {
       if (!inviteForm.email || !inviteForm.role) {
         setInviteError('Email e ruolo sono obbligatori');
-        toast.error('Email e ruolo sono obbligatori');
+        toast.error('Inserisci una email valida.');
         setInviteLoading(false);
         return;
       }
 
-      const result = await base44.functions.invoke('inviteTenantUser', {
+      // FIX: Log exact payload before sending to backend
+      const invitePayload = {
         tenant_id: activeTenant.id,
         email: inviteForm.email,
         role: inviteForm.role,
         language: inviteForm.language || 'it',
-        message: inviteForm.message
-      });
+        message: inviteForm.message,
+        // FIX: Add invited_by tracking for effective user
+        invited_by_user_id: user.id,
+        invited_by_email: user.email,
+      };
+      
+      console.log('[Invitation Submit] Payload:', invitePayload);
+      
+      // Validate email before sending
+      if (!inviteForm.email.includes('@')) {
+        setInviteError('Email non valida');
+        toast.error('Inserisci una email valida.');
+        setInviteLoading(false);
+        return;
+      }
+
+      const result = await base44.functions.invoke('inviteTenantUser', invitePayload);
 
       if (!result.data.success) {
         const errorMsg = result.data.error || 'Errore nell\'invio invito';
@@ -319,6 +359,20 @@ export default function TeamManagement() {
                   Context: <span className="font-mono">{contextDebug.isPlatformMode ? 'platform' : 'tenant'}</span>
                 </div>
               )}
+              <button
+                onClick={async () => {
+                  try {
+                    const result = await base44.functions.invoke('repairBrokenInvitations', {});
+                    toast.success(`Repair: ${result.data.repaired_count} repaired, ${result.data.orphan_count} orphans`);
+                    await loadTeam();
+                  } catch (error) {
+                    toast.error('Repair error: ' + error.message);
+                  }
+                }}
+                className="px-3 py-1.5 text-xs font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700"
+              >
+                🔧 Repair Broken Invites
+              </button>
               {allMemberships.length === 0 && (
                 <button
                   onClick={repairCurrentAdminMembership}
@@ -367,9 +421,28 @@ export default function TeamManagement() {
             <DebugItem label="Pending Invites" value={invitations.length} />
             <DebugItem label="Removed" value={allMemberships.filter(m => m.status === 'removed').length} />
             <DebugItem label="Suspended" value={allMemberships.filter(m => m.status === 'suspended').length} />
-            <DebugItem label="With Email" value={allMemberships.filter(m => m.user_email).length} />
-            <DebugItem label="Missing Email" value={allMemberships.filter(m => !m.user_email || m.user_email === 'Unknown').length} />
+            <DebugItem label="With Valid Email" value={allMemberships.filter(m => m.user_email && m.user_email.includes('@')).length} />
+            <DebugItem label="Missing/Invalid Email" value={allMemberships.filter(m => !m.user_email || !m.user_email.includes('@')).length} />
           </div>
+          
+          {showDebug && invitations.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <h4 className="font-semibold text-gray-900 mb-2 text-sm">📧 Pending Invitations Debug</h4>
+              <div className="space-y-2 text-xs">
+                {invitations.map(inv => (
+                  <div key={inv.id} className="p-2 bg-orange-50 rounded border border-orange-200">
+                    <p className="font-mono text-orange-900">ID: {inv.id}</p>
+                    <p className="text-orange-700">Email: {inv.user_email || 'MISSING'} {inv.user_email === 'Unknown' && '⚠️ IS UNKNOWN'}</p>
+                    <p className="text-orange-700">User Email: {inv.user?.email || 'No linked user'}</p>
+                    <p className="text-orange-700">Role: {inv.tenant_role}</p>
+                    <p className="text-orange-700">Invited By: {inv.invited_by}</p>
+                    <p className="text-orange-700">Invited At: {inv.invited_at || 'MISSING'}</p>
+                    <p className="text-orange-700">Type: {inv.membership_type}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="mt-4 pt-4 border-t border-gray-200">
             <h4 className="font-semibold text-gray-900 mb-2 text-sm">✅ Data Consistency Check</h4>
             <div className="grid grid-cols-2 gap-2 text-xs">
@@ -483,40 +556,73 @@ export default function TeamManagement() {
           <div className="divide-y divide-gray-100">
             {invitations.map(inv => {
               // FIX: Proper email fallback - NEVER show "Unknown"
-              // Priority: 1) user_email (stored on invite), 2) linked user.email, 3) fallback message
-              const displayEmail = inv.user_email && inv.user_email !== 'Unknown' 
+              // Priority: 1) user_email (stored on invite), 2) linked user.email, 3) fallback
+              const isValidEmail = inv.user_email && 
+                                   inv.user_email !== 'Unknown' && 
+                                   inv.user_email !== 'None' && 
+                                   inv.user_email !== 'null' &&
+                                   inv.user_email.includes('@');
+              
+              const displayEmail = isValidEmail 
                 ? inv.user_email 
                 : (inv.user?.email || 'Email non disponibile');
               
-              // FIX: Use effective tenant user for invited_by, not platform user
-              // If platform owner is impersonating, show the tenant admin email, not platform email
+              // Track if this is a broken invite
+              const isBrokenInvite = !isValidEmail && !inv.user?.email;
+              
+              // FIX: invited_by should use effective tenant user
               const invitedByDisplay = inv.invited_by || 'Admin';
               
-              console.log('[Invitation] Rendering:', { 
-                id: inv.id, 
-                user_email: inv.user_email, 
-                user_email_valid: inv.user_email && inv.user_email !== 'Unknown',
-                user_email_fallback: inv.user?.email, 
-                display: displayEmail,
+              console.log('[Invitation Rendering]', {
+                id: inv.id,
+                user_email_raw: inv.user_email,
+                user_email_valid: isValidEmail,
+                user_email_fallback: inv.user?.email,
+                display_email: displayEmail,
+                is_broken: isBrokenInvite,
                 invited_by: inv.invited_by,
-                membership_data: inv
+                full_invite_data: inv
               });
               
+              // Don't render broken invites in normal view (only in debug)
+              if (isBrokenInvite && !showDebug) {
+                console.warn('[Invitation] Skipping broken invite in normal view:', inv.id);
+                return null;
+              }
+              
               return (
-                <div key={inv.id} className="flex items-center justify-between p-4">
+                <div key={inv.id} className={`flex items-center justify-between p-4 ${isBrokenInvite ? 'bg-red-50 border border-red-200' : ''}`}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
                       <Mail className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">{displayEmail}</p>
-                      <p className="text-sm text-gray-500">
-                        {ROLES.find(r => r.value === inv.tenant_role)?.label} • Invitato da {invitedByDisplay}
-                      </p>
+                      {isBrokenInvite ? (
+                        <div>
+                          <p className="font-medium text-red-900">⚠️ Invito Non Valido</p>
+                          <p className="text-xs text-red-600 mt-1">Email mancante - ID: {inv.id}</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="font-medium text-gray-900">{displayEmail}</p>
+                          <p className="text-sm text-gray-500">
+                            {ROLES.find(r => r.value === inv.tenant_role)?.label} • Invitato da {invitedByDisplay}
+                          </p>
+                        </div>
+                      )}
+                      
                       {showDebug && (
-                        <p className="text-xs text-gray-400 font-mono mt-1">
-                          Debug: user_email={inv.user_email} | user.email={inv.user?.email} | invited_by={inv.invited_by}
-                        </p>
+                        <div className="mt-2 text-xs font-mono text-gray-500 space-y-1">
+                          <p>membership_id: {inv.id}</p>
+                          <p>user_email: {inv.user_email || 'MISSING'}</p>
+                          <p>user.email: {inv.user?.email || 'MISSING'}</p>
+                          <p>tenant_role: {inv.tenant_role}</p>
+                          <p>status: {inv.status}</p>
+                          <p>invited_by: {inv.invited_by}</p>
+                          <p>invited_at: {inv.invited_at || 'MISSING'}</p>
+                          <p>membership_type: {inv.membership_type}</p>
+                          {isBrokenInvite && <p className="text-red-600 font-bold">⚠️ BROKEN INVITE - needs repair</p>}
+                        </div>
                       )}
                     </div>
                   </div>
