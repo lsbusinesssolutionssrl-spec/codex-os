@@ -134,6 +134,30 @@ export function GlobalContextProvider({ children }) {
         }
         setTenantMemberships(memberships);
 
+        // AUTO-ACTIVATE: If user has invited/pending memberships matching their email, activate them
+        const invitedMemberships = memberships.filter(m =>
+          ['invited', 'pending'].includes((m.status || '').toLowerCase()) &&
+          m.membership_type === 'customer_member'
+        );
+        if (invitedMemberships.length > 0) {
+          console.log('[GlobalContextEngine] Found invited memberships - auto-activating:', invitedMemberships.length);
+          try {
+            const activateResp = await base44.functions.invoke('acceptTenantInvite', {
+              auto_activate: true,
+              user_email: authenticatedUser.email,
+            });
+            if (activateResp.data?.activated_count > 0) {
+              console.log('[GlobalContextEngine] Auto-activated memberships:', activateResp.data.activated_count);
+              // Reload memberships after activation
+              const reloadResp = await base44.functions.invoke('loadUserMemberships', {});
+              memberships = reloadResp.data.memberships || memberships;
+              setTenantMemberships(memberships);
+            }
+          } catch (activateError) {
+            console.error('[GlobalContextEngine] Auto-activate error:', activateError);
+          }
+        }
+
         // AUTO-REPAIR: If no memberships found, attempt to repair
         if (memberships.length === 0 && authenticatedUser.company_id) {
           console.log('[GlobalContextEngine] No memberships found, attempting auto-repair...');

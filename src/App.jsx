@@ -123,6 +123,7 @@ import ProvisioningValidator from './pages/ProvisioningValidator';
 import TenantDetail from './pages/TenantDetail';
 import RouteHealthDashboard from './pages/RouteHealthDashboard';
 import ModuleActivationManager from './pages/ModuleActivationManager';
+import AcceptInvite from './pages/AcceptInvite';
 
 import Insights from './pages/Insights';
 import TeamPerformance from './pages/TeamPerformance';
@@ -290,6 +291,7 @@ const AuthenticatedApp = () => {
       <Route element={<PortalLayout />}>
         <Route path="/portal" element={<ClientPortal />} />
       </Route>
+      <Route path="/accept-invite/:membershipId" element={<AcceptInvite />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
