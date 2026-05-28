@@ -296,7 +296,7 @@ export default function SuperAdminDashboard() {
                     </td>
                     <td className="text-center py-3 px-4 text-gray-600 font-medium">{t.customerCount || 0}</td>
                     <td className="text-center py-3 px-4 font-medium text-gray-900">
-                      {t.subscription?.mrr ? `€${t.subscription.mrr}` : '—'}
+                      {t.mrr !== undefined && t.mrr !== null ? `€${t.mrr}` : (t.subscription?.mrr ? `€${t.subscription.mrr}` : '—')}
                     </td>
                     <td className="text-center py-3 px-4">
                       <span className={`text-xs font-medium px-2 py-1 rounded-full ${
