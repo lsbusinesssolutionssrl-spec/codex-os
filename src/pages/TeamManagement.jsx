@@ -488,7 +488,7 @@ export default function TeamManagement() {
                     <Mail className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{inv.user?.email || 'Email non disponibile'}</p>
+                    <p className="font-medium text-gray-900">{inv.user_email || inv.user?.email || 'Email non disponibile'}</p>
                     <p className="text-sm text-gray-500">
                       {ROLES.find(r => r.value === inv.tenant_role)?.label} • Invitato da {inv.invited_by}
                     </p>
