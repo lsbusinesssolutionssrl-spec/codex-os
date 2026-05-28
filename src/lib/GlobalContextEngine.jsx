@@ -116,11 +116,15 @@ export function GlobalContextProvider({ children }) {
         }
         
         // Load memberships for ALL users (platform and tenant)
-        // CRITICAL: Do NOT filter by status - load ALL memberships first
-        memberships = await base44.entities.TenantMembership.filter({
-          user_id: authenticatedUser.id,
-        });
-        console.log('[GlobalContextEngine] Loaded memberships:', memberships.length, memberships);
+        // CRITICAL: Use backend function to bypass RLS - frontend queries are restricted
+        try {
+          const membershipResponse = await base44.functions.invoke('loadUserMemberships', {});
+          memberships = membershipResponse.data.memberships || [];
+          console.log('[GlobalContextEngine] Loaded memberships via backend:', memberships.length, memberships);
+        } catch (error) {
+          console.error('[GlobalContextEngine] Error loading memberships:', error);
+          memberships = [];
+        }
         setTenantMemberships(memberships);
 
         // STEP 4: Resolve active context with strict priority
@@ -568,6 +572,11 @@ export function GlobalContextProvider({ children }) {
     window.location.reload();
   };
 
+  // Force reload for development/debugging
+  const forceReload = () => {
+    window.location.reload();
+  };
+
   const value = {
     // Core context
     user,
@@ -615,6 +624,9 @@ export function GlobalContextProvider({ children }) {
     isContextResolved: contextType !== CONTEXT_TYPE.UNRESOLVED,
     canAccessModule: (module) => enabledModules.includes(module),
     hasPermission: (perm) => permissions.includes(perm),
+    
+    // Development
+    forceReload,
   };
 
   return (

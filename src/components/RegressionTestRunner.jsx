@@ -24,6 +24,7 @@ export default function RegressionTestRunner() {
     tenantMemberships,
     isPlatformMode,
     isTenantMode,
+    forceReload,
   } = globalContext;
 
   const runTests = async () => {
@@ -180,8 +181,16 @@ export default function RegressionTestRunner() {
             onClick={runTests}
             disabled={running}
             className="p-1.5 text-gray-600 hover:bg-gray-100 rounded"
+            title="Re-run tests"
           >
             {running ? <Loader2 className="w-4 h-4 animate-spin" /> : '🔄'}
+          </button>
+          <button
+            onClick={forceReload}
+            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
+            title="Force reload context"
+          >
+            🔄
           </button>
         </div>
       </div>
