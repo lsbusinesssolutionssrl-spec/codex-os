@@ -274,7 +274,14 @@ export default function Layout() {
             <span className="text-xs text-white/80 border border-white/30 px-1.5 py-0.5 rounded">⌘N</span>
           </button>
           <div className="flex-1" />
-          {isPlatformMode && <TenantSwitcher />}
+          {/* Platform Mode Indicator */}
+          {isPlatformMode && (
+            <div className="flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-50 border border-purple-200 rounded-lg">
+              <span className="text-purple-700 font-medium">🏢 Platform</span>
+              <span className="text-purple-600 text-xs">{user?.email}</span>
+            </div>
+          )}
+          {/* Tenant Mode or Impersonation */}
           {!isPlatformMode && activeTenant && (
             <div className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 bg-gray-100 rounded-lg">
               {activeTenant.logo_url ? (
