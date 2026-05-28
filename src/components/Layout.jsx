@@ -14,15 +14,7 @@ import QuickCreate from './QuickCreate';
 import TenantSwitcher from './tenant/TenantSwitcher';
 import { useOfflineSync } from '../hooks/useOfflineSync';
 import { useGlobalContext } from '@/lib/GlobalContextEngine';
-import SessionDebugPanel from './SessionDebugPanel';
 import ContextBanner from './tenant/ContextBanner';
-import LayoutInspector from './LayoutInspector';
-import ModuleEntitlementDebug from './ModuleEntitlementDebug';
-import RBACDebugPanel from './RBACDebugPanel';
-import ContextVerification from './ContextVerification';
-import HydrationDebugPanel from './HydrationDebugPanel';
-import RegressionTestRunner from './RegressionTestRunner';
-import QuickMembershipRepair from './QuickMembershipRepair';
 
 // Tenant navigation - modules enabled dynamically based on plan
 const TENANT_NAV_ITEMS = [
@@ -67,12 +59,6 @@ const PLATFORM_NAV_ITEMS = [
   { path: '/platform/audit-logs', icon: BookOpen, label: 'Audit Logs' },
   { path: '/platform/billing', icon: DollarSign, label: 'Billing / MRR' },
   { path: '/platform/subscriptions', icon: CreditCard, label: 'Subscription Management' },
-  // Debug
-  { path: '/platform/session-debug', icon: Activity, label: 'Session Debug' },
-  { path: '/platform/rbac-debug', icon: Shield, label: 'RBAC Debug' },
-  { path: '/platform/context-debug', icon: Brain, label: 'Context Debug' },
-  { path: '/platform/module-entitlement', icon: Zap, label: 'Module Entitlement Debug' },
-  { path: '/platform/layout-inspector', icon: LayoutDashboard, label: 'Layout Inspector' },
 ];
 
 // SECURITY: Platform routes are ONLY shown to platform users
@@ -332,22 +318,7 @@ export default function Layout() {
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
-        {/* Context verification - only for platform developers in platform mode */}
-        {(userRole === 'admin' || userRole === 'developer') && isPlatformMode && (
-          <>
-            <ContextVerification />
-            <HydrationDebugPanel />
-          </>
-        )}
-        {/* Debug panels - guard is inside each component (platform mode only) */}
-        <SessionDebugPanel />
-        <LayoutInspector />
-        <RBACDebugPanel />
-        <ModuleEntitlementDebug />
-        {/* Regression tests - ALWAYS visible in development */}
-        <RegressionTestRunner />
-        {/* Quick membership repair for unresolved contexts */}
-        <QuickMembershipRepair />
+
       </div>
     </div>
   );
