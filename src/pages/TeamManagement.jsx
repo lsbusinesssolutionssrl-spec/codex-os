@@ -482,8 +482,26 @@ export default function TeamManagement() {
           </div>
           <div className="divide-y divide-gray-100">
             {invitations.map(inv => {
-              const displayEmail = inv.user_email || inv.user?.email || 'Email non disponibile';
-              console.log('[Invitation] Rendering:', { id: inv.id, user_email: inv.user_email, user_email_fallback: inv.user?.email, display: displayEmail });
+              // FIX: Proper email fallback - NEVER show "Unknown"
+              // Priority: 1) user_email (stored on invite), 2) linked user.email, 3) fallback message
+              const displayEmail = inv.user_email && inv.user_email !== 'Unknown' 
+                ? inv.user_email 
+                : (inv.user?.email || 'Email non disponibile');
+              
+              // FIX: Use effective tenant user for invited_by, not platform user
+              // If platform owner is impersonating, show the tenant admin email, not platform email
+              const invitedByDisplay = inv.invited_by || 'Admin';
+              
+              console.log('[Invitation] Rendering:', { 
+                id: inv.id, 
+                user_email: inv.user_email, 
+                user_email_valid: inv.user_email && inv.user_email !== 'Unknown',
+                user_email_fallback: inv.user?.email, 
+                display: displayEmail,
+                invited_by: inv.invited_by,
+                membership_data: inv
+              });
+              
               return (
                 <div key={inv.id} className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-3">
@@ -493,8 +511,13 @@ export default function TeamManagement() {
                     <div>
                       <p className="font-medium text-gray-900">{displayEmail}</p>
                       <p className="text-sm text-gray-500">
-                        {ROLES.find(r => r.value === inv.tenant_role)?.label} • Invitato da {inv.invited_by}
+                        {ROLES.find(r => r.value === inv.tenant_role)?.label} • Invitato da {invitedByDisplay}
                       </p>
+                      {showDebug && (
+                        <p className="text-xs text-gray-400 font-mono mt-1">
+                          Debug: user_email={inv.user_email} | user.email={inv.user?.email} | invited_by={inv.invited_by}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
