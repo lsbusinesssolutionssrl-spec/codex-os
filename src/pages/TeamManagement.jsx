@@ -396,7 +396,7 @@ export default function TeamManagement() {
             <div className="mt-3 text-xs text-gray-500">
               <p className="font-medium mb-1">🔍 Memberships Debug (Raw Data):</p>
               <div className="space-y-2 mt-2">
-                {allMemberships.map(m => (
+                {allMemberships.map((m) => (
                   <div key={m.id} className="p-2 bg-gray-50 rounded border border-gray-200">
                     <div className="grid grid-cols-2 gap-2">
                       <div>
