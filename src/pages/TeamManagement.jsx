@@ -432,8 +432,10 @@ export default function TeamManagement() {
                         <p className="font-mono text-gray-700">{m.status}</p>
                       </div>
                     </div>
-                  </div>
-                ))}
+                    </div>
+                    </div>
+                    );
+                    })}
               </div>
             </div>
           )}
@@ -481,14 +483,17 @@ export default function TeamManagement() {
             <h2 className="font-semibold text-gray-900">Inviti in Attesa</h2>
           </div>
           <div className="divide-y divide-gray-100">
-            {invitations.map(inv => (
+            {invitations.map(inv => {
+              const displayEmail = inv.user_email || inv.user?.email || 'Email non disponibile';
+              console.log('[Invitation] Rendering:', { id: inv.id, user_email: inv.user_email, user_email_fallback: inv.user?.email, display: displayEmail });
+              return (
               <div key={inv.id} className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
                     <Mail className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{inv.user_email || inv.user?.email || 'Email non disponibile'}</p>
+                    <p className="font-medium text-gray-900">{displayEmail}</p>
                     <p className="text-sm text-gray-500">
                       {ROLES.find(r => r.value === inv.tenant_role)?.label} • Invitato da {inv.invited_by}
                     </p>
