@@ -155,9 +155,11 @@ export function GlobalContextProvider({ children }) {
         // CRITICAL: Platform owners use platform context BY DEFAULT, even if they have tenant memberships
         // Tenant context is only used when explicitly impersonating or selecting a tenant
         
-        // CRITICAL: Clear ALL stale tenant context for platform owners
+        // CRITICAL: Define platform owner EARLY and use throughout
         const PLATFORM_OWNER_EMAILS = ['lsbusiness.solutions.srl@gmail.com'];
         const isPlatformOwner = PLATFORM_OWNER_EMAILS.includes(authenticatedUser.email);
+        
+        // CRITICAL: Clear ALL stale tenant context for platform owners
         
         // Aggressively clean ALL tenant-related localStorage for platform owners
         if (isPlatformOwner) {
@@ -231,6 +233,9 @@ export function GlobalContextProvider({ children }) {
           setPermissions(['platform:read', 'platform:write', 'tenant:read', 'tenant:write']);
           setIsImpersonating(false);
           setImpersonatedUserEmail(null);
+          setActiveTenant(null); // CRITICAL: Clear any stale activeTenant
+          setActiveMembership(null); // CRITICAL: Clear any stale membership
+          setActiveTenantRole(null); // CRITICAL: Clear any stale role
           
           // CRITICAL: Platform owners SKIP tenant context resolution entirely unless impersonating
           // Even if they have TenantMembership records, those are for internal_support only
