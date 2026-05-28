@@ -41,23 +41,27 @@ Deno.serve(async (req) => {
     // Join memberships with user data
     const allMemberData = allMemberships.map(m => {
       const matchedUser = allUsers.find(u => u.id === m.user_id);
-      const userEmail = matchedUser?.email || m.user?.email || 'Unknown';
+      const userEmail = matchedUser?.email || m.user?.email;
       const userFullName = matchedUser?.full_name || m.user?.full_name;
+      
+      // CRITICAL: Always include user_email from membership (for invited users without account)
+      const membershipEmail = m.user_email;
       
       // Determine membership type
       let membershipType = m.membership_type || 'customer_member';
       
       // Auto-classify platform owners as internal_support
-      if (PLATFORM_OWNER_EMAILS.includes(userEmail)) {
+      if (PLATFORM_OWNER_EMAILS.includes(userEmail || membershipEmail)) {
         membershipType = 'internal_support';
       }
       
       return {
         id: m.id,
         user_id: m.user_id,
+        user_email: membershipEmail, // CRITICAL: Include membership email
         user: {
-          email: userEmail,
-          full_name: userFullName || userEmail.split('@')[0],
+          email: userEmail || membershipEmail || 'Unknown',
+          full_name: userFullName || (userEmail || membershipEmail || 'Unknown').split('@')[0],
         },
         tenant_id: m.tenant_id,
         tenant_role: m.tenant_role,

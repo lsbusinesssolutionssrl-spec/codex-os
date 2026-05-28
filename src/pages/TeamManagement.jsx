@@ -555,76 +555,52 @@ export default function TeamManagement() {
           </div>
           <div className="divide-y divide-gray-100">
             {invitations.map(inv => {
-              // FIX: Proper email fallback - NEVER show "Unknown"
-              // Priority: 1) user_email (stored on invite), 2) linked user.email, 3) fallback
-              const isValidEmail = inv.user_email && 
-                                   inv.user_email !== 'Unknown' && 
-                                   inv.user_email !== 'None' && 
-                                   inv.user_email !== 'null' &&
-                                   inv.user_email.includes('@');
+              // CRITICAL: Force reload check - user_email should now be populated
+              const hasValidEmail = inv.user_email && typeof inv.user_email === 'string' && inv.user_email.includes('@');
+              const hasUserEmail = inv.user?.email && typeof inv.user.email === 'string' && inv.user.email.includes('@');
               
-              const displayEmail = isValidEmail 
-                ? inv.user_email 
-                : (inv.user?.email || 'Email non disponibile');
+              // Priority: 1) user_email field, 2) linked user.email
+              const displayEmail = hasValidEmail ? inv.user_email : (hasUserEmail ? inv.user.email : 'Unknown');
               
-              // Track if this is a broken invite
-              const isBrokenInvite = !isValidEmail && !inv.user?.email;
+              // Debug log EVERY invite
+              console.log('[Invitation Display Check]', {
+                id: inv.id,
+                user_email_raw: inv.user_email,
+                user_email_type: typeof inv.user_email,
+                user_email_value: inv.user_email,
+                has_valid_email: hasValidEmail,
+                user_email: inv.user?.email,
+                has_user_email: hasUserEmail,
+                final_display: displayEmail,
+                full_invite: inv
+              });
               
               // FIX: invited_by should use effective tenant user
-              // If platform owner created it while impersonating, show the tenant admin email instead
               const platformOwnerEmail = 'lsbusiness.solutions.srl@gmail.com';
               const tenantAdminEmail = members.find(m => m.tenant_role === 'tenant_admin')?.user?.email || 'amministrazione@lsbusiness.it';
               const invitedByDisplay = (inv.invited_by === platformOwnerEmail) ? tenantAdminEmail : (inv.invited_by || 'Admin');
               
-              console.log('[Invitation Rendering]', {
-                id: inv.id,
-                user_email_raw: inv.user_email,
-                user_email_valid: isValidEmail,
-                user_email_fallback: inv.user?.email,
-                display_email: displayEmail,
-                is_broken: isBrokenInvite,
-                invited_by: inv.invited_by,
-                full_invite_data: inv
-              });
-              
-              // Don't render broken invites in normal view (only in debug)
-              if (isBrokenInvite && !showDebug) {
-                console.warn('[Invitation] Skipping broken invite in normal view:', inv.id);
-                return null;
-              }
-              
               return (
-                <div key={inv.id} className={`flex items-center justify-between p-4 ${isBrokenInvite ? 'bg-red-50 border border-red-200' : ''}`}>
+                <div key={inv.id} className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
                       <Mail className="w-5 h-5" />
                     </div>
                     <div>
-                      {isBrokenInvite ? (
-                        <div>
-                          <p className="font-medium text-red-900">⚠️ Invito Non Valido</p>
-                          <p className="text-xs text-red-600 mt-1">Email mancante - ID: {inv.id}</p>
-                        </div>
-                      ) : (
-                        <div>
-                          <p className="font-medium text-gray-900">{displayEmail}</p>
-                          <p className="text-sm text-gray-500">
-                            {ROLES.find(r => r.value === inv.tenant_role)?.label} • Invitato da {invitedByDisplay}
-                          </p>
-                        </div>
-                      )}
-                      
+                      <p className="font-medium text-gray-900">{displayEmail}</p>
+                      <p className="text-sm text-gray-500">
+                        {ROLES.find(r => r.value === inv.tenant_role)?.label} • Invitato da {invitedByDisplay}
+                      </p>
                       {showDebug && (
                         <div className="mt-2 text-xs font-mono text-gray-500 space-y-1">
                           <p>membership_id: {inv.id}</p>
-                          <p>user_email: {inv.user_email || 'MISSING'}</p>
+                          <p>user_email: {inv.user_email || 'MISSING'} (type: {typeof inv.user_email})</p>
                           <p>user.email: {inv.user?.email || 'MISSING'}</p>
+                          <p>display_email: {displayEmail}</p>
                           <p>tenant_role: {inv.tenant_role}</p>
                           <p>status: {inv.status}</p>
                           <p>invited_by: {inv.invited_by}</p>
                           <p>invited_at: {inv.invited_at || 'MISSING'}</p>
-                          <p>membership_type: {inv.membership_type}</p>
-                          {isBrokenInvite && <p className="text-red-600 font-bold">⚠️ BROKEN INVITE - needs repair</p>}
                         </div>
                       )}
                     </div>
