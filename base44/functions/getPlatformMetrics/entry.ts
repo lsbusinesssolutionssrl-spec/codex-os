@@ -37,17 +37,32 @@ Deno.serve(async (req) => {
       return true;
     });
 
+    // Get plans for enrichment
+    const plans = await base44.asServiceRole.entities.SubscriptionPlan.list();
+
     // Enrich with data
     const enriched = filtered.map(company => {
       const sub = subscriptions.find(s => s.company_id === company.id && s.status === 'active');
+      const plan = sub?.plan_id ? plans.find(p => p.id === sub.plan_id) : null;
       const companyMemberships = memberships.filter(m => m.tenant_id === company.id && m.status === 'active');
       const customerMembers = companyMemberships.filter(m => m.membership_type === 'customer_member');
       const internalSupport = companyMemberships.filter(m => m.membership_type === 'internal_support');
 
+      // Calculate MRR
+      let mrr = 0;
+      if (sub && plan) {
+        if (sub.billing_cycle === 'monthly') {
+          mrr = plan.price_monthly || 0;
+        } else if (sub.billing_cycle === 'yearly') {
+          mrr = (plan.price_yearly || 0) / 12;
+        }
+      }
+
       return {
         ...company,
         subscription: sub,
-        mrr: sub?.mrr || 0,
+        plan: plan || null,
+        mrr: mrr,
         customerCount: customerMembers.length,
         internalSupportCount: internalSupport.length,
         totalMembers: companyMemberships.length,
