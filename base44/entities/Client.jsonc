@@ -6,59 +6,272 @@
       "type": "string",
       "title": "Company"
     },
+    "client_type": {
+      "type": "string",
+      "title": "Tipo Cliente",
+      "enum": [
+        "Privato",
+        "Azienda",
+        "Condominio",
+        "Pubblica Amministrazione",
+        "Professionista",
+        "Altro"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "title": "Stato Cliente",
+      "enum": [
+        "Lead",
+        "Prospect",
+        "Cliente Attivo",
+        "Cliente Inattivo",
+        "Ex Cliente",
+        "Partner"
+      ],
+      "default": "Lead"
+    },
+    "source": {
+      "type": "string",
+      "title": "Fonte",
+      "enum": [
+        "Passaparola",
+        "Sito Web",
+        "Social",
+        "Google",
+        "Campagna Pubblicitaria",
+        "Referral",
+        "PA / Gara",
+        "Altro"
+      ]
+    },
     "name": {
       "type": "string",
-      "title": "Name"
+      "title": "Nome"
+    },
+    "surname": {
+      "type": "string",
+      "title": "Cognome"
     },
     "company_name": {
       "type": "string",
-      "title": "Company / Surname"
+      "title": "Ragione Sociale / Denominazione"
     },
-    "phone": {
+    "trade_name": {
       "type": "string",
-      "title": "Phone"
+      "title": "Nome Commerciale / Insegna"
+    },
+    "fiscal_code": {
+      "type": "string",
+      "title": "Codice Fiscale"
+    },
+    "vat_number": {
+      "type": "string",
+      "title": "Partita IVA"
+    },
+    "sdi_code": {
+      "type": "string",
+      "title": "Codice SDI"
+    },
+    "pec": {
+      "type": "string",
+      "title": "PEC"
+    },
+    "ipa_code": {
+      "type": "string",
+      "title": "Codice IPA"
+    },
+    "office_code": {
+      "type": "string",
+      "title": "Codice Univoco Ufficio"
+    },
+    "condominium_name": {
+      "type": "string",
+      "title": "Nome Condominio"
+    },
+    "condominium_fiscal_code": {
+      "type": "string",
+      "title": "Codice Fiscale Condominio"
+    },
+    "administrator_name": {
+      "type": "string",
+      "title": "Nome Amministratore"
+    },
+    "administrator_surname": {
+      "type": "string",
+      "title": "Cognome Amministratore"
+    },
+    "administrator_studio": {
+      "type": "string",
+      "title": "Studio Amministratore"
+    },
+    "professional_register": {
+      "type": "string",
+      "title": "Ordine / Albo"
+    },
+    "register_number": {
+      "type": "string",
+      "title": "Numero Iscrizione Albo"
+    },
+    "studio_name": {
+      "type": "string",
+      "title": "Studio / Denominazione"
+    },
+    "entity_name": {
+      "type": "string",
+      "title": "Denominazione Ente"
+    },
+    "website": {
+      "type": "string",
+      "title": "Sito Web"
     },
     "email": {
       "type": "string",
       "title": "Email"
     },
-    "address": {
+    "secondary_email": {
       "type": "string",
-      "title": "Address"
+      "title": "Email Secondaria"
     },
-    "type": {
+    "phone": {
       "type": "string",
-      "title": "Type",
-      "enum": [
-        "Private",
-        "Business",
-        "Public Administration",
-        "Partner"
-      ]
+      "title": "Telefono"
     },
-    "source": {
+    "secondary_phone": {
       "type": "string",
-      "title": "Source",
-      "enum": [
-        "Referral",
-        "Google",
-        "Social",
-        "Partner",
-        "Existing Client"
-      ]
+      "title": "Telefono Secondario"
+    },
+    "birth_date": {
+      "type": "string",
+      "title": "Data di Nascita"
+    },
+    "birth_place": {
+      "type": "string",
+      "title": "Luogo di Nascita"
+    },
+    "document_type": {
+      "type": "string",
+      "title": "Tipo Documento"
+    },
+    "document_number": {
+      "type": "string",
+      "title": "Numero Documento"
+    },
+    "document_issued_by": {
+      "type": "string",
+      "title": "Rilasciato Da"
+    },
+    "document_expiry": {
+      "type": "string",
+      "title": "Scadenza Documento"
+    },
+    "street": {
+      "type": "string",
+      "title": "Indirizzo"
+    },
+    "zip": {
+      "type": "string",
+      "title": "CAP"
+    },
+    "city": {
+      "type": "string",
+      "title": "Comune"
+    },
+    "province": {
+      "type": "string",
+      "title": "Provincia"
+    },
+    "region": {
+      "type": "string",
+      "title": "Regione"
+    },
+    "country": {
+      "type": "string",
+      "title": "Paese",
+      "default": "Italia"
+    },
+    "operational_street": {
+      "type": "string",
+      "title": "Indirizzo Sede Operativa"
+    },
+    "operational_zip": {
+      "type": "string",
+      "title": "CAP Sede Operativa"
+    },
+    "operational_city": {
+      "type": "string",
+      "title": "Comune Sede Operativa"
+    },
+    "operational_province": {
+      "type": "string",
+      "title": "Provincia Sede Operativa"
+    },
+    "contact_name": {
+      "type": "string",
+      "title": "Nome Referente"
+    },
+    "contact_surname": {
+      "type": "string",
+      "title": "Cognome Referente"
+    },
+    "contact_role": {
+      "type": "string",
+      "title": "Ruolo Referente"
+    },
+    "contact_office": {
+      "type": "string",
+      "title": "Ufficio Referente"
+    },
+    "contact_email": {
+      "type": "string",
+      "title": "Email Referente"
+    },
+    "contact_phone": {
+      "type": "string",
+      "title": "Telefono Referente"
+    },
+    "payment_method": {
+      "type": "string",
+      "title": "Modalit\u00e0 Pagamento Preferita"
+    },
+    "iban": {
+      "type": "string",
+      "title": "IBAN"
+    },
+    "cig": {
+      "type": "string",
+      "title": "CIG"
+    },
+    "cup": {
+      "type": "string",
+      "title": "CUP"
+    },
+    "administrative_reference": {
+      "type": "string",
+      "title": "Determina / Riferimento Atto"
+    },
+    "privacy_accepted": {
+      "type": "boolean",
+      "title": "Privacy/GDPR Accettata",
+      "default": false
+    },
+    "administrative_notes": {
+      "type": "string",
+      "title": "Note Amministrative"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Note"
     },
     "is_sample": {
       "type": "boolean",
       "title": "Sample Data",
       "default": false
-    },
-    "notes": {
-      "type": "string",
-      "title": "Notes"
     }
   },
   "required": [
-    "name",
+    "company_id",
+    "client_type",
     "email"
   ]
 }
