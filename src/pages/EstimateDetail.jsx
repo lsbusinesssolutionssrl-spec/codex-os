@@ -5,14 +5,19 @@ import SignaturePad from '../components/SignaturePad';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
 import ContextualAIPanel from '../components/ai/ContextualAIPanel';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
+import { getClients, getClientDisplayName } from '@/lib/ClientService';
+import { getProperties } from '@/lib/PropertyService';
+import { getOptions, t } from '@/lib/I18n';
 
-const STATUSES = ['Draft', 'To Review', 'Sent', 'Accepted', 'Rejected', 'Expired', 'Converted to Project'];
-const TYPES = ['Bathroom', 'Full Home', 'Electrical System', 'Networking', 'Security', 'Maintenance', 'Other'];
-const QUALITY = ['Essential', 'Smart', 'Intelligence'];
+const STATUSES = getOptions('estimate_status');
+const TYPES = getOptions('estimate_type');
+const QUALITY = getOptions('quality_level');
 
 export default function EstimateDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { activeTenant } = useGlobalContext();
   const [form, setForm] = useState({});
   const [clients, setClients] = useState([]);
   const [properties, setProperties] = useState([]);
@@ -23,17 +28,19 @@ export default function EstimateDetail() {
   const [showAIPanel, setShowAIPanel] = useState(false);
 
   useEffect(() => {
+    if (!activeTenant?.id) return;
     const load = async () => {
       const [ests, cls, props] = await Promise.all([
         base44.entities.Estimate.filter({ id }),
-        base44.entities.Client.list(),
-        base44.entities.Property.list(),
+        getClients(activeTenant.id),
+        getProperties(activeTenant.id),
       ]);
       if (ests[0]) setForm(ests[0]);
-      setClients(cls); setProperties(props);
+      setClients(cls);
+      setProperties(props);
     };
     load();
-  }, [id]);
+  }, [id, activeTenant?.id]);
 
   const set = (key, value) => {
     setForm(f => {
@@ -134,7 +141,7 @@ export default function EstimateDetail() {
         </div>
         <div className="flex items-center gap-2">
           <select value={form.status || 'Draft'} onChange={e => set('status', e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none">
-            {STATUSES.map(s => <option key={s}>{s}</option>)}
+            {STATUSES.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
           </select>
           <button onClick={save} disabled={saving} className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium" style={{ backgroundColor: '#1147FF' }}>
             <Save className="w-4 h-4" />{saving ? 'Salvataggio...' : 'Salva'}
@@ -169,8 +176,9 @@ export default function EstimateDetail() {
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Cliente</label>
           <select value={form.client_id || ''} onChange={e => set('client_id', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white">
-            <option value="">— Seleziona —</option>
-            {clients.map(c => <option key={c.id} value={c.id}>{c.name} {c.company_name}</option>)}
+            <option value="">— Seleziona cliente —</option>
+            {clients.length === 0 && <option disabled>Nessun cliente disponibile. Crea prima un cliente.</option>}
+            {clients.map(c => <option key={c.id} value={c.id}>{getClientDisplayName(c)}</option>)}
           </select>
         </div>
         <div>
@@ -184,14 +192,14 @@ export default function EstimateDetail() {
           <label className="block text-xs font-medium text-gray-600 mb-1">Tipo Lavoro</label>
           <select value={form.estimate_type || ''} onChange={e => set('estimate_type', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white">
             <option value="">— Seleziona —</option>
-            {TYPES.map(t => <option key={t}>{t}</option>)}
+            {TYPES.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
           </select>
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Livello Qualità</label>
           <select value={form.quality_level || ''} onChange={e => set('quality_level', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white">
             <option value="">— Seleziona —</option>
-            {QUALITY.map(q => <option key={q}>{q}</option>)}
+            {QUALITY.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
           </select>
         </div>
         {[['revenue', 'Ricavi Stimati (€)'], ['material_cost', 'Costo Materiali (€)'], ['labor_cost', 'Costo Manodopera (€)'], ['other_costs', 'Altri Costi (€)']].map(([k, label]) => (

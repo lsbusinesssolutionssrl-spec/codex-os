@@ -5,9 +5,11 @@ import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import StatusBadge from '../components/StatusBadge';
 import Breadcrumb from '../components/Breadcrumb';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
+import { getClients, getClientDisplayName } from '@/lib/ClientService';
+import { getOptions } from '@/lib/I18n';
 
-const STATUSES = ['', 'Draft', 'To Review', 'Sent', 'Accepted', 'Rejected', 'Expired', 'Converted to Project', 'Archived'];
-const TYPES = ['', 'Bathroom', 'Full Home', 'Electrical System', 'Networking', 'Security', 'Maintenance', 'Other'];
+const STATUSES = getOptions('estimate_status');
 
 export default function Estimates() {
   const [estimates, setEstimates] = useState([]);
@@ -15,33 +17,28 @@ export default function Estimates() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const navigate = useNavigate();
+  const { activeTenant } = useGlobalContext();
 
   useEffect(() => {
+    if (!activeTenant?.id) return;
     const load = async () => {
-      let cls;
       try {
-        // Get user-specific filters for RLS
-        const filtersRes = await base44.functions.invoke('getUserFilters', {});
-        const estimateFilters = filtersRes.data.filters.Estimate || { company_id: null };
-        
-        const [ests, clientsData] = await Promise.all([
-          base44.entities.Estimate.filter(estimateFilters, '-created_date'),
-          base44.entities.Client.list(),
+        const [ests, cls] = await Promise.all([
+          base44.entities.Estimate.filter({ company_id: activeTenant.id }, '-created_date'),
+          getClients(activeTenant.id),
         ]);
         setEstimates(ests);
-        cls = clientsData;
+        const map = {};
+        cls.forEach(c => { map[c.id] = getClientDisplayName(c); });
+        setClients(map);
       } catch (error) {
         console.error('Failed to load estimates:', error);
         setEstimates([]);
         toast.error('Errore nel caricamento preventivi');
-        cls = [];
       }
-      const map = {};
-      cls.forEach(c => { map[c.id] = c.name + (c.company_name ? ` ${c.company_name}` : ''); });
-      setClients(map);
     };
     load();
-  }, []);
+  }, [activeTenant?.id]);
 
   const filtered = estimates.filter(e => {
     const q = search.toLowerCase();
@@ -79,7 +76,7 @@ export default function Estimates() {
         </div>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none">
           <option value="">Tutti gli stati</option>
-          {STATUSES.slice(1).map(s => <option key={s}>{s}</option>)}
+          {STATUSES.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
         </select>
       </div>
 
