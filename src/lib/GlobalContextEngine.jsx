@@ -116,18 +116,38 @@ export function GlobalContextProvider({ children }) {
         }
         
         // Load memberships for ALL users (platform and tenant)
+        // CRITICAL: Do NOT filter by status - load ALL memberships first
         memberships = await base44.entities.TenantMembership.filter({
           user_id: authenticatedUser.id,
-          status: 'active',
         });
+        console.log('[GlobalContextEngine] Loaded memberships:', memberships.length, memberships);
         setTenantMemberships(memberships);
 
         // STEP 4: Resolve active context with strict priority
         // PRIORITY 1: Tenant membership ALWAYS takes precedence over platform role
         // This ensures tenant admins are not forced into platform mode
         if (memberships.length > 0) {
+          // Filter for active memberships only at resolution time
+          const activeMemberships = memberships.filter(m => m.status === 'active');
+          console.log('[GlobalContextEngine] Active memberships:', activeMemberships.length);
+          
+          if (activeMemberships.length === 0) {
+            // No active memberships - this is an error state
+            failedChecksList.push({
+              check: 'no_active_membership',
+              message: `User has ${memberships.length} memberships but none are active`,
+              critical: true,
+              memberships: memberships.map(m => ({ id: m.id, status: m.status, tenant_id: m.tenant_id })),
+            });
+            setFailedChecks(failedChecksList);
+            setContextType(CONTEXT_TYPE.UNRESOLVED);
+            setLoading(false);
+            return;
+          }
+          
           // User has active tenant membership - use tenant context
-          const primaryMembership = memberships.find(m => m.is_primary) || memberships[0];
+          const primaryMembership = activeMemberships.find(m => m.is_primary) || activeMemberships[0];
+          console.log('[GlobalContextEngine] Selected primary membership:', primaryMembership);
           setActiveMembership(primaryMembership);
           setActiveTenantRole(primaryMembership.tenant_role);
 
