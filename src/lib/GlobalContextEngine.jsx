@@ -94,13 +94,30 @@ export function GlobalContextProvider({ children }) {
         setUser(authenticatedUser);
         setSessionValid(true);
 
-        // STEP 2: Load platform role
-        const role = authenticatedUser.role || 'user';
-        setPlatformRole(role);
-
-        // CRITICAL: Only super_admin, developer, platform_owner are valid platform roles
-        // Generic 'admin' role is NOT a platform role - it's a legacy tenant admin role
+        // STEP 2: Load platform role with legacy cleanup
+        let role = authenticatedUser.role || 'user';
+        
+        // CRITICAL: Only these are valid platform roles
         const VALID_PLATFORM_ROLES = ['super_admin', 'developer', 'platform_owner'];
+        
+        // LEGACY FIX: If user has "admin" role but has tenant membership, role is contaminated
+        // User should be "user" not "admin"
+        if (role === 'admin') {
+          console.log('[GlobalContextEngine] Detected legacy admin role - checking for contamination...');
+          try {
+            const fixResponse = await base44.functions.invoke('applyPlatformRoleFix', {});
+            if (fixResponse.data.fix_required) {
+              console.log('[GlobalContextEngine] ROLE CONTAMINATION DETECTED - redirecting to logout...');
+              // Role is contaminated - need logout to refresh session
+              await base44.auth.logout();
+              return;
+            }
+          } catch (error) {
+            console.error('[GlobalContextEngine] Error checking role fix:', error);
+          }
+        }
+        
+        setPlatformRole(role);
         const isPlatformUser = VALID_PLATFORM_ROLES.includes(role);
 
         // STEP 3: Load tenant memberships - ALWAYS load for all users
