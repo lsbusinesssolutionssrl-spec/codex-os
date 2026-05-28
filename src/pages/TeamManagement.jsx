@@ -571,7 +571,10 @@ export default function TeamManagement() {
               const isBrokenInvite = !isValidEmail && !inv.user?.email;
               
               // FIX: invited_by should use effective tenant user
-              const invitedByDisplay = inv.invited_by || 'Admin';
+              // If platform owner created it while impersonating, show the tenant admin email instead
+              const platformOwnerEmail = 'lsbusiness.solutions.srl@gmail.com';
+              const tenantAdminEmail = members.find(m => m.tenant_role === 'tenant_admin')?.user?.email || 'amministrazione@lsbusiness.it';
+              const invitedByDisplay = (inv.invited_by === platformOwnerEmail) ? tenantAdminEmail : (inv.invited_by || 'Admin');
               
               console.log('[Invitation Rendering]', {
                 id: inv.id,
