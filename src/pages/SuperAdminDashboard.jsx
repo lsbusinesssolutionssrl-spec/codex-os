@@ -43,8 +43,12 @@ export default function SuperAdminDashboard() {
   const loadPlatformData = async () => {
     setLoading(true);
     try {
-      // Call backend function that uses service role (no tenant filters)
-      const result = await base44.functions.invoke('getPlatformData', {});
+      // Use new getPlatformMetrics with filters (excludes demo/archived/internal by default)
+      const result = await base44.functions.invoke('getPlatformMetrics', {
+        includeDemo: false,
+        includeInternal: false,
+        includeArchived: false,
+      });
       setPlatformData(result.data);
     } catch (error) {
       console.error('Error loading platform data:', error);
@@ -148,7 +152,7 @@ export default function SuperAdminDashboard() {
       )}
 
       {/* Filters */}
-      <div className="flex gap-3 flex-wrap">
+      <div className="flex gap-3 flex-wrap items-center">
         <div className="relative flex-1 min-w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input 
@@ -171,6 +175,14 @@ export default function SuperAdminDashboard() {
           <option value="suspended">Sospeso</option>
           <option value="cancelled">Cancellato</option>
         </select>
+        <button
+          onClick={() => navigate('/platform/tenant-cleanup')}
+          className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium"
+          style={{ backgroundColor: '#1147FF' }}
+        >
+          <Activity className="w-4 h-4" />
+          Tenant Cleanup
+        </button>
       </div>
 
       {/* Tenant Table */}
@@ -189,6 +201,7 @@ export default function SuperAdminDashboard() {
                 <th className="text-center py-3 px-4 font-medium text-gray-600">Stato</th>
                 <th className="text-center py-3 px-4 font-medium text-gray-600">Utenti</th>
                 <th className="text-center py-3 px-4 font-medium text-gray-600">MRR</th>
+                <th className="text-center py-3 px-4 font-medium text-gray-600">Tipo</th>
                 <th className="text-center py-3 px-4 font-medium text-gray-600">Azioni</th>
               </tr>
             </thead>
@@ -232,6 +245,16 @@ export default function SuperAdminDashboard() {
                       {t.subscription?.mrr ? `€${t.subscription.mrr}` : '—'}
                     </td>
                     <td className="text-center py-3 px-4">
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                        t.tenant_type === 'production_customer' ? 'bg-green-100 text-green-700' :
+                        t.tenant_type === 'demo' ? 'bg-amber-100 text-amber-700' :
+                        t.tenant_type === 'internal' ? 'bg-blue-100 text-blue-700' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>
+                        {t.tenant_type || 'production'}
+                      </span>
+                    </td>
+                    <td className="text-center py-3 px-4">
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => navigate(`/platform/tenants/${t.id}`)}
@@ -240,13 +263,17 @@ export default function SuperAdminDashboard() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => navigate('/tenant-onboarding')}
-                          className="p-1.5 text-gray-400 hover:text-green-600 rounded-lg hover:bg-green-50 transition-colors"
-                          title="Nuovo Tenant"
-                        >
-                          <Play className="w-4 h-4" />
-                        </button>
+                        {t.archived ? (
+                          <span className="text-xs text-gray-400 px-2">Archiviato</span>
+                        ) : (
+                          <button
+                            onClick={() => navigate(`/platform/tenant-cleanup`)}
+                            className="p-1.5 text-gray-400 hover:text-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+                            title="Classifica/Archivia"
+                          >
+                            <Activity className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
