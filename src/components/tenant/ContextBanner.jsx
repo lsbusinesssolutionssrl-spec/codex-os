@@ -39,18 +39,18 @@ export default function ContextBanner() {
 
   // Show Platform Mode banner for platform owners
   if (isPlatformMode && platformRole) {
-    return (
-      <div className="bg-purple-600 text-white px-4 py-2 text-sm flex items-center justify-between shadow-lg hidden">
-        <div className="flex items-center gap-2">
-          <Shield className="w-4 h-4" />
-          <span className="font-medium">
-            🏢 Platform Mode — <strong>{user?.email}</strong>
-          </span>
-        </div>
-        <span className="text-xs text-white/80">
-          {platformRole}
-        </span>
-      </div>);
+    return null;
+
+
+
+
+
+
+
+
+
+
+
 
   }
 
