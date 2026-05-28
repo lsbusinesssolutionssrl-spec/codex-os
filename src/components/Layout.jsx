@@ -22,6 +22,7 @@ import RBACDebugPanel from './RBACDebugPanel';
 import ContextVerification from './ContextVerification';
 import HydrationDebugPanel from './HydrationDebugPanel';
 import RegressionTestRunner from './RegressionTestRunner';
+import QuickMembershipRepair from './QuickMembershipRepair';
 
 // Tenant navigation - modules enabled dynamically based on plan
 const TENANT_NAV_ITEMS = [
@@ -294,6 +295,8 @@ export default function Layout() {
         )}
         {/* Regression tests - ALWAYS visible in development */}
         <RegressionTestRunner />
+        {/* Quick membership repair for unresolved contexts */}
+        <QuickMembershipRepair />
       </div>
     </div>
   );

@@ -127,6 +127,23 @@ export function GlobalContextProvider({ children }) {
         }
         setTenantMemberships(memberships);
 
+        // AUTO-REPAIR: If no memberships found, attempt to repair
+        if (memberships.length === 0 && authenticatedUser.company_id) {
+          console.log('[GlobalContextEngine] No memberships found, attempting auto-repair...');
+          try {
+            const repairResponse = await base44.functions.invoke('resolveOrRepairTenantMembership', {});
+            if (repairResponse.data.success) {
+              console.log('[GlobalContextEngine] Auto-repair successful:', repairResponse.data.action);
+              memberships = [repairResponse.data.membership];
+              setTenantMemberships(memberships);
+            } else {
+              console.log('[GlobalContextEngine] Auto-repair failed:', repairResponse.data.reason);
+            }
+          } catch (repairError) {
+            console.error('[GlobalContextEngine] Auto-repair error:', repairError);
+          }
+        }
+
         // STEP 4: Resolve active context with strict priority
         // PRIORITY 1: Tenant membership ALWAYS takes precedence over platform role
         // This ensures tenant admins are not forced into platform mode
