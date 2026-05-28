@@ -217,11 +217,20 @@ export default function TeamManagement() {
                   {(displayName?.[0] || 'U').toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">
-                    {displayName}
-                    {isCurrentUser && <span className="ml-2 text-xs text-blue-600 font-normal">(Tu)</span>}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-gray-900">
+                      {displayName}
+                    </p>
+                    {isCurrentUser && (
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium">
+                        Tu
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-500">{member.user?.email || 'Email non disponibile'}</p>
+                  {member.status === 'active' && (
+                    <p className="text-xs text-green-600 font-medium">• Attivo</p>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-3">
