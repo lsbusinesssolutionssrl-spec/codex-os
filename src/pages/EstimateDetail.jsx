@@ -31,12 +31,12 @@ export default function EstimateDetail() {
   useEffect(() => {
     if (!activeTenant?.id) return;
     const load = async () => {
-      const [ests, cls, props] = await Promise.all([
-        base44.entities.Estimate.filter({ id }),
+      const [est, cls, props] = await Promise.all([
+        base44.entities.Estimate.get(id),
         getClients(activeTenant.id),
         getProperties(activeTenant.id),
       ]);
-      if (ests[0]) setForm(ests[0]);
+      if (est) setForm(est);
       setClients(cls);
       setProperties(props);
     };
@@ -58,6 +58,7 @@ export default function EstimateDetail() {
   };
 
   const save = async () => {
+    console.log('[EstimateDetail] Save clicked', { id, activeTenantId: activeTenant?.id, formKeys: Object.keys(form) });
     setSaving(true);
     try {
       const payload = {
