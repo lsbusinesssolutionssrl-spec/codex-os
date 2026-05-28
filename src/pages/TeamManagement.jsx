@@ -16,7 +16,8 @@ const ROLES = [
 
 export default function TeamManagement() {
   const navigate = useNavigate();
-  const { activeTenant, activeTenantRole, isPlatformMode, enabledModules, permissions } = useGlobalContext();
+  const globalContext = useGlobalContext();
+  const { activeTenant, activeTenantRole, isPlatformMode, enabledModules, permissions, user } = globalContext;
   const [members, setMembers] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [allMemberships, setAllMemberships] = useState([]);
@@ -340,14 +341,47 @@ export default function TeamManagement() {
           </div>
           {allMemberships.length > 0 && (
             <div className="mt-3 text-xs text-gray-500">
-              <p className="font-medium mb-1">All Memberships (Raw Data):</p>
-              <ul className="list-disc list-inside space-y-0.5">
+              <p className="font-medium mb-1">🔍 Memberships Debug (Raw Data):</p>
+              <div className="space-y-2 mt-2">
                 {allMemberships.map(m => (
-                  <li key={m.id}>
-                    {m.user_email || m.user_id || 'No user'} - {m.tenant_role} - {m.status} - Primary: {m.is_primary ? 'Yes' : 'No'}
-                  </li>
+                  <div key={m.id} className="p-2 bg-gray-50 rounded border border-gray-200">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <p className="text-gray-500">membership_id</p>
+                        <p className="font-mono text-gray-700">{m.id}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">user_id</p>
+                        <p className="font-mono text-gray-700">{m.user_id || 'None'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">membership.email</p>
+                        <p className="font-mono text-gray-700">{m.user_email || 'None'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">user.email</p>
+                        <p className="font-mono text-gray-700">{m.user?.email || 'None'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">user.full_name</p>
+                        <p className="font-mono text-gray-700">{m.user?.full_name || 'None'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">display_name</p>
+                        <p className="font-mono text-gray-700">{m.user?.full_name || m.user?.email || m.user_email || 'Unknown'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">tenant_role</p>
+                        <p className="font-mono text-gray-700">{m.tenant_role}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">status</p>
+                        <p className="font-mono text-gray-700">{m.status}</p>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
         </div>

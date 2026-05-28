@@ -38,12 +38,15 @@ Deno.serve(async (req) => {
     // Join memberships with user data
     const members = allMemberships.map(m => {
       const matchedUser = allUsers.find(u => u.id === m.user_id);
+      const userEmail = matchedUser?.email || m.user?.email || 'Unknown';
+      const userFullName = matchedUser?.full_name || m.user?.full_name;
+      
       return {
         id: m.id,
         user_id: m.user_id,
         user: {
-          email: matchedUser?.email || m.user?.email || 'Unknown',
-          full_name: matchedUser?.full_name || m.user?.full_name,
+          email: userEmail,
+          full_name: userFullName || userEmail.split('@')[0], // Fallback to email prefix if no name
         },
         tenant_id: m.tenant_id,
         tenant_role: m.tenant_role,
