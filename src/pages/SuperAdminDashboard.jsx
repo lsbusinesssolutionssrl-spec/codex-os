@@ -82,16 +82,49 @@ export default function SuperAdminDashboard() {
 
   const healthScore = (t) => {
     let score = 0;
-    if (t.subscription?.status === 'active') score += 40;
-    if (t.subscription?.status === 'trial') score += 20;
-    if (t.userCount > 2) score += 15;
-    if (t.subscription?.mrr > 0) score += 25;
-    if (t.subscription?.seats_used > 1) score += 20;
+    const reasons = [];
     
-    if (score >= 80) return { label: 'Healthy', color: 'text-green-600 bg-green-50' };
-    if (score >= 60) return { label: 'Needs Attention', color: 'text-yellow-600 bg-yellow-50' };
-    if (score >= 40) return { label: 'At Risk', color: 'text-orange-600 bg-orange-50' };
-    return { label: 'Inactive', color: 'text-gray-600 bg-gray-100' };
+    // Critical checks
+    if (t.subscription?.status === 'active' || t.subscription?.status === 'trial') {
+      score += 40;
+    } else {
+      reasons.push('Missing subscription');
+    }
+    
+    if (t.customerCount > 0) {
+      score += 30;
+    } else {
+      reasons.push('No customer members');
+    }
+    
+    if (t.plan?.name || t.subscription?.plan_id) {
+      score += 30;
+    } else {
+      reasons.push('No plan assigned');
+    }
+    
+    // Determine status with reason
+    let label = 'Inactive';
+    if (t.archived) {
+      label = 'Inactive';
+    } else if (score >= 80) {
+      label = 'Healthy';
+    } else if (score >= 60) {
+      label = 'Needs Attention';
+    } else if (score >= 40) {
+      label = 'At Risk';
+    }
+    
+    const reason = reasons.length > 0 ? reasons[0] : '';
+    
+    return { 
+      label, 
+      reason,
+      color: label === 'Healthy' ? 'text-green-600 bg-green-50' :
+             label === 'Needs Attention' ? 'text-yellow-600 bg-yellow-50' :
+             label === 'At Risk' ? 'text-orange-600 bg-orange-50' :
+             'text-gray-600 bg-gray-100'
+    };
   };
 
   const statusConfig = {
@@ -240,12 +273,19 @@ export default function SuperAdminDashboard() {
                       </div>
                     </td>
                     <td className="text-center py-3 px-4">
-                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${health.color}`}>
-                        {health.label}
-                      </span>
+                      <div className="flex flex-col items-center gap-1">
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${health.color}`}>
+                          {health.label}
+                        </span>
+                        {health.reason && (
+                          <span className="text-[10px] text-gray-500">{health.reason}</span>
+                        )}
+                      </div>
                     </td>
                     <td className="text-center py-3 px-4">
-                      <span className="text-xs text-gray-600">{t.plan?.name || '—'}</span>
+                      <span className="text-xs text-gray-600 font-medium">
+                        {t.plan?.name || (t.subscription?.plan_id ? 'Plan assigned' : 'No plan')}
+                      </span>
                     </td>
                     <td className="text-center py-3 px-4">
                       {t.subscription ? (
@@ -254,7 +294,7 @@ export default function SuperAdminDashboard() {
                         </span>
                       ) : <span className="text-xs text-gray-400">No subscription</span>}
                     </td>
-                    <td className="text-center py-3 px-4 text-gray-600">{t.userCount}</td>
+                    <td className="text-center py-3 px-4 text-gray-600 font-medium">{t.customerCount || 0}</td>
                     <td className="text-center py-3 px-4 font-medium text-gray-900">
                       {t.subscription?.mrr ? `€${t.subscription.mrr}` : '—'}
                     </td>
