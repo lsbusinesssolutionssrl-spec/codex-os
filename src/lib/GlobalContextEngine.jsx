@@ -224,7 +224,8 @@ export function GlobalContextProvider({ children }) {
         
         // PRIORITY 1: Platform owners ALWAYS use platform context by default
         // They ONLY enter tenant context when EXPLICITLY impersonating (impersonate_tenant_id in localStorage)
-        const VALID_PLATFORM_ROLES_STRICT = ['super_admin', 'developer', 'platform_owner'];
+        // CRITICAL: 'admin' is the Base44 app owner role - also treated as platform user
+        const VALID_PLATFORM_ROLES_STRICT = ['super_admin', 'developer', 'platform_owner', 'admin'];
         if (VALID_PLATFORM_ROLES_STRICT.includes(role)) {
           console.log('[GlobalContextEngine] Platform owner detected - using platform context by default');
           setContextType(CONTEXT_TYPE.PLATFORM);

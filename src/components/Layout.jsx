@@ -165,10 +165,14 @@ export default function Layout() {
 
   const allowedPaths = userRole ? NAV_BY_ROLE[userRole] : null;
   
-  // CRITICAL: Platform owner sees PLATFORM nav, NOT tenant nav
-  // Only show tenant nav if user is NOT a platform user OR is impersonating
-  const isPlatformUser = ['super_admin', 'developer', 'platform_owner'].includes(userRole);
-  const visibleNav = (isPlatformMode || (isPlatformUser && !isImpersonating)) 
+  // CRITICAL: Determine if we should show platform nav
+  // Show PLATFORM nav if:
+  // 1. isPlatformMode is true (user is authenticated as platform), OR
+  // 2. User is a platform user role AND NOT impersonating
+  const isPlatformUser = ['super_admin', 'developer', 'platform_owner', 'admin'].includes(userRole);
+  const shouldShowPlatformNav = isPlatformMode || (isPlatformUser && !isImpersonating);
+  
+  const visibleNav = shouldShowPlatformNav 
     ? PLATFORM_NAV_ITEMS 
     : TENANT_NAV_ITEMS.filter(item => {
         // Module-based items only appear if enabled
