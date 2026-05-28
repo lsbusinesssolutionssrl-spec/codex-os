@@ -38,6 +38,10 @@ export default function SessionDebugPanel() {
     error,
     isPlatformMode,
     isTenantMode,
+    isImpersonating,
+    impersonatedUserEmail,
+    realUser,
+    effectiveUser,
   } = globalContext;
 
   // CRITICAL: Show ONLY to platform users in platform mode
@@ -149,8 +153,12 @@ export default function SessionDebugPanel() {
         <DebugSection title="User Context">
           <div className="space-y-2 text-xs">
             <div className="flex items-center justify-between">
-              <span className="text-gray-500">Email</span>
-              <span className="font-mono text-gray-900">{user?.email || '—'}</span>
+              <span className="text-gray-500">Real User</span>
+              <span className="font-mono text-gray-900">{realUser?.email || '—'}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-500">Effective User</span>
+              <span className="font-mono text-gray-900">{effectiveUser?.email || '—'}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-500">Platform Role</span>
@@ -186,12 +194,31 @@ export default function SessionDebugPanel() {
               <span className="font-mono text-gray-900">{workspaceType || '—'}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-gray-500">Reason</span>
-              <span className="text-gray-700 text-right">
-                {tenantMemberships.length > 0 ? 'Has TenantMembership' : 
-                 platformRole === 'admin' || platformRole === 'developer' ? 'Platform role' : 'No context'}
+              <span className="text-gray-500">Is Impersonating</span>
+              <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                isImpersonating ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
+              }`}>
+                {isImpersonating ? 'YES' : 'NO'}
               </span>
             </div>
+            {isImpersonating && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500">Impersonating</span>
+                <span className="font-mono text-orange-700">{impersonatedUserEmail}</span>
+              </div>
+            )}
+          </div>
+        </DebugSection>
+
+        {/* LocalStorage State */}
+        <DebugSection title="LocalStorage Keys">
+          <div className="space-y-1.5 text-xs">
+            <LocalStorageKey label="impersonate_tenant_id" />
+            <LocalStorageKey label="selectedTenantId" />
+            <LocalStorageKey label="activeTenantId" />
+            <LocalStorageKey label="tenant_preview_mode" />
+            <LocalStorageKey label="active_membership_id" />
+            <LocalStorageKey label="impersonated_user_email" />
           </div>
         </DebugSection>
 
@@ -379,6 +406,26 @@ function StatCard({ label, value }) {
     <div className="bg-gray-50 rounded-lg p-2 text-center border border-gray-100">
       <div className="text-lg font-bold text-gray-900">{value}</div>
       <div className="text-xs text-gray-500">{label}</div>
+    </div>
+  );
+}
+
+function LocalStorageKey({ label }) {
+  const [value, setValue] = useState(null);
+  
+  useEffect(() => {
+    const val = localStorage.getItem(label);
+    setValue(val);
+  }, [label]);
+  
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-gray-500 font-mono text-[10px]">{label}</span>
+      <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded ${
+        value ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-400'
+      }`}>
+        {value || '—'}
+      </span>
     </div>
   );
 }

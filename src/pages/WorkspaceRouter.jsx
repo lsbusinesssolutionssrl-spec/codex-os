@@ -17,7 +17,7 @@ export default function WorkspaceRouter() {
     if (loading) return;
     // Redirect Platform users to platform dashboard
     if (isPlatformMode) {
-      navigate('/platform/tenants', { replace: true });
+      navigate('/super-admin', { replace: true });
       return;
     }
     // Redirect Tenant Admin to dedicated console

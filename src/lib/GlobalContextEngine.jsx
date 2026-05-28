@@ -151,9 +151,46 @@ export function GlobalContextProvider({ children }) {
           }
         }
 
-        // STEP 4: Resolve active context with CORRECTED priority logic
-        // CRITICAL: Tenant route intent takes precedence over platform role
-        // If user has active TenantMembership, use tenant context (even for platform users)
+        // STEP 4: Resolve active context with PLATFORM OWNER PRIORITY
+        // CRITICAL: Platform owners use platform context BY DEFAULT, even if they have tenant memberships
+        // Tenant context is only used when explicitly impersonating or selecting a tenant
+        
+        // CRITICAL: Clear stale tenant context for platform owners
+        const PLATFORM_OWNER_EMAILS = ['lsbusiness.solutions.srl@gmail.com'];
+        const isPlatformOwner = PLATFORM_OWNER_EMAILS.includes(authenticatedUser.email);
+        
+        // Clean ALL stale localStorage for platform owners (impersonation is handled separately)
+        if (isPlatformOwner) {
+          const staleKeys = [
+            'selectedTenantId',
+            'activeTenantId',
+            'tenant_preview_mode',
+            'active_membership_id',
+            'impersonated_user_email',
+          ];
+          staleKeys.forEach(key => {
+            const val = localStorage.getItem(key);
+            if (val) {
+              console.log('[GlobalContextEngine] Clearing stale platform owner key:', key, val);
+              localStorage.removeItem(key);
+            }
+          });
+          
+          // CRITICAL: Also clear impersonate_tenant_id if no valid impersonation membership exists
+          const impersonateId = localStorage.getItem('impersonate_tenant_id');
+          if (impersonateId) {
+            const impersonatedMembership = await base44.entities.TenantMembership.filter({
+              user_id: authenticatedUser.id,
+              tenant_id: impersonateId,
+              status: 'active',
+            }).then(m => m[0] || null);
+            
+            if (!impersonatedMembership) {
+              console.log('[GlobalContextEngine] Clearing stale impersonation:', impersonateId);
+              localStorage.removeItem('impersonate_tenant_id');
+            }
+          }
+        }
         
         // Check for explicit impersonation FIRST
         const impersonateId = localStorage.getItem('impersonate_tenant_id');
@@ -177,9 +214,38 @@ export function GlobalContextProvider({ children }) {
           }
         }
         
-        // PRIORITY 1: Check for active TenantMembership (TENANT route intent)
-        // This handles both tenant users AND platform users on tenant routes
-        if (memberships.length > 0) {
+        // PRIORITY 1: Platform owners ALWAYS use platform context by default
+        // They only enter tenant context when explicitly impersonating
+        const VALID_PLATFORM_ROLES_STRICT = ['super_admin', 'developer', 'platform_owner'];
+        if (VALID_PLATFORM_ROLES_STRICT.includes(role)) {
+          console.log('[GlobalContextEngine] Platform owner detected - using platform context by default');
+          setContextType(CONTEXT_TYPE.PLATFORM);
+          setWorkspaceType('platform_admin');
+          setEnabledModules([]);
+          setPermissions(['platform:read', 'platform:write', 'tenant:read', 'tenant:write']);
+          setIsImpersonating(false);
+          setImpersonatedUserEmail(null);
+          // Don't return - allow explicit tenant selection below
+        }
+        
+        // PRIORITY 2: Check for explicit tenant selection (selectedTenantId)
+        const selectedTenantId = localStorage.getItem('selectedTenantId');
+        if (selectedTenantId && !isPlatformOwner) {
+          console.log('[GlobalContextEngine] Selected tenant detected:', selectedTenantId);
+          const selectedMembership = memberships.find(m => m.tenant_id === selectedTenantId && m.status === 'active');
+          if (selectedMembership) {
+            setActiveMembership(selectedMembership);
+            setActiveTenantRole(selectedMembership.tenant_role);
+            const tenant = await base44.entities.Company.get(selectedTenantId);
+            if (tenant) {
+              await resolveTenantContext(selectedMembership, tenant, false);
+              return;
+            }
+          }
+        }
+        
+        // PRIORITY 3: Non-platform users with active TenantMembership - use tenant context
+        if (!isPlatformOwner && memberships.length > 0) {
           // Filter for active memberships only at resolution time
           const activeMemberships = memberships.filter(m => m.status === 'active');
           console.log('[GlobalContextEngine] Active memberships:', activeMemberships.length);
@@ -218,22 +284,13 @@ export function GlobalContextProvider({ children }) {
             return;
           }
 
-          await resolveTenantContext(primaryMembership, tenant, isImpersonationActive);
+          await resolveTenantContext(primaryMembership, tenant, false);
           return;
         }
-
-        // PRIORITY 2: Platform users WITHOUT tenant membership - use platform context
-        // CRITICAL: Only valid platform roles (super_admin, developer, platform_owner)
-        // Generic 'admin' role is NOT a valid platform role for context resolution
-        const VALID_PLATFORM_ROLES_STRICT = ['super_admin', 'developer', 'platform_owner'];
-        if (VALID_PLATFORM_ROLES_STRICT.includes(role)) {
-          console.log('[GlobalContextEngine] Platform user without tenant membership - using platform context');
-          setContextType(CONTEXT_TYPE.PLATFORM);
-          setWorkspaceType('platform_admin');
-          setEnabledModules([]);
-          setPermissions(['platform:read', 'platform:write', 'tenant:read', 'tenant:write']);
-          setIsImpersonating(false);
-          setImpersonatedUserEmail(null);
+        
+        // PRIORITY 4: Platform users without explicit tenant selection - stay in platform context
+        if (VALID_PLATFORM_ROLES_STRICT.includes(role) && contextType === CONTEXT_TYPE.PLATFORM) {
+          console.log('[GlobalContextEngine] Platform owner staying in platform context');
           setLoading(false);
           return;
         }
