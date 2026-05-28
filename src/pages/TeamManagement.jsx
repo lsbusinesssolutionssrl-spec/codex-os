@@ -132,11 +132,11 @@ export default function TeamManagement() {
         return;
       }
 
-      toast.success(
-        result.data.email_sent 
-          ? `Invito inviato a ${inviteForm.email}` 
-          : 'Invito creato! Copia il link per inviarlo manualmente.'
-      );
+      const successMessage = result.data.email_sent 
+        ? `Invito inviato a ${inviteForm.email}` 
+        : 'Invito creato! Link: ' + (result.data.invite_link || 'N/A');
+      
+      toast.success(successMessage);
       
       setShowInviteModal(false);
       setInviteForm({ email: '', role: 'project_manager', language: 'it', message: '' });
