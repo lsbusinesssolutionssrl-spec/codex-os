@@ -46,6 +46,8 @@ const TENANT_NAV_ITEMS = [
 const PLATFORM_NAV_ITEMS = [
   { path: '/super-admin', icon: Shield, label: 'Dashboard' },
   { path: '/tenant-onboarding', icon: Building2, label: 'Nuovo Tenant' },
+  { path: '/platform/tenants', icon: Building2, label: 'Gestione Tenant' },
+  { path: '/platform/tenant-cleanup', icon: Activity, label: 'Tenant Cleanup' },
   { path: '/saas-plans-admin', icon: CreditCard, label: 'Piani SaaS' },
   { path: '/platform-settings', icon: Shield, label: 'Impostazioni' },
   { path: '/brand-approval', icon: Palette, label: 'White Label' },
@@ -277,8 +279,9 @@ export default function Layout() {
           {/* Platform Mode Indicator */}
           {isPlatformMode && (
             <div className="flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-50 border border-purple-200 rounded-lg">
-              <span className="text-purple-700 font-medium">🏢 Platform</span>
-              <span className="text-purple-600 text-xs">{user?.email}</span>
+              <Shield className="w-3 h-3 text-purple-700" />
+              <span className="text-purple-700 font-medium">Platform Mode</span>
+              <span className="text-purple-600 text-xs ml-2">{user?.email}</span>
             </div>
           )}
           {/* Tenant Mode or Impersonation */}
