@@ -6,7 +6,14 @@ import { toast } from 'sonner';
 import { useGlobalContext } from '@/lib/GlobalContextEngine';
 import { getClients, getClientDisplayName, getClientSecondaryLabel } from '@/lib/ClientService';
 
-const TYPE_OPTS = ['', 'Apartment', 'Villa', 'Office', 'Industrial Building', 'Commercial Space'];
+const TYPE_OPTS = ['Apartment', 'Villa', 'Office', 'Industrial Building', 'Commercial Space'];
+const TYPE_LABELS = {
+  'Apartment': 'Appartamento',
+  'Villa': 'Villa',
+  'Office': 'Ufficio',
+  'Industrial Building': 'Capannone Industriale',
+  'Commercial Space': 'Locale Commerciale',
+};
 
 export default function Properties() {
   const [properties, setProperties] = useState([]);
@@ -24,7 +31,7 @@ export default function Properties() {
     const load = async () => {
       try {
         const [filteredProps, cls] = await Promise.all([
-          base44.entities.Property.filter({ company_id: activeTenant.id }, '-created_date'),
+          base44.entities.Property.filter({ company_id: activeTenant.id, is_sample: false }, '-created_date'),
           getClients(activeTenant.id),
         ]);
         setProperties(filteredProps);
@@ -85,7 +92,7 @@ export default function Properties() {
         </div>
         <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none">
           <option value="">Tutti i tipi</option>
-          {TYPE_OPTS.slice(1).map(t => <option key={t}>{t}</option>)}
+          {TYPE_OPTS.map(t => <option key={t} value={t}>{TYPE_LABELS[t]}</option>)}
         </select>
       </div>
 
@@ -118,7 +125,7 @@ export default function Properties() {
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
               <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white">
-                {TYPE_OPTS.slice(1).map(t => <option key={t}>{t}</option>)}
+                {TYPE_OPTS.map(t => <option key={t} value={t}>{TYPE_LABELS[t]}</option>)}
               </select>
             </div>
             <div>
@@ -154,7 +161,7 @@ export default function Properties() {
               </div>
             )}
             <div className="flex items-center gap-3 mt-3">
-              <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">{p.type}</span>
+              <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">{TYPE_LABELS[p.type] || p.type}</span>
               {p.square_meters && <span className="text-xs text-gray-400">{p.square_meters} mq</span>}
               {p.year_built && <span className="text-xs text-gray-400">Anno {p.year_built}</span>}
             </div>
