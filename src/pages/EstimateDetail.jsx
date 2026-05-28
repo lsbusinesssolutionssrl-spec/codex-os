@@ -4,6 +4,7 @@ import { ArrowLeft, Save, FileDown, FolderPlus, Trash2, PenLine, CheckCircle2, B
 import SignaturePad from '../components/SignaturePad';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '../components/StatusBadge';
+import { toast } from 'sonner';
 import ContextualAIPanel from '../components/ai/ContextualAIPanel';
 import { useGlobalContext } from '@/lib/GlobalContextEngine';
 import { getClients, getClientDisplayName } from '@/lib/ClientService';
@@ -58,8 +59,27 @@ export default function EstimateDetail() {
 
   const save = async () => {
     setSaving(true);
-    await base44.entities.Estimate.update(id, form);
-    setSaving(false);
+    try {
+      const payload = {
+        ...form,
+        company_id: activeTenant?.id,
+        revenue: Number(form.revenue) || 0,
+        material_cost: Number(form.material_cost) || 0,
+        labor_cost: Number(form.labor_cost) || 0,
+        other_costs: Number(form.other_costs) || 0,
+        total_costs: (Number(form.material_cost) || 0) + (Number(form.labor_cost) || 0) + (Number(form.other_costs) || 0),
+        gross_margin: Number(form.gross_margin) || 0,
+        gross_margin_pct: Number(form.gross_margin_pct) || 0,
+      };
+      const updated = await base44.entities.Estimate.update(id, payload);
+      setForm(updated);
+      toast.success('Preventivo salvato correttamente.');
+    } catch (err) {
+      console.error('[EstimateDetail] Save error:', err);
+      toast.error('Errore salvataggio preventivo: ' + (err.message || 'Riprova'));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const deleteRecord = async () => {
