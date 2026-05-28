@@ -48,6 +48,46 @@
       "type": "string",
       "title": "Industry"
     },
+    "tenant_type": {
+      "type": "string",
+      "title": "Tenant Type",
+      "enum": [
+        "production_customer",
+        "internal",
+        "demo",
+        "default_seed",
+        "duplicate",
+        "archived"
+      ],
+      "default": "production_customer"
+    },
+    "visibility": {
+      "type": "string",
+      "title": "Visibility",
+      "enum": [
+        "visible",
+        "hidden",
+        "platform_only"
+      ],
+      "default": "visible"
+    },
+    "archived": {
+      "type": "boolean",
+      "title": "Archived",
+      "default": false
+    },
+    "archived_reason": {
+      "type": "string",
+      "title": "Archived Reason"
+    },
+    "archived_at": {
+      "type": "string",
+      "title": "Archived At"
+    },
+    "archived_by": {
+      "type": "string",
+      "title": "Archived By"
+    },
     "settings": {
       "type": "object",
       "title": "Company Settings",
