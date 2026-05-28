@@ -221,7 +221,7 @@ export function GlobalContextProvider({ children }) {
         }
         
         // PRIORITY 1: Platform owners ALWAYS use platform context by default
-        // They only enter tenant context when explicitly impersonating
+        // They ONLY enter tenant context when EXPLICITLY impersonating (impersonate_tenant_id in localStorage)
         const VALID_PLATFORM_ROLES_STRICT = ['super_admin', 'developer', 'platform_owner'];
         if (VALID_PLATFORM_ROLES_STRICT.includes(role)) {
           console.log('[GlobalContextEngine] Platform owner detected - using platform context by default');
@@ -231,26 +231,15 @@ export function GlobalContextProvider({ children }) {
           setPermissions(['platform:read', 'platform:write', 'tenant:read', 'tenant:write']);
           setIsImpersonating(false);
           setImpersonatedUserEmail(null);
-          // Don't return - allow explicit tenant selection below
+          
+          // CRITICAL: Platform owners SKIP tenant context resolution entirely unless impersonating
+          // Even if they have TenantMembership records, those are for internal_support only
+          console.log('[GlobalContextEngine] Platform owner skipping tenant context resolution');
+          setLoading(false);
+          return;
         }
         
-        // PRIORITY 2: Check for explicit tenant selection (selectedTenantId)
-        const selectedTenantId = localStorage.getItem('selectedTenantId');
-        if (selectedTenantId && !isPlatformOwner) {
-          console.log('[GlobalContextEngine] Selected tenant detected:', selectedTenantId);
-          const selectedMembership = memberships.find(m => m.tenant_id === selectedTenantId && m.status === 'active');
-          if (selectedMembership) {
-            setActiveMembership(selectedMembership);
-            setActiveTenantRole(selectedMembership.tenant_role);
-            const tenant = await base44.entities.Company.get(selectedTenantId);
-            if (tenant) {
-              await resolveTenantContext(selectedMembership, tenant, false);
-              return;
-            }
-          }
-        }
-        
-        // PRIORITY 3: Non-platform users with active TenantMembership - use tenant context
+        // PRIORITY 2: Non-platform users with active TenantMembership - use tenant context
         if (!isPlatformOwner && memberships.length > 0) {
           // Filter for active memberships only at resolution time
           const activeMemberships = memberships.filter(m => m.status === 'active');
