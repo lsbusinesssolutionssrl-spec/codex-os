@@ -432,10 +432,9 @@ export default function TeamManagement() {
                         <p className="font-mono text-gray-700">{m.status}</p>
                       </div>
                     </div>
-                    </div>
-                    </div>
-                    );
-                    })}
+                  </div>
+                );
+              })}
               </div>
             </div>
           )}
