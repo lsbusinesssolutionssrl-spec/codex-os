@@ -6,6 +6,10 @@
       "type": "string",
       "title": "User ID"
     },
+    "user_email": {
+      "type": "string",
+      "title": "User Email (for invited users without account)"
+    },
     "tenant_id": {
       "type": "string",
       "title": "Tenant ID (Company)"
@@ -111,7 +115,6 @@
     }
   },
   "required": [
-    "user_id",
     "tenant_id",
     "tenant_role"
   ]
