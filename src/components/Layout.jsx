@@ -21,6 +21,7 @@ import ModuleEntitlementDebug from './ModuleEntitlementDebug';
 import RBACDebugPanel from './RBACDebugPanel';
 import ContextVerification from './ContextVerification';
 import HydrationDebugPanel from './HydrationDebugPanel';
+import RegressionTestRunner from './RegressionTestRunner';
 
 // Tenant navigation - modules enabled dynamically based on plan
 const TENANT_NAV_ITEMS = [
@@ -291,6 +292,8 @@ export default function Layout() {
             </div>
           </>
         )}
+        {/* Regression tests - ALWAYS visible in development */}
+        <RegressionTestRunner />
       </div>
     </div>
   );
