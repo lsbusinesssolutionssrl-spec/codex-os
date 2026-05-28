@@ -24,6 +24,8 @@ export default function TeamManagement() {
   const [loading, setLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: '', role: 'project_manager' });
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState(null);
   const [showDebug, setShowDebug] = useState(false);
   const [repairing, setRepairing] = useState(false);
   const [contextDebug, setContextDebug] = useState(null);
@@ -66,8 +68,12 @@ export default function TeamManagement() {
       const activeMembers = customerMembers.filter(m => m.status === 'active');
       setMembers(activeMembers);
       
-      // Show pending invitations
-      const pendingMembers = data.members.filter(m => ['invited', 'pending'].includes(m.status.toLowerCase()));
+      // Show pending invitations - check ALL memberships, not just active ones
+      const allMemberships = data.all_memberships || [];
+      const pendingMembers = allMemberships.filter(m => 
+        ['invited', 'pending'].includes(m.status?.toLowerCase()) && 
+        m.membership_type === 'customer_member'
+      );
       setInvitations(pendingMembers);
       
       console.log('[TeamManagement] Team Data:', {
@@ -86,25 +92,62 @@ export default function TeamManagement() {
   };
 
   const inviteUser = async () => {
+    setInviteLoading(true);
+    setInviteError(null);
+    
     try {
-      await base44.users.inviteUser(inviteForm.email, 'user');
-      
-      const currentUser = await base44.auth.me();
-      await base44.entities.TenantMembership.create({
-        user_id: currentUser.id,
+      if (!inviteForm.email || !inviteForm.role) {
+        setInviteError('Email e ruolo sono obbligatori');
+        toast.error('Email e ruolo sono obbligatori');
+        setInviteLoading(false);
+        return;
+      }
+
+      const result = await base44.functions.invoke('inviteTenantUser', {
         tenant_id: activeTenant.id,
-        tenant_role: inviteForm.role,
-        status: 'invited',
-        invited_by: currentUser.email,
-        invited_at: new Date().toISOString(),
+        email: inviteForm.email,
+        role: inviteForm.role,
+        language: inviteForm.language || 'it',
+        message: inviteForm.message
       });
 
-      toast.success(`Invito inviato a ${inviteForm.email}`);
+      if (!result.data.success) {
+        const errorMsg = result.data.error || 'Errore nell\'invio invito';
+        setInviteError(errorMsg);
+        
+        if (errorMsg.includes('già membro')) {
+          toast.error('Questo utente è già membro del team');
+        } else if (errorMsg.includes('invito in attesa')) {
+          toast.error('Esiste già un invito in attesa per questa email');
+        } else if (errorMsg.includes('Email non valida')) {
+          toast.error('Email non valida');
+        } else if (errorMsg.includes('Ruolo non consentito')) {
+          toast.error('Ruolo non consentito');
+        } else if (errorMsg.includes('Permessi insufficienti')) {
+          toast.error('Non hai i permessi per invitare membri');
+        } else {
+          toast.error(errorMsg);
+        }
+        setInviteLoading(false);
+        return;
+      }
+
+      toast.success(
+        result.data.email_sent 
+          ? `Invito inviato a ${inviteForm.email}` 
+          : 'Invito creato! Copia il link per inviarlo manualmente.'
+      );
+      
       setShowInviteModal(false);
-      setInviteForm({ email: '', role: 'project_manager' });
-      loadTeam();
+      setInviteForm({ email: '', role: 'project_manager', language: 'it', message: '' });
+      setInviteError(null);
+      await loadTeam();
     } catch (error) {
+      console.error('[inviteUser] Error:', error);
+      setInviteError(error.message);
       toast.error('Errore nell\'invio invito: ' + error.message);
+    } finally {
+      setInviteLoading(false);
     }
   };
 
