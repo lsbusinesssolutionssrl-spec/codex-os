@@ -151,13 +151,13 @@ export function GlobalContextProvider({ children }) {
           }
         }
 
-        // STEP 4: Resolve active context with NEW priority logic
-        // CRITICAL: Platform owner/developer should see PLATFORM context by default
-        // unless explicitly impersonating a tenant user
+        // STEP 4: Resolve active context with CORRECTED priority logic
+        // CRITICAL: Tenant route intent takes precedence over platform role
+        // If user has active TenantMembership, use tenant context (even for platform users)
         
         // Check for explicit impersonation FIRST
         const impersonateId = localStorage.getItem('impersonate_tenant_id');
-        const isImpersonationActive = !!impersonateId && isPlatformUser;
+        const isImpersonationActive = !!impersonateId;
         
         if (isImpersonationActive) {
           console.log('[GlobalContextEngine] Impersonation detected:', impersonateId);
@@ -177,21 +177,8 @@ export function GlobalContextProvider({ children }) {
           }
         }
         
-        // PRIORITY 1: Platform users (super_admin, developer, platform_owner) see PLATFORM context
-        // This is the DEFAULT for platform owner - they do NOT see tenant context automatically
-        if (isPlatformUser) {
-          console.log('[GlobalContextEngine] Platform user detected - using platform context');
-          setContextType(CONTEXT_TYPE.PLATFORM);
-          setWorkspaceType('platform_admin');
-          setEnabledModules([]);
-          setPermissions(['platform:read', 'platform:write', 'tenant:read', 'tenant:write']);
-          setIsImpersonating(false);
-          setImpersonatedUserEmail(null);
-          setLoading(false);
-          return;
-        }
-
-        // PRIORITY 2: Tenant users WITHOUT platform role - use tenant context
+        // PRIORITY 1: Check for active TenantMembership (TENANT route intent)
+        // This handles both tenant users AND platform users on tenant routes
         if (memberships.length > 0) {
           // Filter for active memberships only at resolution time
           const activeMemberships = memberships.filter(m => m.status === 'active');
@@ -231,50 +218,30 @@ export function GlobalContextProvider({ children }) {
             return;
           }
 
-          await resolveTenantContext(primaryMembership, tenant, false);
+          await resolveTenantContext(primaryMembership, tenant, isImpersonationActive);
           return;
         }
 
-        // PRIORITY 3: Fallback for platform users checking impersonation
-        if (isPlatformUser && impersonateId) {
-          // Check if impersonating a tenant
-          const impersonateId = localStorage.getItem('impersonate_tenant_id');
-          if (impersonateId) {
-            const impersonatedMembership = await base44.entities.TenantMembership.filter({
-              user_id: authenticatedUser.id,
-              tenant_id: impersonateId,
-            }).then(m => m[0] || null);
-            
-            if (impersonatedMembership) {
-              await resolveTenantContext(impersonatedMembership);
-              return;
-            } else {
-              // Try to load tenant directly
-              const tenant = await base44.entities.Company.get(impersonateId);
-              if (tenant) {
-                await resolveTenantContext({
-                  tenant_id: impersonateId,
-                  tenant_role: 'tenant_admin',
-                  status: 'active',
-                }, tenant);
-                return;
-              }
-            }
-          }
-          
-          // Pure platform context (no tenant membership)
+        // PRIORITY 2: Platform users WITHOUT tenant membership - use platform context
+        // CRITICAL: Only valid platform roles (super_admin, developer, platform_owner)
+        // Generic 'admin' role is NOT a valid platform role for context resolution
+        const VALID_PLATFORM_ROLES_STRICT = ['super_admin', 'developer', 'platform_owner'];
+        if (VALID_PLATFORM_ROLES_STRICT.includes(role)) {
+          console.log('[GlobalContextEngine] Platform user without tenant membership - using platform context');
           setContextType(CONTEXT_TYPE.PLATFORM);
-          setWorkspaceType('super_admin');
+          setWorkspaceType('platform_admin');
           setEnabledModules([]);
-          setPermissions(['platform:read', 'platform:write', 'tenant:read']);
+          setPermissions(['platform:read', 'platform:write', 'tenant:read', 'tenant:write']);
+          setIsImpersonating(false);
+          setImpersonatedUserEmail(null);
           setLoading(false);
           return;
         }
 
-        // PRIORITY 3: Tenant users without membership (error state)
+        // PRIORITY 3: No valid context found (error state)
         failedChecksList.push({
-          check: 'tenant_membership',
-          message: 'No active TenantMembership found',
+          check: 'no_valid_context',
+          message: 'No active TenantMembership found and not a valid platform role',
           critical: true,
         });
         setFailedChecks(failedChecksList);
@@ -292,51 +259,6 @@ export function GlobalContextProvider({ children }) {
         setContextType(CONTEXT_TYPE.UNRESOLVED);
         setLoading(false);
         return;
-
-        // Tenant user context
-        if (memberships.length === 0) {
-          failedChecksList.push({
-            check: 'tenant_membership',
-            message: 'No active TenantMembership found',
-            critical: true,
-          });
-          setFailedChecks(failedChecksList);
-          
-          // Check if user has old company_id binding
-          if (authenticatedUser.company_id) {
-            failedChecksList.push({
-              check: 'legacy_binding',
-              message: 'User has legacy company_id but no TenantMembership',
-              critical: true,
-              repairable: true,
-            });
-          }
-          
-          setContextType(CONTEXT_TYPE.UNRESOLVED);
-          setLoading(false);
-          return;
-        }
-
-        // STEP 4b: Select active membership
-        const primaryMembership = memberships.find(m => m.is_primary) || memberships[0];
-        setActiveMembership(primaryMembership);
-        setActiveTenantRole(primaryMembership.tenant_role);
-
-        // Load tenant company
-        const tenant = await base44.entities.Company.get(primaryMembership.tenant_id);
-        if (!tenant) {
-          failedChecksList.push({
-            check: 'tenant_exists',
-            message: `Tenant ${primaryMembership.tenant_id} not found`,
-            critical: true,
-          });
-          setFailedChecks(failedChecksList);
-          setContextType(CONTEXT_TYPE.UNRESOLVED);
-          setLoading(false);
-          return;
-        }
-
-        await resolveTenantContext(primaryMembership, tenant);
 
       } catch (err) {
         console.error('GlobalContextEngine error:', err);
