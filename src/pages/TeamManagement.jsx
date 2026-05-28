@@ -485,26 +485,27 @@ export default function TeamManagement() {
               const displayEmail = inv.user_email || inv.user?.email || 'Email non disponibile';
               console.log('[Invitation] Rendering:', { id: inv.id, user_email: inv.user_email, user_email_fallback: inv.user?.email, display: displayEmail });
               return (
-              <div key={inv.id} className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
-                    <Mail className="w-5 h-5" />
+                <div key={inv.id} className="flex items-center justify-between p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                      <Mail className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{displayEmail}</p>
+                      <p className="text-sm text-gray-500">
+                        {ROLES.find(r => r.value === inv.tenant_role)?.label} • Invitato da {inv.invited_by}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{displayEmail}</p>
-                    <p className="text-sm text-gray-500">
-                      {ROLES.find(r => r.value === inv.tenant_role)?.label} • Invitato da {inv.invited_by}
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-1 text-xs font-medium text-orange-700 bg-orange-100 rounded-full flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      In attesa
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-1 text-xs font-medium text-orange-700 bg-orange-100 rounded-full flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    In attesa
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
