@@ -433,8 +433,7 @@ export default function TeamManagement() {
                       </div>
                     </div>
                   </div>
-                );
-              })}
+                ))}
               </div>
             </div>
           )}
