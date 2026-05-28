@@ -12,20 +12,23 @@ export default function LayoutInspector() {
     activeLayouts: [],
   });
   const globalContext = useGlobalContext();
-  const { isPlatformMode } = globalContext;
+  const { isPlatformMode, platformRole } = globalContext;
+
+  // CRITICAL: Show ONLY to super_admin / developer in platform mode
+  const isInternalUser = ['super_admin', 'developer', 'platform_owner'].includes(platformRole) && isPlatformMode;
 
 /**
  * LAYOUT INSPECTOR - Developer Tool
  * Shows mounted layout components, active panels, and ghost containers
  */
 
-
-
   useEffect(() => {
-    if (isOpen && globalContext.user?.role === 'admin') {
+    if (isOpen && isInternalUser) {
       inspectLayout();
     }
-  }, [isOpen]);
+  }, [isOpen, isInternalUser]);
+
+  if (!isInternalUser) return null;
 
   const inspectLayout = () => {
     // Scan DOM for layout containers

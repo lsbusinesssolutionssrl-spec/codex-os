@@ -22,8 +22,12 @@ export default function RBACDebugPanel() {
     contextId,
     rbacContextId,
     moduleRegistryId,
+    platformRole,
   } = useGlobalContext();
 
+  // CRITICAL: Show ONLY to super_admin / developer in platform mode
+  const isInternalUser = ['super_admin', 'developer', 'platform_owner'].includes(platformRole) && isPlatformMode;
+  
   const [debugInfo, setDebugInfo] = useState(null);
 
   useEffect(() => {
@@ -32,6 +36,8 @@ export default function RBACDebugPanel() {
       setDebugInfo(debug);
     }
   }, [activeTenantRole, enabledModules]);
+
+  if (!isInternalUser) return null;
 
   if (!user) return null;
 

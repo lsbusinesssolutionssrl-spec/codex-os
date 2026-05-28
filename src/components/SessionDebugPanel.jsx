@@ -40,6 +40,9 @@ export default function SessionDebugPanel() {
     isTenantMode,
   } = globalContext;
 
+  // CRITICAL: Show ONLY to super_admin / developer in platform mode
+  const isInternalUser = ['super_admin', 'developer', 'platform_owner'].includes(platformRole) && isPlatformMode;
+  
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalTenants: 0,
@@ -51,6 +54,8 @@ export default function SessionDebugPanel() {
       loadPlatformStats();
     }
   }, [expanded]);
+
+  if (!isInternalUser) return null;
 
   const loadPlatformStats = async () => {
     try {

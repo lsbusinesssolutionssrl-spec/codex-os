@@ -15,17 +15,22 @@ export default function RegressionTestRunner() {
   const [summary, setSummary] = useState({ pass: 0, fail: 0, total: 0 });
   const globalContext = useGlobalContext();
   const { 
+    user,
+    platformRole,
+    isPlatformMode,
     contextType, 
     activeTenant, 
     activeTenantRole, 
-    platformRole,
     enabledModules, 
     permissions,
     tenantMemberships,
-    isPlatformMode,
     isTenantMode,
     forceReload,
   } = globalContext;
+
+  // CRITICAL: Show ONLY to super_admin / developer in platform mode
+  const isInternalUser = ['super_admin', 'developer', 'platform_owner'].includes(platformRole) && isPlatformMode;
+  if (!isInternalUser) return null;
 
   const runTests = async () => {
     setRunning(true);

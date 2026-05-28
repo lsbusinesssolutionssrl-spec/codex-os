@@ -5,7 +5,11 @@ import { CheckCircle2, XCircle, AlertTriangle, Database, Shield, Zap, FileText, 
 
 export default function ModuleEntitlementDebug() {
   const [minimized, setMinimized] = useState(false);
-  const { activeTenant, activeTenantRole, enabledModules, subscription } = useGlobalContext();
+  const { activeTenant, activeTenantRole, enabledModules, subscription, platformRole, isPlatformMode } = useGlobalContext();
+
+  // CRITICAL: Show ONLY to super_admin / developer in platform mode
+  const isInternalUser = ['super_admin', 'developer', 'platform_owner'].includes(platformRole) && isPlatformMode;
+  
   const [debug, setDebug] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -99,6 +103,7 @@ export default function ModuleEntitlementDebug() {
     loadDebug();
   }, [activeTenant, activeTenantRole, enabledModules]);
 
+  if (!isInternalUser) return null;
   if (loading) return <div className="p-4 text-sm text-gray-500">Loading debug data...</div>;
   if (!debug) return <div className="p-4 text-sm text-red-600">No debug data available</div>;
 
