@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Home, MapPin } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { useGlobalContext } from '@/lib/GlobalContextEngine';
+import { getClients, getClientDisplayName, getClientSecondaryLabel } from '@/lib/ClientService';
 
 const TYPE_OPTS = ['', 'Apartment', 'Villa', 'Office', 'Industrial Building', 'Commercial Space'];
 
@@ -15,26 +17,20 @@ export default function Properties() {
   const [form, setForm] = useState({ property_name: '', client_id: '', address: '', type: 'Apartment', square_meters: '', year_built: '' });
   const [clientList, setClientList] = useState([]);
   const navigate = useNavigate();
+  const { activeTenant } = useGlobalContext();
 
   useEffect(() => {
+    if (!activeTenant?.id) return;
     const load = async () => {
       try {
-        const [filtersRes, props, cls] = await Promise.all([
-          base44.functions.invoke('getUserFilters', {}),
-          base44.entities.Property.list('-created_date'),
-          base44.entities.Client.list(),
+        const [filteredProps, cls] = await Promise.all([
+          base44.entities.Property.filter({ company_id: activeTenant.id }, '-created_date'),
+          getClients(activeTenant.id),
         ]);
-        // Apply RLS filters properly
-        const filters = filtersRes.data.filters;
-        const propertyFilter = filters.Property || { company_id: null };
-        
-        // Use filter() API instead of manual filtering
-        const filteredProps = await base44.entities.Property.filter(propertyFilter, '-created_date');
-        
         setProperties(filteredProps);
         setClientList(cls);
         const map = {};
-        cls.forEach(c => { map[c.id] = c.name + (c.company_name ? ` ${c.company_name}` : ''); });
+        cls.forEach(c => { map[c.id] = getClientDisplayName(c); });
         setClients(map);
       } catch (error) {
         console.error('Failed to load properties:', error);
@@ -43,7 +39,7 @@ export default function Properties() {
       }
     };
     load();
-  }, []);
+  }, [activeTenant?.id]);
 
   const filtered = properties.filter(p => {
     const q = search.toLowerCase();
@@ -53,9 +49,19 @@ export default function Properties() {
 
   const save = async (e) => {
     e.preventDefault();
-    const created = await base44.entities.Property.create({ ...form, square_meters: Number(form.square_meters) || undefined, year_built: Number(form.year_built) || undefined });
+    if (!activeTenant?.id) {
+      toast.error('Tenant non risolto: impossibile salvare la proprietà.');
+      return;
+    }
+    const created = await base44.entities.Property.create({
+      ...form,
+      company_id: activeTenant.id,
+      square_meters: Number(form.square_meters) || undefined,
+      year_built: Number(form.year_built) || undefined,
+    });
     setProperties(prev => [created, ...prev]);
     setShowForm(false);
+    toast.success('Proprietà salvata con successo');
   };
 
   const typeIcon = { Apartment: '🏢', Villa: '🏡', Office: '🏬', 'Industrial Building': '🏭', 'Commercial Space': '🏪' };
@@ -95,7 +101,14 @@ export default function Properties() {
               <label className="block text-xs font-medium text-gray-600 mb-1">Cliente *</label>
               <select value={form.client_id} onChange={e => setForm(f => ({ ...f, client_id: e.target.value }))} required className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white">
                 <option value="">— Seleziona cliente —</option>
-                {clientList.map(c => <option key={c.id} value={c.id}>{c.name} {c.company_name}</option>)}
+                {clientList.length === 0 && (
+                  <option disabled>Nessun cliente trovato. Crea prima un cliente.</option>
+                )}
+                {clientList.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {getClientDisplayName(c)}{getClientSecondaryLabel(c) ? ` — ${getClientSecondaryLabel(c)}` : ''}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="sm:col-span-2">

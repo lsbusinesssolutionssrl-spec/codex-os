@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { useGlobalContext } from '@/lib/GlobalContextEngine';
 import { toast } from 'sonner';
 import ClientForm from '../components/client/ClientForm';
+import { getClients, getClientDisplayName } from '@/lib/ClientService';
 
 const CLIENT_TYPE_OPTS = [
   { value: 'Privato', label: 'Privato', icon: UserCheck, color: '#1147FF' },
@@ -51,11 +52,7 @@ export default function Clients() {
         toast.error('Tenant non selezionato');
         return;
       }
-      
-      const data = await base44.entities.Client.filter(
-        { company_id: activeTenant.id },
-        '-created_date'
-      );
+      const data = await getClients(activeTenant.id);
       setClients(data);
     } catch (error) {
       console.error('Failed to load clients:', error);
