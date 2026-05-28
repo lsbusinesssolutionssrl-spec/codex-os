@@ -159,6 +159,11 @@ const AuthenticatedApp = () => {
       <Route element={<Layout />}>
         <Route path="/" element={<WorkspaceRouter />} />
         <Route path="/dashboard" element={<WorkspaceRouter />} />
+        {/* TENANT ADMIN ROUTES - must use /app/admin/* to avoid platform conflict */}
+        <Route path="/app/admin/dashboard" element={<TenantAdminDashboard />} />
+        <Route path="/app/admin/team" element={<TeamManagement />} />
+        <Route path="/app/admin/modules" element={<ModuleManagement />} />
+        {/* Legacy redirects for tenant admin routes */}
         <Route path="/admin/dashboard" element={<TenantAdminDashboard />} />
         <Route path="/admin/team" element={<TeamManagement />} />
         <Route path="/admin/modules" element={<ModuleManagement />} />

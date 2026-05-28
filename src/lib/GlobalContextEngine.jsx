@@ -98,11 +98,12 @@ export function GlobalContextProvider({ children }) {
         const role = authenticatedUser.role || 'user';
         setPlatformRole(role);
 
-        // CRITICAL: Define platform roles that can access Platform Mode
-        const PLATFORM_ROLES = ['admin', 'developer'];
-        const isPlatformUser = PLATFORM_ROLES.includes(role);
+        // CRITICAL: Only super_admin, developer, platform_owner are valid platform roles
+        // Generic 'admin' role is NOT a platform role - it's a legacy tenant admin role
+        const VALID_PLATFORM_ROLES = ['super_admin', 'developer', 'platform_owner'];
+        const isPlatformUser = VALID_PLATFORM_ROLES.includes(role);
 
-        // STEP 3: Load tenant memberships
+        // STEP 3: Load tenant memberships - ALWAYS load for all users
         let memberships = [];
         
         if (role === 'client') {
@@ -122,7 +123,8 @@ export function GlobalContextProvider({ children }) {
         setTenantMemberships(memberships);
 
         // STEP 4: Resolve active context with strict priority
-        // PRIORITY 1: Tenant users (even if they have platform role, tenant membership takes precedence)
+        // PRIORITY 1: Tenant membership ALWAYS takes precedence over platform role
+        // This ensures tenant admins are not forced into platform mode
         if (memberships.length > 0) {
           // User has active tenant membership - use tenant context
           const primaryMembership = memberships.find(m => m.is_primary) || memberships[0];
@@ -148,11 +150,16 @@ export function GlobalContextProvider({ children }) {
         }
 
         // PRIORITY 2: Platform users WITHOUT tenant membership
-        if (isPlatformUser) {
+        // Only users with valid platform roles AND no tenant membership get platform context
+        if (isPlatformUser && memberships.length === 0) {
           // Check if impersonating a tenant
           const impersonateId = localStorage.getItem('impersonate_tenant_id');
           if (impersonateId) {
-            const impersonatedMembership = memberships.find(m => m.tenant_id === impersonateId);
+            const impersonatedMembership = await base44.entities.TenantMembership.filter({
+              user_id: authenticatedUser.id,
+              tenant_id: impersonateId,
+            }).then(m => m[0] || null);
+            
             if (impersonatedMembership) {
               await resolveTenantContext(impersonatedMembership);
               return;

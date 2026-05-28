@@ -16,7 +16,7 @@ const ROLES = [
 
 export default function TeamManagement() {
   const navigate = useNavigate();
-  const { activeTenant } = useGlobalContext();
+  const { activeTenant, activeTenantRole, isPlatformMode, enabledModules, permissions } = useGlobalContext();
   const [members, setMembers] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [allMemberships, setAllMemberships] = useState([]);
@@ -25,6 +25,7 @@ export default function TeamManagement() {
   const [inviteForm, setInviteForm] = useState({ email: '', role: 'project_manager' });
   const [showDebug, setShowDebug] = useState(false);
   const [repairing, setRepairing] = useState(false);
+  const [contextDebug, setContextDebug] = useState(null);
 
   useEffect(() => {
     loadTeam();
@@ -33,6 +34,16 @@ export default function TeamManagement() {
   const loadTeam = async () => {
     try {
       console.log('[TeamManagement] Loading team for tenant:', activeTenant?.id);
+      
+      // Capture context debug info
+      setContextDebug({
+        activeTenantId: activeTenant?.id,
+        activeTenantName: activeTenant?.name,
+        activeTenantRole,
+        isPlatformMode,
+        enabledModulesCount: enabledModules?.length,
+        permissionsCount: permissions?.length,
+      });
       
       // Use backend function (bypasses RLS issues)
       const response = await base44.functions.invoke('getTenantTeamMembers', {
@@ -239,16 +250,45 @@ export default function TeamManagement() {
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-gray-900">🔍 Team Debug</h3>
-            {allMemberships.length === 0 && (
-              <button
-                onClick={repairCurrentAdminMembership}
-                disabled={repairing}
-                className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {repairing ? '⏳ Riparazione...' : '🔧 Repair Admin Membership'}
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {contextDebug && (
+                <div className="text-xs text-gray-500">
+                  Context: <span className="font-mono">{contextDebug.isPlatformMode ? 'platform' : 'tenant'}</span>
+                </div>
+              )}
+              {allMemberships.length === 0 && (
+                <button
+                  onClick={repairCurrentAdminMembership}
+                  disabled={repairing}
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {repairing ? '⏳ Riparazione...' : '🔧 Repair Admin Membership'}
+                </button>
+              )}
+            </div>
           </div>
+          {contextDebug && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <p className="text-gray-600">Active Tenant</p>
+                  <p className="font-semibold text-blue-600">{contextDebug.activeTenantName || 'None'}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Tenant Role</p>
+                  <p className="font-semibold text-blue-600">{contextDebug.activeTenantRole || 'None'}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Enabled Modules</p>
+                  <p className="font-semibold text-blue-600">{contextDebug.enabledModulesCount || 0}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Permissions</p>
+                  <p className="font-semibold text-blue-600">{contextDebug.permissionsCount || 0}</p>
+                </div>
+              </div>
+            </div>
+          )}
           {allMemberships.length === 0 && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-sm font-semibold text-red-800 mb-1">⚠️ CRITICAL: No Tenant Memberships Found</p>
